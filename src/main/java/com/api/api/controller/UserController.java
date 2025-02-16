@@ -15,8 +15,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import com.api.api.DTO.SoundDTO;
 import com.api.api.DTO.TipDTO;
 import com.api.api.DTO.UserDTO;
+import com.api.api.model.Sound;
 import com.api.api.model.Tip;
 import com.api.api.model.User;
 import com.api.api.service.PatchUtils;
@@ -148,5 +150,27 @@ public class UserController {
         if (tipDTO == null) return ResponseEntity.notFound().build();
         return ResponseEntity.status(HttpStatus.CREATED).body(tipDTO); //Guardado correctamente en la lista de favoritos del user
     }
+
+    //TODO: ENDPOINT PARA OBTENER LOS SONIDOS QUE EL USER HA SUBIDO A LA APP, SOLO PUEDEN LLAMARLO LOS DUEÑOS DEL AUDIO
+    //Endpoint para obtener los sonidos de los users 
+    @GetMapping("/{id}/sounds")
+    public ResponseEntity<List<SoundDTO>> getUserSounds(@PathVariable("id") Long id ){
+        List<SoundDTO> userSounds = userService.getUserSounds(id);
+        if(userSounds.isEmpty()) return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(userSounds);
+    }
+
+    //Endpoint para que el user pueda crear un sonido
+    @PostMapping("/{id}/sounds")
+    public ResponseEntity<SoundDTO> createSound(@PathVariable("id") Long id, @RequestBody @Valid Sound sound){
+        //llamamos a la función encargada de crear el sonido
+        SoundDTO createdSound = userService.createSound(id, sound);
+        if(createdSound == null) return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(createdSound);
+    }
+
+    //TODO: HACER EL ENDPOINT DE ELIMINAR UN SONIDO SI EL USUARIO YA NO LO QUIERE
+    //@DeleteMapping("/{id}/sounds/{idSound}")
+
 
 }

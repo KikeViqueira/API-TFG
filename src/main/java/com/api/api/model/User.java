@@ -1,6 +1,7 @@
 package com.api.api.model;
 
 import java.util.List;
+import java.util.Set;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -54,4 +55,9 @@ public class User {
         inverseJoinColumns = @JoinColumn(name="tip_id") //Lo mismo que la anterior pero diciendo el nombre de la columna que hace referencia a la primaria de la tabla con la que se relaciona user (tip)
     )
     private List<Tip> favoriteTips; //Lista de tips que el user ha marcado como favoritos
+
+    //Relación uno a muchos entre user y sonidos (Esta es especial solo para los sonidos que ha subido el user)
+    //MappedBy hace referencia al campo owner en la entidad Sound (lado Many de la relación)
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL) //Si eliminamos un user, se eliminan los sonidos que el ha subido
+    private List<Sound> soundsUser; //Lista de sonidos que ha subido el user
 }

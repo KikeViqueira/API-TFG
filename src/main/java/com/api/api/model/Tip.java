@@ -47,19 +47,19 @@ public class Tip {
 
 
      //DEFINIMOS EL MÉTODO EQUALS Y HASHCODE PARA QUE SE PUEDAN COMPARAR DOS OBJETOS DE LA CLASE TIP
-     @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Tip tip = (Tip) o;
-            //Dos tips son iguales si tienen el mismo título, descripción e icono
-            return title.equals(tip.title) &&
-           description.equals(tip.description) &&
-           icon.equals(tip.icon);
-}
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Tip tip = (Tip) o;
+        //Dos tips son iguales si tienen el mismo título, descripción e icono
+        return title.equals(tip.title) &&
+        description.equals(tip.description) &&
+        icon.equals(tip.icon);
+    }
 
-@Override
-public int hashCode() {
-    return Objects.hash(title, description, icon); //Devuelve un hash del objeto tip
-}
+    @Override
+    public int hashCode() {
+        return Objects.hash(title, description, icon); //Devuelve un hash del objeto tip
+    }
 }
