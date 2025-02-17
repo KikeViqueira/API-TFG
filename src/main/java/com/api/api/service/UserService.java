@@ -118,4 +118,21 @@ public class UserService {
         }
         return null;
     }
+
+    //Función para eliminar un sonido de lo sque ha subido el user a la app
+    public SoundDTO deleteSoundUser(Long idUser, Long idSound){
+        //Comprobamos que el user exista
+        User user = userRepository.findById(idUser).orElse(null);
+        if (user != null){
+            //Comprobamos que el sonido exista en la bd
+            Sound sound = soundRepository.findById(idSound).orElse(null);
+            if (sound != null && user.getSoundsUser().contains(sound)){//Si el sonido existe en la BD y esta en la lista de sonidos del user que ha llamado al endpoint entonces podemos eliminarlo de la BD
+                user.getSoundsUser().remove(sound);
+                soundRepository.delete(sound);
+                userRepository.save(user);
+                return new SoundDTO(sound);
+            }
+        }
+        return null;
+    }
 }

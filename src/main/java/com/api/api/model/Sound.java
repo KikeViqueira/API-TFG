@@ -26,6 +26,8 @@ import lombok.Setter;
 @NoArgsConstructor
 public class Sound {
 
+    //TODO: Tenemos que comprobar que el archivo que se subo solo pueda ser de tipo audio (FrontEnd)
+
     //Atrubutos de la entidad Sound
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

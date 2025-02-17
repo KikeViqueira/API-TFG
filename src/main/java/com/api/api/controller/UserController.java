@@ -170,7 +170,13 @@ public class UserController {
     }
 
     //TODO: HACER EL ENDPOINT DE ELIMINAR UN SONIDO SI EL USUARIO YA NO LO QUIERE
-    //@DeleteMapping("/{id}/sounds/{idSound}")
+    @DeleteMapping("/{id}/sounds/{idSound}")
+    public ResponseEntity<SoundDTO> deleteSoundUser(@PathVariable("id") Long idUser, @PathVariable("idSound") Long idSound){
+        //llamamos a la función que se encarga de esta lógica
+        SoundDTO soundDTO = userService.deleteSoundUser(idUser, idSound);
+        if (soundDTO == null) return ResponseEntity.notFound().build(); //No se ha encontrado el sonido o el user
+        return ResponseEntity.ok(soundDTO);
+    }
 
 
 }

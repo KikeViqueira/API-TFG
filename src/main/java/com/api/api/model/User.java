@@ -50,7 +50,7 @@ public class User {
     //Un user puede tener varios tips en favoritos, y el mismo tip puede ser el favorito de varios users (Relación muchos a muchos)
     @ManyToMany
     @JoinTable(
-        name = "users_tips", //Indicamos el nombre de la tabla intermedia en la BD que representa la relación entre las dos entidades
+        name = "user_favs", //Indicamos el nombre de la tabla intermedia en la BD que representa la relación entre las dos entidades
         joinColumns = @JoinColumn(name="user_id"), //Indicamos el nombre de la columna de la tabla intermedia que hace referencia a la clave primaria de la entidad user
         inverseJoinColumns = @JoinColumn(name="tip_id") //Lo mismo que la anterior pero diciendo el nombre de la columna que hace referencia a la primaria de la tabla con la que se relaciona user (tip)
     )
