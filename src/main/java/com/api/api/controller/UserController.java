@@ -154,40 +154,4 @@ public class UserController {
     }
 
 
-
-
-
-
-
-
-    //TODO: MOVER AL LADO DEL CONTROLLER DE SOUNDS
-
-    //TODO: ENDPOINT PARA OBTENER LOS SONIDOS QUE EL USER HA SUBIDO A LA APP, SOLO PUEDEN LLAMARLO LOS DUEÑOS DEL AUDIO
-    //Endpoint para obtener los sonidos de los users 
-    @GetMapping("/{id}/sounds")
-    public ResponseEntity<List<SoundDTO>> getUserSounds(@PathVariable("id") Long id ){
-        List<SoundDTO> userSounds = userService.getUserSounds(id);
-        if(userSounds.isEmpty()) return ResponseEntity.noContent().build();
-        return ResponseEntity.ok(userSounds);
-    }
-
-    //Endpoint para que el user pueda crear un sonido
-    @PostMapping("/{id}/sounds")
-    public ResponseEntity<SoundDTO> createSound(@PathVariable("id") Long id, @RequestBody @Valid Sound sound){
-        //llamamos a la función encargada de crear el sonido
-        SoundDTO createdSound = userService.createSound(id, sound);
-        if(createdSound == null) return ResponseEntity.noContent().build();
-        return ResponseEntity.ok(createdSound);
-    }
-
-    //TODO: HACER EL ENDPOINT DE ELIMINAR UN SONIDO SI EL USUARIO YA NO LO QUIERE
-    @DeleteMapping("/{id}/sounds/{idSound}")
-    public ResponseEntity<SoundDTO> deleteSoundUser(@PathVariable("id") Long idUser, @PathVariable("idSound") Long idSound){
-        //llamamos a la función que se encarga de esta lógica
-        SoundDTO soundDTO = userService.deleteSoundUser(idUser, idSound);
-        if (soundDTO == null) return ResponseEntity.notFound().build(); //No se ha encontrado el sonido o el user
-        return ResponseEntity.ok(soundDTO);
-    }
-
-
 }

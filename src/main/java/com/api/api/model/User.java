@@ -1,6 +1,7 @@
 package com.api.api.model;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -62,4 +63,21 @@ public class User {
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL) //Si eliminamos un user, se eliminan los sonidos que el ha subido
     @JsonIgnore
     private List<Sound> soundsUser; //Lista de sonidos que ha subido el user
+
+
+
+    //DEFINIMOS EL MÉTODO EQUALS Y HASHCODE PARA QUE SE PUEDAN COMPARAR DOS OBJETOS DE LA CLASE SOUND
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        //Dos sonidos son iguales si tienen la misma URL
+        return email.equals(user.email);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(email); //Devuelve un hash del objeto tip
+    }
 }

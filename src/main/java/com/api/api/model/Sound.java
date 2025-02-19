@@ -45,6 +45,7 @@ public class Sound {
     @ManyToOne
     @JoinColumn(name = "idUser", nullable = false)
     private User owner; //Dueño del sonido
+    //Tenemos que definir los endpoints de este lado de la relación ya que es la que tiene el join
 
 
 
