@@ -36,7 +36,7 @@ public class SoundService {
     public List<SoundDTO> getUserSounds(Long idUser){
         List<SoundDTO> soundsDTOs = new ArrayList<>();
         //llamamos la bd para saber los sonidos que tienen de dueño al user con la id recibida
-        List<Sound> sounds = soundRepository.findByUserId(idUser);
+        List<Sound> sounds = soundRepository.findByOwnerId(idUser);
         //Si el user tiene sonidos, los pasamos a DTO con la info necesario
         if (!sounds.isEmpty()){
             for (Sound sound : sounds) soundsDTOs.add(new SoundDTO(sound));
@@ -51,7 +51,7 @@ public class SoundService {
         User user = userRepository.findById(id).orElse(null);
         if (user != null){
             //Comprobamos que el sonido que el user quiere crear ya no lo haya subido anteriormente
-            boolean exists = soundRepository.existsByUserIdAndFileUrl(id, sound.getFileUrl());
+            boolean exists = soundRepository.existsByOwnerIdAndFileUrl(id, sound.getFileUrl());
             if (!exists){
                 //Si el sonido no existe en la BD entonces lo creamos
                 sound.setOwner(user);
@@ -69,7 +69,7 @@ public class SoundService {
         Sound sound = soundRepository.findById(idSound).orElse(null);
         if (sound != null){
             //Tenemos que comprobar que exista la relación entre ambas entidades
-            boolean exits = soundRepository.existsByUserIdAndFileUrl(idUser, sound.getFileUrl()); 
+            boolean exits = soundRepository.existsByOwnerIdAndFileUrl(idUser, sound.getFileUrl()); 
             //la realación existe por lo que podemos eliminar el sonido de la bd y hibernate ya desvinculara el sonido del user
             if (exits){
                 soundRepository.delete(sound);

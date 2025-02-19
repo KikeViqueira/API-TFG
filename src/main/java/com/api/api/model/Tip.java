@@ -22,14 +22,14 @@ public class Tip {
 
     @NotBlank(message = "El título no puede ser vacío")
     @Size(min = 2, message = "El título debe tener al menos 2 caracteres")
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true) //Cualquier tip tiene que tener un nombre único
     private String title;
 
     @NotBlank(message = "La descripción no puede ser vacía")
     @Column(nullable = false)
     private String description;
 
-    @NotBlank(message = "La categoría no puede ser vacía")
+    @NotBlank(message = "El icono no puede ser vacío")
     @Column(nullable = false)
     private String icon;
 

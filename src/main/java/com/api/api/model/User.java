@@ -64,8 +64,6 @@ public class User {
     @JsonIgnore
     private List<Sound> soundsUser; //Lista de sonidos que ha subido el user
 
-
-
     //DEFINIMOS EL MÉTODO EQUALS Y HASHCODE PARA QUE SE PUEDAN COMPARAR DOS OBJETOS DE LA CLASE SOUND
     @Override
     public boolean equals(Object o) {

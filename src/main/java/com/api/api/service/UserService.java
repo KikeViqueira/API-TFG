@@ -25,9 +25,6 @@ public class UserService {
     @Autowired
     private TipRepository tipRepository;
 
-    @Autowired
-    private SoundRepository soundRepository;
-
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public User registerUser(User user) {

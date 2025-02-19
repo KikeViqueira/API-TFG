@@ -26,11 +26,16 @@ public class TipService {
     }
 
     //Función para obtener un tip en concreto por su id en la BD
-    public Tip geTip(Long id){
+    public Tip geTipByID(Long id){
         return tipRepository.findById(id).orElse(null);
     }
 
-    //Función para guardar un tip en la BD
+    //Función para obtener un tip en concreto por su título en la BD //TODO: Esta función se usa para cuando se esta intentando crear una entidad llamando a un endpoint y no podemos usar ID ya que este se genera cuando la entidad se guarda en la BD
+    public Tip geTipByTitle(String title){
+        return tipRepository.findByTitle(title).orElse(null);
+    }
+
+    //Función para guardar un tip en la BD, //TODO: Los tips que se añaden en la bd a través de este endpoint tenemos que poner que son creados por el user que está logeado
     public Tip createTip(Tip tip){
         return tipRepository.save(tip);
     }

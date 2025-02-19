@@ -44,11 +44,12 @@ public class TipController {
         return ResponseEntity.ok(tips);
     }
     
-    //Endpoint para crear un tip en la BD
+    //Endpoint para crear un tip en la BD, //TODO: REHACER ESTE ENDPOINT PARA QUE LA IA DEVUELVA EL CUERPO AL SERVICE Y ESTE LO GUARDE EN LA BD
     @PostMapping
     public ResponseEntity<?> createTip(@RequestBody @Valid Tip tip){
-        //Tenemos que comprobar que el tip no existe ya en la BD, si no devolveremos un error de conflicto al intentar crear un recurso ya existente
-        Tip tipRecuperado = tipService.geTip(tip.getId());
+        //Tenemos que comprobar si existe en base al titulo ya que el tip que viene en el request no tiene ID
+        //Por lo que nos dará null al hacer el get
+        Tip tipRecuperado = tipService.geTipByTitle(tip.getTitle());
         if (tipRecuperado != null){
             return ResponseEntity.status(HttpStatus.CONFLICT).body("El tip que se está intentando crear ya existe.");
         }else{
@@ -62,7 +63,7 @@ public class TipController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteTip(@PathVariable Long id){
         //Comprobamos que el tip que se está intentando eliminar está en la BD
-        Tip tipRecuperado = tipService.geTip(id);
+        Tip tipRecuperado = tipService.geTipByID(id);
         if (tipRecuperado == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("El tip que se está intentando eliminar no existe.");
         //En caso de que exista llamamos a la función para eliminarlo de la BD
         return ResponseEntity.noContent().build();
