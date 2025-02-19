@@ -47,7 +47,7 @@ public class UserController {
     public ResponseEntity<?> registerUser(@RequestBody @Valid User user) { //Valid para que se apliquen las restricciones de la clase User
 
         //Comprobamos primero que en la BD no exista un user igual, teniendo en cuenta el email
-        if (userService.getUser(user.getId()) != null){
+        if (userService.getUser(user.getEmail()) != null){
             //En este caso el recurso ya existe por lo que devolvemos el código de conflicto
             return ResponseEntity.status(409).body("El usuario ya existe");
         }
@@ -65,12 +65,12 @@ public class UserController {
     }
 
     //Endpoint para la actualización de la información de un user
-    @PatchMapping("/{id}")
+    @PatchMapping("/{email}") //TODO: NO SE SI TENEMOS QUE MIRAR SI LA DATA QUE SE VA ACTUALIZAR TIENE VALORES DISTINTOS A LOS QUE LE PASA EL USER, PQ SI NO LA LLAMADA NO TENDRIA MUCHO SENTIDO?
     //Spring ya convierte el String de la URL a un Long en este caso
-    public ResponseEntity<?> updateUser(@PathVariable("id") Long id, @RequestBody List<Map<String, Object>> updates){
+    public ResponseEntity<?> updateUser(@PathVariable("email") String email, @RequestBody List<Map<String, Object>> updates){
         try {
             //Recuperamos el user de la BD y vemos si existe o no
-            User user = userService.getUser(id);
+            User user = userService.getUser(email);
             if (user == null){
                 return ResponseEntity.status(404).body("El usuario no existe");
             }
@@ -85,7 +85,7 @@ public class UserController {
                 if (pathsNoModificables.contains(path)){
                     HashMap<String, String> errorResponse = new HashMap<>();
                     errorResponse.put("Error", "No se puede modificar el campo "+ path);
-                    ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
                 }
                 //Hacemos caso especial para el caso de que el user cambie la contraseña de la cuenta, la recibimos en texto plano y tenemos que encriptarla
                 else if(path.equals("/password")){
@@ -96,8 +96,10 @@ public class UserController {
                 }
             }
 
+            System.out.println("Datos antes de pasar a PatchUtils: " + user.getClass().getName());
             //Una vez comprobado los atributos que va a modificar el user, llamamos a patchUtils
             User userActualizado = patchUtils.patch(user, updates);
+            System.out.println("USER ACTUALIZADO: "+ userActualizado);
             //Guardamos el user actualizado en la BD, el que nos devuelve el service lo transformamos al DTO correspondiente para mostrar solo la info necesaria
             UserDTO.UserUpdateDTO updateUserDTO = new UserDTO.UserUpdateDTO(userService.updateUser(userActualizado));
             //Devolvemos ok y la info actualizada
@@ -112,11 +114,11 @@ public class UserController {
 
     }
 
-    //Endpoint para obtener la info de un user en base a su id
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getUser(@PathVariable("id") Long id){
+    //Endpoint para obtener la info de un user en base a su email
+    @GetMapping("/{email}")
+    public ResponseEntity<?> getUser(@PathVariable("email") String email){
         //llamamos a la función que recupera el user de la BD y comprobamos que exista
-        User user = userService.getUser(id);
+        User user = userService.getUser(email);
 
         if (user==null) return ResponseEntity.status(404).body("User not found");
         //En caso de que si que exista y hayamos recuperado su info, la pasamos al DTO correspondiente para no mostrar toda la info de la entidad en la respuesta
@@ -126,9 +128,9 @@ public class UserController {
 
     //TODO: REPASARLOS
     //Endpoint para recuperar los tips favoritos de un user
-    @GetMapping("/{id}/favorites")
-    public ResponseEntity<List<TipDTO>> getFavoritesTips(@PathVariable("id") Long id){
-        List<TipDTO> favoriteTips = userService.getFavoritesTips(id);
+    @GetMapping("/{email}/favorites")
+    public ResponseEntity<List<TipDTO>> getFavoritesTips(@PathVariable("email") String email){
+        List<TipDTO> favoriteTips = userService.getFavoritesTips(email);
         if (favoriteTips.isEmpty()) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(favoriteTips);
     }
@@ -143,13 +145,22 @@ public class UserController {
     }
 
     //Endpoint para añadir un tip a los favoritos de un user
-    @PostMapping("/{id}/favorites")
-    public ResponseEntity<TipDTO> addFavoriteTip(@PathVariable("id") Long id, @RequestBody Tip tip){
+    @PostMapping("/{id}/favorites/{idTip}")
+    public ResponseEntity<TipDTO> addFavoriteTip(@PathVariable("id") Long id, @PathVariable("idTip") Long idTip){
         //Llamamos a la función del service que se encarga de esta lógica
-        TipDTO tipDTO = userService.addFavoriteTip(id, tip);
+        TipDTO tipDTO = userService.addFavoriteTip(id, idTip);
         if (tipDTO == null) return ResponseEntity.notFound().build();
         return ResponseEntity.status(HttpStatus.CREATED).body(tipDTO); //Guardado correctamente en la lista de favoritos del user
     }
+
+
+
+
+
+
+
+
+    //TODO: MOVER AL LADO DEL CONTROLLER DE SOUNDS
 
     //TODO: ENDPOINT PARA OBTENER LOS SONIDOS QUE EL USER HA SUBIDO A LA APP, SOLO PUEDEN LLAMARLO LOS DUEÑOS DEL AUDIO
     //Endpoint para obtener los sonidos de los users 

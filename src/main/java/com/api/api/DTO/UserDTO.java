@@ -27,7 +27,7 @@ public class UserDTO {
      public static class UserUpdateDTO{
         private String email;
         private String profilePicture;
-        private String password;
+        private String password; //TODO: no se si es bueno devolver la contraseña en el DTO aunque sea un campo que se actualiza
 
 
         public UserUpdateDTO(User user) {

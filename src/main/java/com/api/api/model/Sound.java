@@ -1,6 +1,5 @@
 package com.api.api.model;
 
-import static org.mockito.Mockito.description;
 
 import java.util.Objects;
 
