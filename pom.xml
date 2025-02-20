@@ -81,6 +81,13 @@
         </dependency>
 
 
+        <!-- Dependencia para poder usar el web client y poder hablar con otras apis -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+
+
         <dependency>
     <groupId>com.github.fge</groupId>
     <artifactId>json-patch</artifactId>

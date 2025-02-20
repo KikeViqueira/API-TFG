@@ -64,6 +64,12 @@ public class User {
     @JsonIgnore
     private List<Sound> soundsUser; //Lista de sonidos que ha subido el user
 
+    //Relación uno a muchos entre user y chat
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Chat> chats; //Lista de chats que ha creado el user
+
+
     //DEFINIMOS EL MÉTODO EQUALS Y HASHCODE PARA QUE SE PUEDAN COMPARAR DOS OBJETOS DE LA CLASE SOUND
     @Override
     public boolean equals(Object o) {
