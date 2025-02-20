@@ -1,5 +1,6 @@
 package com.api.api.model;
 
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
 import jakarta.persistence.Column;
@@ -9,6 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -26,15 +28,16 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Quien ha mandado el mesnsaje no puede ser vacío")
+    //Se recibe el valor vacío y se asigna el valor en el service del mensaje
     @Column(nullable = false)
     private String sender;
 
     @NotBlank(message = "El contenido del mensaje no puede ser vacío")
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
+    
 
-    @NotBlank(message = "La hora en la que se ha mandado el mensaje no puede ser vacía")
+    //Lo mismo que en el caso de sender, pero en este caso ya lo añade hibernate
     @Column(nullable = false)
     private ZonedDateTime time; //Tiene en cuenta la zona horaria en la que se encuentra el user
 
@@ -42,4 +45,11 @@ public class Message {
     @ManyToOne
     @JoinColumn(name = "idChat", nullable = false)
     private Chat chat; //Chat al que pertenece el mensaje
+
+
+    //Función para cuando se cree un mensaje se añada la fecha actual en base a la zona horaria en la que esta el user
+    @PrePersist
+    public void onCreate(){
+        this.time = ZonedDateTime.now(ZoneId.systemDefault()); //Conseguimos la hora y fecha en la zona horaria en la que está el user
+    }
 }
