@@ -42,6 +42,11 @@ public class ChatController {
 
         try {
             String response = chatService.addMessageToChat(idUser, idChat, message);
+            //Tenemos que comprobar que el mensaje que se devuelve no sea null
+            if (response == null){
+                //Ponemos ok (estado 200) debido a que si falla la IA no es un error de nuestro server
+                return ResponseEntity.ok("Error al recibir un mensaje de la IA");
+            }
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario o chat no encontrado: "+ e.getMessage());

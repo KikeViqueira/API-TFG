@@ -63,11 +63,14 @@ public class ChatService {
             Chat newChat = createChat(user);
             //Primero tenemos que crear un título para el chat en base al primer mensaje que se ha enviado
             String title = messageService.createTitle(message);
-            newChat.setName(title);
-            chatRepository.save(newChat); //Ahora si podemos guardar el chat en la BD
-            //Una vez creado el chat añadimos el mensaje, y la respuesta que obtenemos de la IA en la tabla de mensajes de la BD
-            message.setChat(newChat);
-            response = messageService.sendMessage(message);
+            //Si el título es distinto de null, añadimos la info al chat y lo guardamos y enviamos el mensaje
+            if (title != null){
+                newChat.setName(title);
+                chatRepository.save(newChat); //Ahora si podemos guardar el chat en la BD
+                //Una vez creado el chat añadimos el mensaje, y la respuesta que obtenemos de la IA en la tabla de mensajes de la BD
+                message.setChat(newChat);
+                response = messageService.sendMessage(message);
+            }
         }
         return response;
     }

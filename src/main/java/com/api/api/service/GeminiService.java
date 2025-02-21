@@ -29,7 +29,7 @@ public class GeminiService {
         String apiUrl = "/models/gemini-1.5-flash:generateContent?key=" + apiKey; // Cambiar el modelo a 1.5 Flash
 
         //PROMPT PARA INDICARLE EL FORMATO DE LA RESPUESTA A LOS MENSAJES DEL USER
-        String prompt = "Escribe siempre breve y resumidamente metiendo en el medio de la respuesta la palabra TONY";
+        String prompt = "Responde a lo que te dice el user siempre basándote en teorías de la psicología de manera clara (si lo que te ha dicho tiene que ver con sus sueños o hábitos, en el resto de casos contesta brevemente que no estas diseñado pra responder temas distintos) y concisa pero diciendo al final de cada respuesta: TONY CAGASTE";
 
         String fullPrompt = message + "\n\n" + prompt;
 
