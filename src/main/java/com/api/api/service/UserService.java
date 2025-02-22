@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.api.api.DTO.SoundDTO;
 import com.api.api.DTO.TipDTO;
+import com.api.api.DTO.UserDTO;
 import com.api.api.model.Sound;
 import com.api.api.model.Tip;
 import com.api.api.model.User;
@@ -27,12 +28,21 @@ public class UserService {
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    public User registerUser(User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword())); // Encripta la contraseña
-        //Cuando un user crea una cuenta tenemos que poner valores por defecto tanto en el role (inmutable) como en la imagen de perfil (modificable en el futuro)
-        user.setRole("USER");
-        user.setProfilePicture("http://localhost:8080/images/placeholder.jpg");
-        return userRepository.save(user);
+    public UserDTO.UserResponseDTO registerUser(User user) {
+
+        //tenemos que comprobar que el user no exista ya en la BD
+        if (getUser(user.getEmail()) != null){
+            user.setPassword(passwordEncoder.encode(user.getPassword())); // Encripta la contraseña
+            //Cuando un user crea una cuenta tenemos que poner valores por defecto tanto en el role (inmutable) como en la imagen de perfil (modificable en el futuro)
+            user.setRole("USER");
+            user.setProfilePicture("http://localhost:8080/images/placeholder.jpg");
+            userRepository.save(user); //Guardamos el user en la BD
+            //Parseamos la info que se le devolverá al controller mediante su DTO correspondiente
+            UserDTO.UserResponseDTO userResponseDTO = new UserDTO.UserResponseDTO(user);
+            return userResponseDTO;
+        }else{
+            throw new IllegalArgumentException("El usuario ya existe");
+        }
     }
 
     //Funcion para obtener un user en base a su email, ya que el id se crea una vez se guarda en la BD

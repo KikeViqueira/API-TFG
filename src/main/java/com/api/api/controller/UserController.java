@@ -45,23 +45,19 @@ public class UserController {
     //Endpoint para crear el usuario en el registro y guardarlo en la BD
     @PostMapping
     public ResponseEntity<?> registerUser(@RequestBody @Valid User user) { //Valid para que se apliquen las restricciones de la clase User
-
-        //Comprobamos primero que en la BD no exista un user igual, teniendo en cuenta el email
-        if (userService.getUser(user.getEmail()) != null){
-            //En este caso el recurso ya existe por lo que devolvemos el código de conflicto
-            return ResponseEntity.status(409).body("El usuario ya existe");
-        }
-
-        //En caso de que no exista podemos llamar a la función de guardar el user en la , guardamos el resultado que es un User en el DTO correspondiente para enseñar solo la info necesaria y evitar mostrar info sensible en la API
-        User userRecuperado = userService.registerUser(user);
-        UserDTO.UserResponseDTO userRecuperadoDTO = new UserDTO.UserResponseDTO(userRecuperado);
-
-        //Creamos el mapa para enseñar la info que se ha creado en el endpoint si se ha ejecutado con éxito
-        Map<String, Object> mapResponse = Map.of(
-            "message", "User created successfully",
-            "Resource", userRecuperadoDTO
-        );
+        try {
+            //llamamos a la función que se encarga de registrar el user en la BD
+            UserDTO.UserResponseDTO userResponseDTO = userService.registerUser(user);
+            //Creamos el mapa para enseñar la info que se ha creado en el endpoint si se ha ejecutado con éxito
+            Map<String, Object> mapResponse = Map.of(
+                "message", "User created successfully",
+                "Resource", userResponseDTO
+            );
         return ResponseEntity.status(201).body(mapResponse);
+        } catch (IllegalArgumentException e) {
+
+            return ResponseEntity.status(409).body("El usuario ya existe");
+        }        
     }
 
     //Endpoint para la actualización de la información de un user
