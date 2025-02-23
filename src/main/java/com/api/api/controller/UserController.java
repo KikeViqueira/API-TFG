@@ -62,6 +62,7 @@ public class UserController {
 
     //Endpoint para la actualización de la información de un user
     @PatchMapping("/{email}") //TODO: NO SE SI TENEMOS QUE MIRAR SI LA DATA QUE SE VA ACTUALIZAR TIENE VALORES DISTINTOS A LOS QUE LE PASA EL USER, PQ SI NO LA LLAMADA NO TENDRIA MUCHO SENTIDO?
+    //TODO: NO SE SI ES BUENA IDEA DEJAR CAMBIAR EL CORREO ELECTRONICO DE UN USUARIO
     //Spring ya convierte el String de la URL a un Long en este caso
     public ResponseEntity<?> updateUser(@PathVariable("email") String email, @RequestBody List<Map<String, Object>> updates){
         try {
@@ -91,23 +92,17 @@ public class UserController {
                     update.put("value", encodedPassword); //Actualizamos el valor de la contraseña que vamos a aplicar en el patch
                 }
             }
-
-            System.out.println("Datos antes de pasar a PatchUtils: " + user.getClass().getName());
             //Una vez comprobado los atributos que va a modificar el user, llamamos a patchUtils
             User userActualizado = patchUtils.patch(user, updates);
-            System.out.println("USER ACTUALIZADO: "+ userActualizado);
             //Guardamos el user actualizado en la BD, el que nos devuelve el service lo transformamos al DTO correspondiente para mostrar solo la info necesaria
             UserDTO.UserUpdateDTO updateUserDTO = new UserDTO.UserUpdateDTO(userService.updateUser(userActualizado));
             //Devolvemos ok y la info actualizada
             return ResponseEntity.ok(updateUserDTO);
-            
         } catch (JsonPatchException e) {
             HashMap<String, String> errorResponse = new HashMap<>();
             errorResponse.put("error", "Error al aplicar el patch "+ e.getMessage());
             return ResponseEntity.status(400).body(errorResponse);
         }
-    
-
     }
 
     //Endpoint para obtener la info de un user en base a su email
@@ -125,26 +120,26 @@ public class UserController {
     //TODO: REPASARLOS
     //Endpoint para recuperar los tips favoritos de un user
     @GetMapping("/{email}/favorites")
-    public ResponseEntity<List<TipDTO>> getFavoritesTips(@PathVariable("email") String email){
-        List<TipDTO> favoriteTips = userService.getFavoritesTips(email);
+    public ResponseEntity<List<TipDTO.TipFavDTO>> getFavoritesTips(@PathVariable("email") String email){
+        List<TipDTO.TipFavDTO> favoriteTips = userService.getFavoritesTips(email);
         if (favoriteTips.isEmpty()) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(favoriteTips);
     }
 
     //Endpoint para eliminar un tip de los favoritos de un user
     @DeleteMapping("/{id}/favorites/{idTip}")
-    public ResponseEntity<TipDTO> deleteFavoriteTip(@PathVariable("id") Long id, @PathVariable("idTip") Long idTip){
+    public ResponseEntity<TipDTO.TipFavDTO> deleteFavoriteTip(@PathVariable("id") Long id, @PathVariable("idTip") Long idTip){
         //llamamos a la función del service que se encarga de esta lógica
-        TipDTO tipDTO = userService.deleteFavoriteTip(id, idTip);
+        TipDTO.TipFavDTO tipDTO = userService.deleteFavoriteTip(id, idTip);
         if (tipDTO == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(tipDTO);
     }
 
     //Endpoint para añadir un tip a los favoritos de un user
     @PostMapping("/{id}/favorites/{idTip}")
-    public ResponseEntity<TipDTO> addFavoriteTip(@PathVariable("id") Long id, @PathVariable("idTip") Long idTip){
+    public ResponseEntity<TipDTO.TipFavDTO> addFavoriteTip(@PathVariable("id") Long id, @PathVariable("idTip") Long idTip){
         //Llamamos a la función del service que se encarga de esta lógica
-        TipDTO tipDTO = userService.addFavoriteTip(id, idTip);
+        TipDTO.TipFavDTO tipDTO = userService.addFavoriteTip(id, idTip);
         if (tipDTO == null) return ResponseEntity.notFound().build();
         return ResponseEntity.status(HttpStatus.CREATED).body(tipDTO); //Guardado correctamente en la lista de favoritos del user
     }

@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import com.api.api.DTO.TipDTO;
 import com.api.api.DTO.UserDTO;
 import com.api.api.model.Tip;
 import com.api.api.model.TipDetail;
@@ -20,6 +21,7 @@ import com.api.api.service.TipService;
 import com.api.api.service.UserService;
 import com.github.fge.jsonpatch.JsonPatchException;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.val;
 
@@ -37,45 +39,48 @@ public class TipController {
 
     //Endpoint para recuperar la lista de tips para la página tips de la app
     @GetMapping
-    public ResponseEntity<List<Tip>> getTips(){
-        //Devolvemos la lista de tips en caso de que existan, si no devolvemos Not Found
-        List<Tip> tips = tipService.getTips();
-        if (tips.isEmpty()) return ResponseEntity.noContent().build();
-        return ResponseEntity.ok(tips);
+    public ResponseEntity<List<TipDTO.TipResponseDTO>> getTips(){
+        try {
+            //llamamos a la función que se encarga de recuperar los tips de la BD
+            List<TipDTO.TipResponseDTO> tips = tipService.getTips();
+            return ResponseEntity.ok(tips);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.noContent().build();
+        }
     }
     
     //Endpoint para crear un tip en la BD, //TODO: REHACER ESTE ENDPOINT PARA QUE LA IA DEVUELVA EL CUERPO AL SERVICE Y ESTE LO GUARDE EN LA BD
     @PostMapping
     public ResponseEntity<?> createTip(@RequestBody @Valid Tip tip){
-        //Tenemos que comprobar si existe en base al titulo ya que el tip que viene en el request no tiene ID
-        //Por lo que nos dará null al hacer el get
-        Tip tipRecuperado = tipService.geTipByTitle(tip.getTitle());
-        if (tipRecuperado != null){
+        try {
+            //llamamos a la función que se encarga de crear un tip y guardarlo en la BD
+            TipDTO.TipResponseDTO tipCreado = tipService.createTip(tip);
+            return ResponseEntity.status(HttpStatus.CREATED).body(tipCreado);
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("El tip que se está intentando crear ya existe.");
-        }else{
-        //llamamos a la función que se encarga de guardar el tip en la BD, las comprobaciones de los campos ya los hace la anotación @Valid
-        Tip tipCreado = tipService.createTip(tip);
-        return ResponseEntity.status(HttpStatus.CREATED).body(tipCreado);
         }
     }
 
     //Endpoint para eliminar un tip de la sección de tips de la app
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteTip(@PathVariable Long id){
-        //Comprobamos que el tip que se está intentando eliminar está en la BD
-        Tip tipRecuperado = tipService.geTipByID(id);
-        if (tipRecuperado == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("El tip que se está intentando eliminar no existe.");
-        //En caso de que exista llamamos a la función para eliminarlo de la BD
-        return ResponseEntity.noContent().build();
+        try {
+            //llamamos a la función que se encarga de eliminar el tip de la BD
+            tipService.deleteTip(id);
+            return ResponseEntity.noContent().build();
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("El tip que se está intentando eliminar no existe.");
+        }
     }
 
-
-    //Endpoint para recuperar la info detallada del tip
+    //Endpoint para recuperar la info detallada del tip en el que el user pincha en la app
     @GetMapping("/{id}")
     public ResponseEntity<?> getDetailTip(@PathVariable Long id){
-        //llamamos a la función del service y en base a los que nos devuelva devolvemos un status u otro
-        TipDetail tipDetail = tipService.getDetailsTip(id);
-        if (tipDetail == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("El tip que se está intentando recuperar no tiene detalles.");
-        return ResponseEntity.ok(tipDetail);
+        try {
+            //llamamos a la función del service y en base a los que nos devuelva devolvemos un status u otro
+            return ResponseEntity.ok(tipService.getDetailsTip(id));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("El tip que se está intentando recuperar no tiene detalles.");
+        }
     }
 }

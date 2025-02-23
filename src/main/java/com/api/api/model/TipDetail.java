@@ -2,6 +2,8 @@ package com.api.api.model;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -43,5 +45,6 @@ public class TipDetail {
     //DEFINIMOS LAS RELACIONES QUE TIENE LA ENTIDAD TIPDETAIL CON EL RESTO DE ENTIDADES DE NUESTRA BD, en este caso solo con Tip "padre"
     @OneToOne
     @JoinColumn(name = "tip_id") //Clave foránea que conecta con la entidad Tip
+    @JsonBackReference
     private Tip tip;
 }

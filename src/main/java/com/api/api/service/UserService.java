@@ -17,6 +17,8 @@ import com.api.api.repository.SoundRepository;
 import com.api.api.repository.TipRepository;
 import com.api.api.repository.UserRepository;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class UserService {
 
@@ -31,7 +33,7 @@ public class UserService {
     public UserDTO.UserResponseDTO registerUser(User user) {
 
         //tenemos que comprobar que el user no exista ya en la BD
-        if (getUser(user.getEmail()) != null){
+        if (getUser(user.getEmail()) == null){
             user.setPassword(passwordEncoder.encode(user.getPassword())); // Encripta la contraseña
             //Cuando un user crea una cuenta tenemos que poner valores por defecto tanto en el role (inmutable) como en la imagen de perfil (modificable en el futuro)
             user.setRole("USER");
@@ -55,20 +57,22 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    @Transactional
     //Recuperamos los tips guardados como favoritos por un user
-    public List<TipDTO> getFavoritesTips(String email){
-        List<TipDTO> tips = new ArrayList<>();
+    public List<TipDTO.TipFavDTO> getFavoritesTips(String email){
+        List<TipDTO.TipFavDTO> tips = new ArrayList<>();
         //Comprobamos si el user existe
         User user = userRepository.findByEmail(email).orElse(null);
         if (user != null && !user.getFavoriteTips().isEmpty()) {
             //Pasamos cada uno de los tips a su DTO correspondiente, ya que en la sección de favoritos solo queremos mostrar el título
-            for (Tip tip: user.getFavoriteTips()) tips.add(new TipDTO(tip));
+            for (Tip tip: user.getFavoriteTips()) tips.add(new TipDTO.TipFavDTO(tip));
         }
         return tips;
     }
 
+    @Transactional
     //Función para eliminar un tip de la lista de favoritos del user
-    public TipDTO deleteFavoriteTip(long userId, long idTip){
+    public TipDTO.TipFavDTO deleteFavoriteTip(long userId, long idTip){
         //Comprobamos si el user existe y el tip tambien
         User user = userRepository.findById(userId).orElse(null);
         Tip tip = tipRepository.findById(idTip).orElse(null);
@@ -76,14 +80,15 @@ public class UserService {
             //Eliminamos el tip en caso de que el user lo tenga en favs
             user.getFavoriteTips().remove(tip);
             userRepository.save(user);
-            TipDTO tipDTO = new TipDTO(tip);
-            return tipDTO;
+            TipDTO.TipFavDTO tipFavDTO = new TipDTO.TipFavDTO(tip);
+            return tipFavDTO;
         }
         return null;
     }
 
+    @Transactional //TODO: TENEMOS QUE MARCAR EL METODO COMO TRANSACTIONAL CUANDO ACCEDE A UN ATRIBUTO QUE REPRESENTA UNA RELACION
     //Función para añadir un tip a la lista de favoritos del user
-    public TipDTO addFavoriteTip(Long idUser, Long idTip){
+    public TipDTO.TipFavDTO addFavoriteTip(Long idUser, Long idTip){
         //Comprobamos que el user existe y el tip existen en la BD
         User user = userRepository.findById(idUser).orElse(null);
         Tip tip = tipRepository.findById(idTip).orElse(null);
@@ -93,8 +98,9 @@ public class UserService {
                 user.getFavoriteTips().add(tip);
                 userRepository.save(user);
                 //No hace falta guardar nada en la entidad tip ya que la encargada de la relación es la de User, asique Hibernate ya se ocupa solo de mantener la relación
-                return new TipDTO(tip);
+                return new TipDTO.TipFavDTO(tip);
             }
+            //TODO: DEVOLVER UNA EXCEPCION EN CASO DE QUE EL TIP YA ESTE EN LA LISTA DE FAVORITOS
         }
         return null;
     }

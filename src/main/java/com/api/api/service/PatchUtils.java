@@ -29,7 +29,6 @@ public class PatchUtils {
             JsonPatch operations = mapper.convertValue(updates, JsonPatch.class);
             /*El objeto (data) se convierte en un JsonNode (una representación genérica de JSON). Esto facilita aplicar las operaciones
             de parche directamente sobre un objeto JSON sin modificar el objeto original.*/
-            System.out.println("POLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLASSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS2");
 
             JsonNode json = mapper.convertValue(data, JsonNode.class);
 

@@ -5,6 +5,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -56,6 +57,7 @@ public class User {
         inverseJoinColumns = @JoinColumn(name="tip_id") //Lo mismo que la anterior pero diciendo el nombre de la columna que hace referencia a la primaria de la tabla con la que se relaciona user (tip)
     )
     @JsonIgnore // TODO: Nunca renderizamos esta info en formato json para evitar la excepcion de lazily initialized
+    @JsonManagedReference
     private List<Tip> favoriteTips; //Lista de tips que el user ha marcado como favoritos
 
     //Relación uno a muchos entre user y sonidos (Esta es especial solo para los sonidos que ha subido el user)
