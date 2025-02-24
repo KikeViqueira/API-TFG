@@ -18,8 +18,9 @@ public class SoundService {
 
     private UserRepository userRepository;
 
-    public SoundService(SoundRepository soundRepository){
+    public SoundService(SoundRepository soundRepository, UserRepository userRepository){
         this.soundRepository = soundRepository;
+        this.userRepository = userRepository;
     }
 
     //Función para recuperra todos los sonidos estáticos de la BD
@@ -54,16 +55,18 @@ public class SoundService {
             boolean exists = soundRepository.existsByOwnerIdAndFileUrl(id, sound.getFileUrl());
             if (!exists){
                 //Si el sonido no existe en la BD entonces lo creamos
+                sound.setDefault(false);
                 sound.setOwner(user);
                 soundRepository.save(sound);
                 return new SoundDTO(sound);
             }
+            //TODO: LANZAR EXCEPCION RELACION YA EXISTENTE
         }
+        //TODO: LANZAR EXCEPCION DE ENTITIY NO ENCONTRADA
         return null;
-       
     }
 
-    //Función para eliminar un sonido de lo sque ha subido el user a la app
+    //Función para eliminar un sonido de los que ha subido el user a la app
     public SoundDTO deleteSoundUser(Long idUser, Long idSound){
         //Tenemos que comprobar que el sonido exista en la bd
         Sound sound = soundRepository.findById(idSound).orElse(null);

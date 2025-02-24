@@ -66,8 +66,8 @@ public class TipController {
     public ResponseEntity<?> deleteTip(@PathVariable Long id){
         try {
             //llamamos a la función que se encarga de eliminar el tip de la BD
-            tipService.deleteTip(id);
-            return ResponseEntity.noContent().build();
+            TipDTO.TipResponseDTO tipEliminado = tipService.deleteTip(id);
+            return ResponseEntity.ok(tipEliminado);
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("El tip que se está intentando eliminar no existe.");
         }

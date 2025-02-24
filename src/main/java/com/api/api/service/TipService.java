@@ -59,10 +59,13 @@ public class TipService {
     }
 
     //Función para eliminar un tip de la BD
-    public void deleteTip(Long id){
+    public TipDTO.TipResponseDTO deleteTip(Long id){
         Tip tipRecuperado = geTipByID(id);
         if (tipRecuperado == null) throw new EntityNotFoundException("El tip que se está intentando eliminar no existe.");
-        else tipRepository.deleteById(id);
+        else  {
+            tipRepository.deleteById(id);
+            return new TipDTO.TipResponseDTO(tipRecuperado);
+        }
     }
 
     //Función para recuperar la info detallada de un tip

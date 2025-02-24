@@ -3,6 +3,7 @@ package com.api.api.model;
 
 import java.util.Objects;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -12,6 +13,8 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,10 +35,16 @@ public class Sound {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "El nombre del sonido no puede ser vacío")
+    @Size(min = 2, message = "El nombre del sonido debe tener al menos 2 caracteres")
+    @Column(nullable = false)
     private String name;
 
+    @NotBlank(message = "La URL del archivo no puede ser vacía")
+    @Column(nullable = false)
     private String fileUrl;
 
+    @Column(nullable = false)
     private boolean isDefault;
 
     /*Definimos las relaciones que tiene la entidad con user:
@@ -43,7 +52,7 @@ public class Sound {
     */
 
     @ManyToOne
-    @JoinColumn(name = "idUser", nullable = false)
+    @JoinColumn(name = "idUser", nullable = true) //Indicamos que el valor de la columna puede ser null, este caso es para cuando no existe relación con un user
     private User owner; //Dueño del sonido
     //Tenemos que definir los endpoints de este lado de la relación ya que es la que tiene el join
 
