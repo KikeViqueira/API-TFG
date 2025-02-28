@@ -7,16 +7,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.api.api.DTO.ChatDTO;
 import com.api.api.DTO.SoundDTO;
 import com.api.api.DTO.TipDTO;
 import com.api.api.DTO.UserDTO;
+import com.api.api.exceptions.NoContentException;
+import com.api.api.model.Chat;
 import com.api.api.model.Sound;
 import com.api.api.model.Tip;
 import com.api.api.model.User;
+import com.api.api.repository.ChatRepository;
 import com.api.api.repository.SoundRepository;
 import com.api.api.repository.TipRepository;
 import com.api.api.repository.UserRepository;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
 @Service
@@ -27,6 +32,9 @@ public class UserService {
 
     @Autowired
     private TipRepository tipRepository;
+
+    @Autowired
+    private ChatRepository chatRepository;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -49,7 +57,9 @@ public class UserService {
 
     //Funcion para obtener un user en base a su email, ya que el id se crea una vez se guarda en la BD
     public User getUser(String email){
-        return userRepository.findByEmail(email).orElse(null);
+        User userRecuperado = userRepository.findByEmail(email).orElse(null);
+        if (userRecuperado != null) return userRecuperado;
+        else throw new EntityNotFoundException("No se ha encontrado al usuario con email: "+ email);
     }
 
     //Función para actualizar la info de un user en la BD
@@ -63,11 +73,13 @@ public class UserService {
         List<TipDTO.TipFavDTO> tips = new ArrayList<>();
         //Comprobamos si el user existe
         User user = userRepository.findByEmail(email).orElse(null);
-        if (user != null && !user.getFavoriteTips().isEmpty()) {
-            //Pasamos cada uno de los tips a su DTO correspondiente, ya que en la sección de favoritos solo queremos mostrar el título
-            for (Tip tip: user.getFavoriteTips()) tips.add(new TipDTO.TipFavDTO(tip));
-        }
-        return tips;
+        if (user != null) {
+            if (!user.getFavoriteTips().isEmpty()){
+                //Pasamos cada uno de los tips a su DTO correspondiente, ya que en la sección de favoritos solo queremos mostrar el título
+                for (Tip tip: user.getFavoriteTips()) tips.add(new TipDTO.TipFavDTO(tip));
+                return tips;
+            } else throw new NoContentException("EL usuario no tiene tips favoritos");
+        } else throw new EntityNotFoundException("No hay tips favoritos para el usuario con email: "+email);
     }
 
     @Transactional
@@ -76,14 +88,16 @@ public class UserService {
         //Comprobamos si el user existe y el tip tambien
         User user = userRepository.findById(userId).orElse(null);
         Tip tip = tipRepository.findById(idTip).orElse(null);
-        if (user != null && tip != null && user.getFavoriteTips().contains(tip)){ //Comprobamos si el user tiene tiene el tip en la lista de favoritos
-            //Eliminamos el tip en caso de que el user lo tenga en favs
-            user.getFavoriteTips().remove(tip);
-            userRepository.save(user);
-            TipDTO.TipFavDTO tipFavDTO = new TipDTO.TipFavDTO(tip);
-            return tipFavDTO;
-        }
-        return null;
+        if (user != null){ //Comprobamos si el user tiene tiene el tip en la lista de favoritos
+            if (tip != null && user.getFavoriteTips().contains(tip)){
+                //Eliminamos el tip en caso de que el user lo tenga en favs
+                user.getFavoriteTips().remove(tip);
+                userRepository.save(user);
+                TipDTO.TipFavDTO tipFavDTO = new TipDTO.TipFavDTO(tip);
+                return tipFavDTO;
+            }else throw new EntityNotFoundException("No se ha encontrado el tip con id: "+idTip+" en la lista de favoritos del user");
+            
+        }else throw new EntityNotFoundException("No se ha encontrado al usuario con id: "+ userId);
     }
 
     @Transactional //TODO: TENEMOS QUE MARCAR EL METODO COMO TRANSACTIONAL CUANDO ACCEDE A UN ATRIBUTO QUE REPRESENTA UNA RELACION
@@ -92,16 +106,64 @@ public class UserService {
         //Comprobamos que el user existe y el tip existen en la BD
         User user = userRepository.findById(idUser).orElse(null);
         Tip tip = tipRepository.findById(idTip).orElse(null);
-        if (user != null && tip != null){
+        if (user != null){
             //Tenemos que comprobar si el tip no esta ya en la lista de favoritos
-            if (!user.getFavoriteTips().contains(tip)){
+            if (tip != null && !user.getFavoriteTips().contains(tip)){
                 user.getFavoriteTips().add(tip);
                 userRepository.save(user);
                 //No hace falta guardar nada en la entidad tip ya que la encargada de la relación es la de User, asique Hibernate ya se ocupa solo de mantener la relación
                 return new TipDTO.TipFavDTO(tip);
-            }
-            //TODO: DEVOLVER UNA EXCEPCION EN CASO DE QUE EL TIP YA ESTE EN LA LISTA DE FAVORITOS
-        }
-        return null;
+            }else throw new IllegalArgumentException("El tip ya está en la lista de favoritos del user");
+        } else throw new EntityNotFoundException("No se ha encontrado al usuario con id: "+idUser);
     }
+
+
+
+    //TODO: FUNCIONES QUE SE USAN POR LOS ENDPOINTS RELACIONADOS CON LOS CHATS DEL USER
+    //Función para recuperar el historial de chats de un usuario
+    @Transactional //Para que no de error al hacer la consulta
+    public List<ChatDTO> getChats(Long idUser){
+        //Comprobamos si el user existe en la BD
+        User user = userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        if (user.getChats().isEmpty()) throw new NoContentException("El usuario no tiene chats");
+        else{
+            List<ChatDTO> chatsRecuperados = new ArrayList<>();
+            for (Chat chat : user.getChats()) chatsRecuperados.add(new ChatDTO(chat));
+            return chatsRecuperados;
+        }
+    }
+
+    //Función para eliminar uno o varios chats de un user
+    @Transactional
+    public List<ChatDTO> deleteChats(Long idUser, List<Long> idChats){
+        //Comprobamos si el user existe
+        User user = userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        //Recuperamos los chats que si que existen en la BD y comparamos longitudes para ver si estan todos o no
+        List<Chat> chats = chatRepository.findAllById(idChats);
+        if (chats.size() == idChats.size()){
+            /*
+            * LA LONGITUD DE AMBAS LISTAS SON IGUALES POR LO QUE PODEMOS ELIMINAR TODOS LOS CHATS*/
+            user.getChats().removeAll(chats);
+            userRepository.save(user);
+            chatRepository.deleteAll(chats);
+            List<ChatDTO> chatsRecuperados = new ArrayList<>();
+            for (Chat chat : chats) chatsRecuperados.add(new ChatDTO(chat));
+            return chatsRecuperados;
+        } else throw new EntityNotFoundException("Uno o más chats no se han encontrado.");
+    }
+
+    //Función para recuperar la conversación de un chat
+    @Transactional
+    public Chat getChat(Long idUser, Long idChat){
+        //Comprobamos si el user existe
+        User user = userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        //Comprobamos si el chat existe
+        Chat chat = chatRepository.findById(idChat).orElseThrow(() -> new EntityNotFoundException("Chat no encontrado"));
+        //Comprobamos si el user tiene acceso al chat
+        if (chat.getUser().equals(user)){
+            return chat;
+        } else throw new IllegalArgumentException("El usuario no tiene acceso a este chat");
+    }
+
+
 }

@@ -35,7 +35,6 @@ public class SoundController {
     public ResponseEntity<List<SoundDTO>> getAllStaticsSounds(){
         //llamamos a la función del servicio que se encarga de devolvernos la lista de ellos
         List<SoundDTO> staticSounds = soundService.getAllStaticSounds();
-        if (staticSounds.isEmpty()) return ResponseEntity.noContent().build();
         return ResponseEntity.ok(staticSounds);
     }
 
@@ -45,7 +44,6 @@ public class SoundController {
     @GetMapping("/{idUser}")
     public ResponseEntity<List<SoundDTO>> getUserSounds(@PathVariable("idUser") Long idUser ){
         List<SoundDTO> userSounds = soundService.getUserSounds(idUser);
-        if(userSounds.isEmpty()) return ResponseEntity.noContent().build();
         return ResponseEntity.ok(userSounds);
     }
 
@@ -54,7 +52,6 @@ public class SoundController {
     public ResponseEntity<SoundDTO> createSound(@PathVariable("idUser") Long idUser, @RequestBody @Valid Sound sound){
         //llamamos a la función encargada de crear el sonido
         SoundDTO createdSound = soundService.createSound(idUser, sound);
-        if(createdSound == null) return ResponseEntity.noContent().build();
         return ResponseEntity.ok(createdSound);
     }
 
@@ -63,7 +60,6 @@ public class SoundController {
     public ResponseEntity<SoundDTO> deleteSoundUser(@PathVariable("idUser") Long idUser, @PathVariable("idSound") Long idSound){
         //llamamos a la función que se encarga de esta lógica
         SoundDTO soundDTO = soundService.deleteSoundUser(idUser, idSound);
-        if (soundDTO == null) return ResponseEntity.notFound().build(); //No se ha encontrado el sonido o el user
         return ResponseEntity.ok(soundDTO);
     }
 }

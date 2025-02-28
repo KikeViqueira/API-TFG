@@ -3,13 +3,19 @@ package com.api.api.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.management.relation.RelationNotFoundException;
+
 import org.springframework.stereotype.Service;
 
 import com.api.api.DTO.SoundDTO;
+import com.api.api.exceptions.NoContentException;
+import com.api.api.exceptions.RelationshipAlreadyExistsException;
 import com.api.api.model.Sound;
 import com.api.api.model.User;
 import com.api.api.repository.SoundRepository;
 import com.api.api.repository.UserRepository;
+
+import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class SoundService {
@@ -27,9 +33,11 @@ public class SoundService {
     public List<SoundDTO> getAllStaticSounds(){
         List<SoundDTO> soundsDto = new ArrayList<>();
         List<Sound> sounds = soundRepository.findByIsDefaultTrue();
-        //Hacemos la conversión de el objeto recuperado a su correspondiente DTO para devolver solo los campos necesarios
-        for (Sound sound : sounds) soundsDto.add(new SoundDTO(sound));
-        return soundsDto;
+        if (!sounds.isEmpty()){
+            //Hacemos la conversión de el objeto recuperado a su correspondiente DTO para devolver solo los campos necesarios
+            for (Sound sound : sounds) soundsDto.add(new SoundDTO(sound));
+            return soundsDto;
+        } else throw new NoContentException("No hay sonidos estáticos en la BD");
     }
 
 
@@ -42,8 +50,7 @@ public class SoundService {
         if (!sounds.isEmpty()){
             for (Sound sound : sounds) soundsDTOs.add(new SoundDTO(sound));
             return soundsDTOs;
-        }
-        return soundsDTOs;
+        } else throw new NoContentException("No hay sonidos subidos por el usuario con id: " + idUser);
     }
 
     //Función para que el user pueda crear un sonido en la app
@@ -59,11 +66,8 @@ public class SoundService {
                 sound.setOwner(user);
                 soundRepository.save(sound);
                 return new SoundDTO(sound);
-            }
-            //TODO: LANZAR EXCEPCION RELACION YA EXISTENTE
-        }
-        //TODO: LANZAR EXCEPCION DE ENTITIY NO ENCONTRADA
-        return null;
+            } else throw new RelationshipAlreadyExistsException("El sonido ya ha sido subido por el usuario");
+        }else throw new EntityNotFoundException("El usuario con id: " + id + " no existe");
     }
 
     //Función para eliminar un sonido de los que ha subido el user a la app
@@ -77,8 +81,7 @@ public class SoundService {
             if (exits){
                 soundRepository.delete(sound);
                 return new SoundDTO(sound);
-            }
-        }
-        return null;
+            } else throw new EntityNotFoundException("La relación entre el usuario y el sonido no existe");
+        } else throw new EntityNotFoundException("El sonido con id: " + idSound + " no existe");
     }
 }

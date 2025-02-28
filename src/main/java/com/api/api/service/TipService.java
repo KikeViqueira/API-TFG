@@ -47,7 +47,7 @@ public class TipService {
         return tipRepository.findByTitle(title).orElse(null);
     }
 
-    //Función para guardar un tip en la BD, //TODO: Los tips que se añaden en la bd a través de este endpoint tenemos que poner que son creados por el user que está logeado
+    //Función para guardar un tip en la BD
     public TipDTO.TipResponseDTO createTip(Tip tip){
         //primero tenemos que comprobar que el tip que se está intentando crear no existe ya en la BD
         if (geTipByTitle(tip.getTitle()) != null){

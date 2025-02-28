@@ -2,16 +2,19 @@ package com.api.api.controller;
 
 import org.springframework.security.access.AccessDeniedException;
 
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.api.api.DTO.ChatDTO;
 import com.api.api.model.Chat;
 import com.api.api.model.Message;
 import com.api.api.service.ChatService;
@@ -36,22 +39,12 @@ public class ChatController {
     */
     @PostMapping("/{idUser}/{idChat}/messages")
     public ResponseEntity<String> addMessageToChat(@PathVariable("idUser") Long idUser,@PathVariable("idChat") String idChatStr, @RequestBody @Valid Message message){
-
         //Si el idChat es null, creamos un Long con valor null, si no lo parseamos a Long
         Long idChat = idChatStr.equals("null") ? null : Long.parseLong(idChatStr);
-
-        try {
-            String response = chatService.addMessageToChat(idUser, idChat, message);
-            //Tenemos que comprobar que el mensaje que se devuelve no sea null
-            if (response == null){
-                //Ponemos ok (estado 200) debido a que si falla la IA no es un error de nuestro server
-                return ResponseEntity.ok("Error al recibir un mensaje de la IA");
-            }
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario o chat no encontrado: "+ e.getMessage());
-        }catch (AccessDeniedException e){
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("El usuario no tiene acceso al chat: "+ e.getMessage());
-        }
+        String response = chatService.addMessageToChat(idUser, idChat, message);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+
+    
 }

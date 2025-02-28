@@ -1,11 +1,16 @@
 package com.api.api.service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import com.api.api.DTO.ChatDTO;
+import com.api.api.exceptions.AIResponseGenerationException;
+import com.api.api.exceptions.NoContentException;
 import com.api.api.model.Chat;
 import com.api.api.model.Message;
 import com.api.api.model.User;
@@ -14,6 +19,7 @@ import com.api.api.repository.MessageRepository;
 import com.api.api.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 
 @Service
 public class ChatService {
@@ -53,11 +59,10 @@ public class ChatService {
                 message.setChat(chat); //Añadimos el chat al mensaje
                 //Si existe la relación añadimos el mensaje al chat llamando a MessageService
                 response = messageService.sendMessage(message);
-            }
-            else{
-                 //Si no existe la relación mandamos AccessDeniedException al controlador
-                throw new AccessDeniedException("El usuario no tiene acceso a este chat");
-            }
+                if (response != null) return response;
+                else throw new AIResponseGenerationException("No se ha podido enviar el mensaje");
+                
+            } else throw new AccessDeniedException("El usuario no tiene acceso a este chat");
         }
         else{
             Chat newChat = createChat(user);
@@ -70,10 +75,12 @@ public class ChatService {
                 //Una vez creado el chat añadimos el mensaje, y la respuesta que obtenemos de la IA en la tabla de mensajes de la BD
                 message.setChat(newChat);
                 response = messageService.sendMessage(message);
-            }
+                return response;
+            } else throw new AIResponseGenerationException("No se ha podido crear un título para el chat");
         }
-        return response;
     }
 
+
+    
 
 }

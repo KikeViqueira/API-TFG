@@ -15,9 +15,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import com.api.api.DTO.ChatDTO;
 import com.api.api.DTO.SoundDTO;
 import com.api.api.DTO.TipDTO;
 import com.api.api.DTO.UserDTO;
+import com.api.api.model.Chat;
 import com.api.api.model.Sound;
 import com.api.api.model.Tip;
 import com.api.api.model.User;
@@ -45,19 +47,14 @@ public class UserController {
     //Endpoint para crear el usuario en el registro y guardarlo en la BD
     @PostMapping
     public ResponseEntity<?> registerUser(@RequestBody @Valid User user) { //Valid para que se apliquen las restricciones de la clase User
-        try {
-            //llamamos a la función que se encarga de registrar el user en la BD
-            UserDTO.UserResponseDTO userResponseDTO = userService.registerUser(user);
-            //Creamos el mapa para enseñar la info que se ha creado en el endpoint si se ha ejecutado con éxito
-            Map<String, Object> mapResponse = Map.of(
-                "message", "User created successfully",
-                "Resource", userResponseDTO
-            );
+        //llamamos a la función que se encarga de registrar el user en la BD
+        UserDTO.UserResponseDTO userResponseDTO = userService.registerUser(user);
+        //Creamos el mapa para enseñar la info que se ha creado en el endpoint si se ha ejecutado con éxito
+        Map<String, Object> mapResponse = Map.of(
+            "message", "User created successfully",
+            "Resource", userResponseDTO
+        );
         return ResponseEntity.status(201).body(mapResponse);
-        } catch (IllegalArgumentException e) {
-
-            return ResponseEntity.status(409).body("El usuario ya existe");
-        }        
     }
 
     //Endpoint para la actualización de la información de un user
@@ -68,9 +65,6 @@ public class UserController {
         try {
             //Recuperamos el user de la BD y vemos si existe o no
             User user = userService.getUser(email);
-            if (user == null){
-                return ResponseEntity.status(404).body("El usuario no existe");
-            }
 
             //En caso de que el user exista comprobamos que en la lista de operaciones no haya ningun path de un atributo no modificable
             //Primero hacemos una lista de los paths que no se pueden modificar
@@ -107,12 +101,9 @@ public class UserController {
 
     //Endpoint para obtener la info de un user en base a su email
     @GetMapping("/{email}")
-    public ResponseEntity<?> getUser(@PathVariable("email") String email){
+    public ResponseEntity<UserDTO.UserResponseDTO> getUser(@PathVariable("email") String email){
         //llamamos a la función que recupera el user de la BD y comprobamos que exista
         User user = userService.getUser(email);
-
-        if (user==null) return ResponseEntity.status(404).body("User not found");
-        //En caso de que si que exista y hayamos recuperado su info, la pasamos al DTO correspondiente para no mostrar toda la info de la entidad en la respuesta
         UserDTO.UserResponseDTO userDTO = new UserDTO.UserResponseDTO(user);
         return ResponseEntity.ok(userDTO);
     }
@@ -122,7 +113,6 @@ public class UserController {
     @GetMapping("/{email}/favorites")
     public ResponseEntity<List<TipDTO.TipFavDTO>> getFavoritesTips(@PathVariable("email") String email){
         List<TipDTO.TipFavDTO> favoriteTips = userService.getFavoritesTips(email);
-        if (favoriteTips.isEmpty()) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(favoriteTips);
     }
 
@@ -131,7 +121,6 @@ public class UserController {
     public ResponseEntity<TipDTO.TipFavDTO> deleteFavoriteTip(@PathVariable("id") Long id, @PathVariable("idTip") Long idTip){
         //llamamos a la función del service que se encarga de esta lógica
         TipDTO.TipFavDTO tipDTO = userService.deleteFavoriteTip(id, idTip);
-        if (tipDTO == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(tipDTO);
     }
 
@@ -140,9 +129,32 @@ public class UserController {
     public ResponseEntity<TipDTO.TipFavDTO> addFavoriteTip(@PathVariable("id") Long id, @PathVariable("idTip") Long idTip){
         //Llamamos a la función del service que se encarga de esta lógica
         TipDTO.TipFavDTO tipDTO = userService.addFavoriteTip(id, idTip);
-        if (tipDTO == null) return ResponseEntity.notFound().build();
         return ResponseEntity.status(HttpStatus.CREATED).body(tipDTO); //Guardado correctamente en la lista de favoritos del user
     }
+
+    //TODO: ENDPOINTS RELACIONADOS CON LOS CHATS QUE PERTENECEN A UN USER (TIENE SENTIDO HACERLOS AQUI YA QUE ESTÁN RELACIONADOS CON LA LÓGICA DEL USER)
+    //Endpoint para recuperar el historial de chats de un usuario
+    @GetMapping("/{idUser}/chats")
+    public ResponseEntity<List<ChatDTO>> getChats(@PathVariable("idUser") Long idUser){
+        List<ChatDTO> chats = userService.getChats(idUser);
+        return ResponseEntity.ok(chats);
+    }
+
+    //Endpoint para eliminar uno o varios chats de un user
+    @DeleteMapping("/{idUser}/chats")
+    //Recibimos en el cuerpo de la solicitud la lista de los ids de los chats que se quieren eliminar
+    public ResponseEntity<List<ChatDTO>> deleteChats(@PathVariable("idUser") Long idUser, @RequestBody List<Long> idChats){
+        List<ChatDTO> chats = userService.deleteChats(idUser, idChats);
+        return ResponseEntity.ok(chats);
+    }
+
+    //Endpoint para cargar la conversación de un chat
+    @GetMapping("/{idUser}/chats/{idChat}")
+    public ResponseEntity<Chat> getChat(@PathVariable("idUser") Long idUser, @PathVariable("idChat") Long idChat){
+        Chat chat = userService.getChat(idUser, idChat);
+        return ResponseEntity.ok(chat);
+    }
+
 
 
 }
