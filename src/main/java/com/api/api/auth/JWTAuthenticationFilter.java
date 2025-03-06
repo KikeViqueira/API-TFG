@@ -34,6 +34,16 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+
+        String servletPath = request.getServletPath();
+
+        // Omitir el filtro para rutas públicas de auth y para POST en /api/users
+        if (servletPath.startsWith("/api/auth/") || (servletPath.equals("/api/users") && request.getMethod().equalsIgnoreCase("POST"))) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+
         //Extraemos el token de la cabecera Authorization
         String header = request.getHeader("Authorization");
         String token = null;

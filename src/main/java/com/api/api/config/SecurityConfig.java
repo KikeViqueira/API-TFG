@@ -3,6 +3,7 @@ package com.api.api.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -27,9 +28,12 @@ public class SecurityConfig {
         http.csrf().disable()
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS) // API REST sin estado
             .and()
-            .authorizeHttpRequests()
-                .requestMatchers("/api/auth/**").permitAll() // Endpoints de auth públicos
-                .anyRequest().authenticated();
+            .authorizeHttpRequests(authorize -> authorize
+            .requestMatchers(HttpMethod.POST, "/api/users").permitAll() // Solo POST es público (registro) para que el nuevo usuario no necesite de un token JWT
+            .requestMatchers("/api/auth/**").permitAll() // Otros endpoints públicos de auth
+            .anyRequest().authenticated() // El resto requiere autenticación
+        );
+
         
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         

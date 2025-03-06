@@ -13,10 +13,12 @@ import com.api.api.DTO.TipDTO;
 import com.api.api.DTO.UserDTO;
 import com.api.api.exceptions.NoContentException;
 import com.api.api.model.Chat;
+import com.api.api.model.Onboarding;
 import com.api.api.model.Sound;
 import com.api.api.model.Tip;
 import com.api.api.model.User;
 import com.api.api.repository.ChatRepository;
+import com.api.api.repository.OnboardingRepository;
 import com.api.api.repository.SoundRepository;
 import com.api.api.repository.TipRepository;
 import com.api.api.repository.UserRepository;
@@ -36,6 +38,9 @@ public class UserService {
     @Autowired
     private ChatRepository chatRepository;
 
+    @Autowired
+    private OnboardingRepository onboardingRepository;
+
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public UserDTO.UserResponseDTO registerUser(User user) {
@@ -47,6 +52,12 @@ public class UserService {
             user.setRole("USER");
             user.setProfilePicture("http://localhost:8080/images/placeholder.jpg");
             userRepository.save(user); //Guardamos el user en la BD
+
+            //Tenemos que crear también el objeto Onboarding para el user y lo guardamos en la BD
+            Onboarding onboarding = new Onboarding();
+            onboarding.setUser(user);
+            onboardingRepository.save(onboarding);
+
             //Parseamos la info que se le devolverá al controller mediante su DTO correspondiente
             UserDTO.UserResponseDTO userResponseDTO = new UserDTO.UserResponseDTO(user);
             return userResponseDTO;
@@ -58,14 +69,20 @@ public class UserService {
     //Funcion para obtener un user en base a su email, ya que el id se crea una vez se guarda en la BD
     public User getUser(String email){
         User userRecuperado = userRepository.findByEmail(email).orElse(null);
-        if (userRecuperado != null) return userRecuperado;
-        else throw new EntityNotFoundException("No se ha encontrado al usuario con email: "+ email);
+        return userRecuperado;
     }
 
     //Función para actualizar la info de un user en la BD
     public User updateUser(User user){
         return userRepository.save(user);
     }
+
+    /*
+     * Debemos poner @Transactional en los métodos del servicio cuando necesitemos que todas las operaciones de base de datos
+     *  que se realizan en ese método se ejecuten como una sola transacción. Esto significa que si ocurre algún error en medio,
+     *  se deshacen todas las operaciones, garantizando la consistencia de los datos. También es útil en métodos que cargan datos perezosamente
+     * (lazy loading) para que las asociaciones se resuelvan correctamente mientras la transacción esté activa.
+     */
 
     @Transactional
     //Recuperamos los tips guardados como favoritos por un user

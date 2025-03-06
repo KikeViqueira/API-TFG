@@ -2,8 +2,8 @@ package com.api.api.model;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
@@ -31,6 +31,7 @@ public class User {
     private String email;
 
     @Column(nullable = false)
+    @NotBlank(message = "El nombre no puede ser vacío") //Restriciones en el controller en lo que se refiere a validación
     @Size(min = 2, message = "El nombre debe tener al menos 2 caracteres")
     private String name;
 
@@ -64,12 +65,20 @@ public class User {
     //MappedBy hace referencia al campo owner en la entidad Sound (lado Many de la relación)
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL) //Si eliminamos un user, se eliminan los sonidos que el ha subido
     @JsonIgnore
+    @JsonBackReference
     private List<Sound> soundsUser; //Lista de sonidos que ha subido el user
 
     //Relación uno a muchos entre user y chat
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @JsonIgnore
+    @JsonBackReference
     private List<Chat> chats; //Lista de chats que ha creado el user
+
+    //Relación uno a uno entre user y onboarding
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
+    @JsonBackReference
+    private Onboarding onboarding; //Onboarding del user
 
 
     //DEFINIMOS EL MÉTODO EQUALS Y HASHCODE PARA QUE SE PUEDAN COMPARAR DOS OBJETOS DE LA CLASE SOUND

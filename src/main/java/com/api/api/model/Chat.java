@@ -5,6 +5,9 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -42,10 +45,12 @@ public class Chat {
 
     @ManyToOne
     @JoinColumn(name = "idUser", nullable = false)
+    @JsonManagedReference
     private User user; //Usuario que ha creado el chat en la app
 
     //Relación uno a muchos ya que un chat puede tener muchos mensajes
     @OneToMany(mappedBy = "chat", cascade = CascadeType.ALL) //Si eliminamos el chat tenemos que eliminar todos los mensajes pertenecientes a el
+    @JsonBackReference
     private List<Message> messages; //Lista de mensajes que pertenecen al chat
 
 

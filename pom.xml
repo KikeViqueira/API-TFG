@@ -37,7 +37,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <scope>runtime</scope>
+            <version>42.7.5</version>
         </dependency>
 
         <!-- Validaciones -->
@@ -89,10 +89,10 @@
 
 
         <dependency>
-    <groupId>com.github.fge</groupId>
-    <artifactId>json-patch</artifactId>
-    <version>1.9</version>
-</dependency>
+            <groupId>com.github.fge</groupId>
+            <artifactId>json-patch</artifactId>
+            <version>1.9</version>
+        </dependency>
 
 <!-- Dependencia para poder usar JWT -->
        <dependency>
@@ -112,6 +112,7 @@
             <version>0.11.5</version>
             <scope>runtime</scope>
         </dependency>
+
 
     </dependencies>
 
