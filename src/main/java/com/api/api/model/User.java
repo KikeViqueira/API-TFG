@@ -80,6 +80,12 @@ public class User {
     @JsonBackReference
     private Onboarding onboarding; //Onboarding del user
 
+    //Relación uno a muchos entre user y sleeplogs
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
+    @JsonBackReference
+    private List<SleepLog> sleepLogs;
+
 
     //DEFINIMOS EL MÉTODO EQUALS Y HASHCODE PARA QUE SE PUEDAN COMPARAR DOS OBJETOS DE LA CLASE SOUND
     @Override
