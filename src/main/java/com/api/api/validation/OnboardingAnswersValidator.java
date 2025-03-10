@@ -45,6 +45,14 @@ public class OnboardingAnswersValidator implements ConstraintValidator<ValidOnbo
             return false;
         }
 
+        //Comprobamos que las claves que se han recibido sean las permitidas y que el número sea el esperado
+        if (value.size() != ALLOWED_KEYS.size() || !value.keySet().containsAll(ALLOWED_KEYS)){
+            context.disableDefaultConstraintViolation();
+            context.buildConstraintViolationWithTemplate("El mapa de respuestas debe contener exactamente los siguientes campos: " + ALLOWED_KEYS)
+                .addConstraintViolation();
+            return false;
+        }
+
         //Comprobamos que las claves y valores del mapa por cada entrada sean las permitidas
         for(Map.Entry<String, String> entry : value.entrySet()){
             String key = entry.getKey();

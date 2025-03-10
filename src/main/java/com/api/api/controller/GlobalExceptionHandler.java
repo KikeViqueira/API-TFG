@@ -8,6 +8,7 @@ import java.util.Date;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -18,6 +19,7 @@ import com.api.api.exceptions.RelationshipAlreadyExistsException;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 
 /*
     * Para mantener los controllers limpios y evitar tener lógica de manejo de errores repetida,
@@ -67,11 +69,23 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AIResponseGenerationException.class)
-    public ResponseEntity<?> handleAIResponseGenerationExceptionn(AIResponseGenerationException ex, HttpServletRequest request){
+    public ResponseEntity<?> handleAIResponseGenerationException(AIResponseGenerationException ex, HttpServletRequest request){
         //Creamos el objeto de error
         CustomErrorResponseDTO error = new CustomErrorResponseDTO(LocalDateTime.now(), "Error API AI: " + ex.getMessage(), request.getRequestURI());
         return ResponseEntity.status(HttpStatus.OK).body(error); //Devolvemos el siguiente código ya que el error se produce en la api de terceros, no en la nuestra
     }
+
+
+    /*
+    * Caso especial que devuelve spring boot cuando se viola el contexto de validacion
+    */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex, HttpServletRequest request){
+        //Creamos el objeto de error
+        CustomErrorResponseDTO error = new CustomErrorResponseDTO(LocalDateTime.now(), "Error en la validación de los datos recibidos: " + ex.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
 
     
 }

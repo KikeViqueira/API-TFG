@@ -10,7 +10,7 @@ import java.util.Set;
 public class SleepLogAnswersValidator implements ConstraintValidator<ValidSleepLogAnswers, Map<String, String>> {
 
     // Claves esperadas para el sleep log: campos de tiempo, duración y preguntas fijas.
-    private static final Set<String> ALLOWED_KEYS = Set.of("sleepTime", "wakeTime", "duration", "question1", "question2");
+    private static final Set<String> ALLOWED_KEYS = Set.of("sleepTime", "wakeUpTime", "duration", "question1", "question2");
 
     // Para las preguntas fijas definimos los valores permitidos.
     private static final Map<String, Set<String>> ALLOWED_VALUES = Map.of(
@@ -27,6 +27,14 @@ public class SleepLogAnswersValidator implements ConstraintValidator<ValidSleepL
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate("El mapa de respuestas no puede estar vacío")
                    .addConstraintViolation();
+            return false;
+        }
+
+        // Validamos que el mapa tenga exactamente el número de campos esperados, para que se tenga que pasar en el body de la solicitud exactamente lo que se espera
+        if (value.size() != ALLOWED_KEYS.size() || !value.keySet().containsAll(ALLOWED_KEYS)) {
+            context.disableDefaultConstraintViolation();
+            context.buildConstraintViolationWithTemplate("El mapa de respuestas debe contener exactamente los siguientes campos: " + ALLOWED_KEYS)
+                .addConstraintViolation();
             return false;
         }
 

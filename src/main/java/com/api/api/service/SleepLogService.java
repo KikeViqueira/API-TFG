@@ -46,13 +46,7 @@ public class SleepLogService {
         //Sabemos que si hemos lleagdo a este punto las respuestas son correctas, por lo que podemos crear el nuevo registro de sueño
         SleepLog sleepLog = new SleepLog();
         sleepLog.setUser(user);
-        /*
-         * Guardamos la entidad en la BD para generarle un id y asi poder pasarle el objeto a la función que se encarga de guardar las respuestas en SleepLogAnswerService
-         * 
-         * Haciendo esto solo se hacen registros en la bd en la tabla de SleepLog si el usuario hace el cuestionario matutino, si no, no se hace ningún registro y se optimiza
-         * el almacenamiento en la BD, si un día el user no lo hace pues simplemente no se guarda nada y así no se desperdicia espacio en la BD teniendo registros vacíos
-        */
-        sleepLogRepository.save(sleepLog);
+       
         //llamamos a la función que se encarga de guardar las respuestas en la tabla de SleepLogAnswers pero antes tenemos que calcular el inicio y fin del día
         ZoneId zone = ZoneId.systemDefault();
         LocalDate today = LocalDate.now(zone);
@@ -61,6 +55,15 @@ public class SleepLogService {
 
         boolean alreadyExists = sleepLogRepository.existsByUser_IdAndTimeStampBetween(userId, start, endOfDay);
         if (!alreadyExists){
+            /*
+            * Guardamos la entidad en la BD para generarle un id y asi poder pasarle el objeto a la función que se encarga de guardar las respuestas en SleepLogAnswerService
+            * 
+            * Haciendo esto solo se hacen registros en la bd en la tabla de SleepLog si el usuario hace el cuestionario matutino, si no, no se hace ningún registro y se optimiza
+            * el almacenamiento en la BD, si un día el user no lo hace pues simplemente no se guarda nada y así no se desperdicia espacio en la BD teniendo registros vacíos
+            *
+            * Tenemos que guardar el registro en este punto del código ya que si intentamos hacer antes el save la bandera siempre nos devolverá true
+            */
+            sleepLogRepository.save(sleepLog);
             //En caso de que no exista el registro delegamos la lógica en la función del servicio SleepLogAnswerService, donde le pasamos el objeto SleepLog y las respuestas
             SleepLogAnswerDTO sleepLogAnswerDTO = sleepLogAnswerService.saveAnswers(sleepLog, answers);
             return sleepLogAnswerDTO;
@@ -70,8 +73,9 @@ public class SleepLogService {
     @Transactional
     //Función para recuperar las respuestas al cuestionario matutino de un user de ese mismo día
     public SleepLogAnswerDTO getSleepLog(Long userId, Long sleepLogId){
-        //Comprobamos que el user exista
+        //Comprobamos que el user exista y comprobamos que el SleepLog exista
         userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("El usuario no existe"));
+        sleepLogRepository.findById(sleepLogId).orElseThrow(() -> new EntityNotFoundException("El registro de sueño no existe"));
         //Comprobamos que exista el registro correspondiente al user y que se haya hecho en el día actual
         ZoneId zone = ZoneId.systemDefault();
         LocalDate today = LocalDate.now(zone);

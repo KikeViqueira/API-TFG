@@ -14,7 +14,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,19 +30,23 @@ import lombok.Setter;
 @NoArgsConstructor
 public class SleepLogAnswer {
 
+    //El campo NotBlank solo se aplica a cadenas de texto por lo que para números tenemos que usar NotNull y Min cuando sea necesario
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "La hora en la que el user se ha ido a dormir no puede ser vacía")
+    @NotNull(message = "La hora en la que el user se ha ido a dormir no puede ser vacía")
     @Column(nullable = false)
     private ZonedDateTime SleepTime;
 
-    @NotBlank(message = "La hora en la que el user se ha despertado no puede ser vacía")
+    @NotNull(message = "La hora en la que el user se ha despertado no puede ser vacía")
     @Column(nullable = false)
     private ZonedDateTime WakeUpTime;
 
-    @NotBlank(message = "La duración del sueño no puede ser vacía")
+    
+    @NotNull(message = "La duración no puede ser nula")
+    @Min(value = 0, message = "La duración debe ser mayor o igual a 0")
     @Column(nullable = false)
     private float duration;
 
