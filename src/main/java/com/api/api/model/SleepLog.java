@@ -48,13 +48,12 @@ public class SleepLog {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    @JsonIgnore
-    @JsonManagedReference
+    @JsonBackReference(value = "user-sleeplogs")
     private User user;
 
     @OneToOne(mappedBy = "sleepLog", cascade = CascadeType.ALL)
-    @JsonBackReference
-    @JsonIgnore
+    @JsonManagedReference(value = "sleepLogAnswer")
+    //@JsonIgnore
     private SleepLogAnswer sleepLogAnswer;
 
     //Creamos la función para rellenar el campo de fecha automáticamente cuando la entidad vaya a ser guardada en la BD

@@ -3,6 +3,9 @@ package com.api.api.model;
 
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -53,6 +56,7 @@ public class Sound {
 
     @ManyToOne
     @JoinColumn(name = "idUser", nullable = true) //Indicamos que el valor de la columna puede ser null, este caso es para cuando no existe relación con un user
+    @JsonBackReference(value = "user-sounds")
     private User owner; //Dueño del sonido
     //Tenemos que definir los endpoints de este lado de la relación ya que es la que tiene el join
 

@@ -2,6 +2,7 @@ package com.api.api.model;
 
 import java.time.ZonedDateTime;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
@@ -66,8 +67,7 @@ public class SleepLogAnswer {
 
      @OneToOne
      @JoinColumn(name = "sleepLog_id", nullable = false)
-     @JsonIgnore
-     @JsonManagedReference
+     @JsonBackReference(value = "sleepLogAnswer")
      private SleepLog sleepLog;
     
 }

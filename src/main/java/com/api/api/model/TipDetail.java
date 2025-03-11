@@ -45,6 +45,6 @@ public class TipDetail {
     //DEFINIMOS LAS RELACIONES QUE TIENE LA ENTIDAD TIPDETAIL CON EL RESTO DE ENTIDADES DE NUESTRA BD, en este caso solo con Tip "padre"
     @OneToOne
     @JoinColumn(name = "tip_id") //Clave foránea que conecta con la entidad Tip
-    @JsonBackReference
+    @JsonBackReference(value = "tipDetails")
     private Tip tip;
 }

@@ -3,6 +3,9 @@ package com.api.api.model;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -44,6 +47,7 @@ public class Message {
     //DEFINIMOS LAS RELACIONES, EN ESTE CASO SOLO HAY QUE LOS MENSAJES SOLO PERTENECEN A UN CHAT
     @ManyToOne
     @JoinColumn(name = "idChat", nullable = false)
+    @JsonBackReference(value = "chat-messages")
     private Chat chat; //Chat al que pertenece el mensaje
 
 

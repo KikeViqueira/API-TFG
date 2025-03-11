@@ -57,8 +57,9 @@ public class Onboarding {
      *  invocar explícitamente un método de eliminación.
     */
 
-    @OneToMany(mappedBy = "onboarding", cascade = CascadeType.ALL, orphanRemoval = true) //Indicamos que la relación es uno a muchos y que el campo que hace referencia a esta entidad en la tabla de la otra entidad es onboarding
-    @JsonBackReference
+    @OneToMany(mappedBy = "onboarding", cascade = CascadeType.ALL) //Indicamos que la relación es uno a muchos y que el campo que hace referencia a esta entidad en la tabla de la otra entidad es onboarding
+    @JsonManagedReference(value = "onboarding-answers")
+    //@JsonIgnore
     private List<OnboardingAnswer> answers; 
 
     /*
@@ -68,7 +69,7 @@ public class Onboarding {
 
     @OneToOne
     @JoinColumn(name = "idUser", nullable = false) //Indicamos el nombre de la columna que hace referencia a la clave primaria de la entidad User
-    @JsonManagedReference
+    @JsonBackReference(value = "user-onboarding")
     private User user;
 
 

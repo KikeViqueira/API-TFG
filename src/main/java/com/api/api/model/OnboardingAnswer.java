@@ -2,6 +2,7 @@ package com.api.api.model;
 
 import java.time.ZonedDateTime;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.Column;
@@ -47,7 +48,7 @@ public class OnboardingAnswer {
 
      @ManyToOne
      @JoinColumn(name = "onboarding_id", nullable = false)
-     @JsonManagedReference
+     @JsonBackReference(value = "onboarding-answers")
      private Onboarding onboarding;
 
     

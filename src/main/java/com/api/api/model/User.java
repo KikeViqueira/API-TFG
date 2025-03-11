@@ -4,8 +4,10 @@ import java.util.List;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -48,7 +50,22 @@ public class User {
     private String profilePicture;
 
 
-    //DEFINIMOS LAS RELACIONES QUE TIENE LA ENTIDAD USER CON EL RESTO DE ENTIDADES DE NUESTRA BD
+    /*
+     * DEFINIMOS LAS RELACIONES QUE TIENE LA ENTIDAD USER CON EL RESTO DE ENTIDADES DE NUESTRA BD
+     * 
+     * Usa @JsonManagedReference en el lado "padre" (el que se serializa, por ejemplo, la colección).
+     * Usa @JsonBackReference en el lado "hijo" (el que tiene @JoinColumn).
+     * Asegúrate de usar el mismo identificador en ambos lados (ej: "parent-child").
+     * 
+     * Si no queremos que al serializar se tenga en cuenta el campo en el lado del @JsonManagedReference tenemos que usar @JsonIgnore
+     * Por ahora devolveremos todo aunque desués en realidad lo que devolvemos es el DTO
+     * 
+     * @JsonIdentityInfo permite manejar relaciones Many-to-Many evitando ciclos de serialización.
+     * Al usar un generador de identificadores (por ejemplo, el valor del campo "id"),
+     * Jackson serializa cada objeto una única vez y, en apariciones posteriores, solo usa el id para referenciarlo.
+     * Esto previene la recursión infinita en relaciones bidireccionales.
+
+     * */
 
     //Un user puede tener varios tips en favoritos, y el mismo tip puede ser el favorito de varios users (Relación muchos a muchos)
     @ManyToMany
@@ -57,33 +74,33 @@ public class User {
         joinColumns = @JoinColumn(name="user_id"), //Indicamos el nombre de la columna de la tabla intermedia que hace referencia a la clave primaria de la entidad user
         inverseJoinColumns = @JoinColumn(name="tip_id") //Lo mismo que la anterior pero diciendo el nombre de la columna que hace referencia a la primaria de la tabla con la que se relaciona user (tip)
     )
-    @JsonIgnore // TODO: Nunca renderizamos esta info en formato json para evitar la excepcion de lazily initialized
-    @JsonManagedReference
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    //@JsonIgnore
     private List<Tip> favoriteTips; //Lista de tips que el user ha marcado como favoritos
 
     //Relación uno a muchos entre user y sonidos (Esta es especial solo para los sonidos que ha subido el user)
     //MappedBy hace referencia al campo owner en la entidad Sound (lado Many de la relación)
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL) //Si eliminamos un user, se eliminan los sonidos que el ha subido
-    @JsonIgnore
-    @JsonBackReference
+    @JsonManagedReference(value = "user-sounds")
+    //@JsonIgnore
     private List<Sound> soundsUser; //Lista de sonidos que ha subido el user
 
     //Relación uno a muchos entre user y chat
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    @JsonIgnore
-    @JsonBackReference
+    @JsonManagedReference(value = "user-chats")
+    //@JsonIgnore
     private List<Chat> chats; //Lista de chats que ha creado el user
 
     //Relación uno a uno entre user y onboarding
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
-    @JsonIgnore
-    @JsonBackReference
+    @JsonManagedReference(value = "user-onboarding")
+    //@JsonIgnore
     private Onboarding onboarding; //Onboarding del user
 
     //Relación uno a muchos entre user y sleeplogs
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    @JsonIgnore
-    @JsonBackReference
+    @JsonManagedReference(value = "user-sleeplogs")
+    //@JsonIgnore
     private List<SleepLog> sleepLogs;
 
 
