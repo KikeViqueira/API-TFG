@@ -5,30 +5,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.catalina.connector.Response;
-import org.hibernate.annotations.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import com.api.api.DTO.ChatDTO;
-import com.api.api.DTO.SoundDTO;
 import com.api.api.DTO.TipDTO;
 import com.api.api.DTO.UserDTO;
 import com.api.api.model.Chat;
-import com.api.api.model.Sound;
-import com.api.api.model.Tip;
 import com.api.api.model.User;
 import com.api.api.service.PatchUtils;
 import com.api.api.service.UserService;
 import com.github.fge.jsonpatch.JsonPatchException;
 
 import jakarta.validation.Valid;
-import lombok.val;
 
 @RestController
 @RequestMapping("/api/users")
@@ -154,7 +146,4 @@ public class UserController {
         Chat chat = userService.getChat(idUser, idChat);
         return ResponseEntity.ok(chat);
     }
-
-
-
 }

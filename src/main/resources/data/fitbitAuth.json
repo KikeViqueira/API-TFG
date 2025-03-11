@@ -1,0 +1,8 @@
+{
+  "access_token": "ACCESS_TOKEN_VALUE",
+  "expires_in": 28800,
+  "refresh_token": "REFRESH_TOKEN_VALUE",
+  "token_type": "Bearer",
+  "user_id": "USER_ID_VALUE",
+  "scope": "activity nutrition profile settings sleep social weight"
+}

@@ -43,6 +43,11 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
+        // Si la solicitud es para /api/fitbit, se omite la validación JWT
+        if (request.getServletPath().startsWith("/api/fitbit")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         //Extraemos el token de la cabecera Authorization
         String header = request.getHeader("Authorization");

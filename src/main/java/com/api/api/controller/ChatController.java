@@ -14,12 +14,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import com.api.api.DTO.ChatDTO;
-import com.api.api.model.Chat;
 import com.api.api.model.Message;
 import com.api.api.service.ChatService;
 
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 
 @Controller

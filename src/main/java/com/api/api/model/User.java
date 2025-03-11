@@ -3,9 +3,7 @@ package com.api.api.model;
 import java.util.List;
 import java.util.Objects;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
@@ -14,6 +12,19 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+/*
+ * Lado dueño vs. lado inverso:
+ * - El lado dueño (sin 'mappedBy') es el que se encarga de persistir la relación (guarda la FK en la BD).
+ * - El lado inverso (con 'mappedBy') solo refleja la relación.
+ * 
+ * Para una persistencia correcta, asigna la relación en el lado dueño. 
+ * Se recomienda sincronizar ambos lados (ej.: padre.setHijo(hijo) y hijo.setPadre(padre)) 
+ * para mantener la consistencia en la lógica y en la serialización.
+ * 
+ * pero si es para guardar solo en la BD, solo se tiene que hacer en el lado dueño
+ * 
+ * Nota: @JsonBackReference se usa para evitar ciclos en la serialización JSON y no afecta la persistencia.
+ */
 
 @Entity
 @Table(name = "users")
@@ -102,6 +113,12 @@ public class User {
     @JsonManagedReference(value = "user-sleeplogs")
     //@JsonIgnore
     private List<SleepLog> sleepLogs;
+
+    //Relación uno a uno entre user y fitbitToken
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonManagedReference(value = "user-fitbitToken")
+    //@JsonIgnore
+    private FitbitToken fitbitToken; //Token de Fitbit del user
 
 
     //DEFINIMOS EL MÉTODO EQUALS Y HASHCODE PARA QUE SE PUEDAN COMPARAR DOS OBJETOS DE LA CLASE SOUND

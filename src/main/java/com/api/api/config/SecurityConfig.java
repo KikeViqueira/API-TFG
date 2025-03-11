@@ -13,11 +13,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.api.api.auth.FitbitTokenFilter;
 import com.api.api.auth.JWTAuthenticationFilter;
 
 
 @Configuration
 public class SecurityConfig {
+
+    //Registramos el filtro de seguridad para los endpoints de relacionados con la WEB API de Fitbit
+    @Autowired
+    private FitbitTokenFilter fitbitTokenFilter;
 
     //Tenemos que registrar nuestro filtro de seguridad personalizado
     @Autowired
@@ -31,10 +36,13 @@ public class SecurityConfig {
             .authorizeHttpRequests(authorize -> authorize
             .requestMatchers(HttpMethod.POST, "/api/users").permitAll() // Solo POST es público (registro) para que el nuevo usuario no necesite de un token JWT
             .requestMatchers("/api/auth/**").permitAll() // Otros endpoints públicos de auth
+            .requestMatchers("/api/fitbitAuth/**").permitAll() // Permite el acceso a /api/fitbitAuth
             .anyRequest().authenticated() // El resto requiere autenticación
         );
 
-        
+        //Agregamos primero el filtro para /fitbit
+        http.addFilterBefore(fitbitTokenFilter, UsernamePasswordAuthenticationFilter.class);
+        //Agregamos nuestro filtro JWT para el resto de endpoints
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         
         return http.build();
