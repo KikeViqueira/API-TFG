@@ -47,21 +47,13 @@ public class SleepLogAnswersValidator implements ConstraintValidator<ValidSleepL
 
             // Si la clave es "duration", se valida que sea numérico y <= 86400000 ms (24 horas)
             if ("duration".equals(key)) {
-                try {
-                    long durationValue = Long.parseLong(answer);
-                    if (durationValue > 86400000L) {
-                        context.disableDefaultConstraintViolation();
-                        context.buildConstraintViolationWithTemplate("La duración no puede superar las 24 horas")
-                               .addConstraintViolation();
-                        return false;
-                    }
-                } catch (NumberFormatException e) {
+                long durationValue = Long.parseLong(answer);
+                if (durationValue > 86400000L) {
                     context.disableDefaultConstraintViolation();
-                    context.buildConstraintViolationWithTemplate("La duración debe ser un número válido")
-                           .addConstraintViolation();
+                    context.buildConstraintViolationWithTemplate("La duración no puede superar las 24 horas")
+                            .addConstraintViolation();
                     return false;
                 }
-                continue;
             }
 
             // Si es un campo de tiempo, validar el formato ISO-8601

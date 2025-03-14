@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.api.api.DTO.FormRequestDTO;
 import com.api.api.DTO.SleepLogAnswerDTO;
-import com.api.api.DTO.SleepLogRequestDTO;
 import com.api.api.service.SleepLogService;
 
 import jakarta.validation.Valid;
@@ -31,7 +31,7 @@ public class SleepLogController {
     //Endpoint para la creación de un nuevo registro de sueño
     @PostMapping("/{userId}/sleep-logs")
     //Recibimos el id del user y las respuestas de su cuestionario matutino
-    public ResponseEntity<SleepLogAnswerDTO> createSleepLog(@PathVariable("userId") Long userId, @RequestBody @Valid SleepLogRequestDTO sleepLogRequestDTO) {
+    public ResponseEntity<SleepLogAnswerDTO> createSleepLog(@PathVariable("userId") Long userId, @RequestBody @Valid FormRequestDTO.SleepLogRequestDTO sleepLogRequestDTO) {
         //Creamos el registro matutino del user una vez lo ha completado y enviado
         SleepLogAnswerDTO sleepLogAnswerDTO = sleepLogService.createSleepLog(userId, sleepLogRequestDTO.getData());
         return ResponseEntity.ok(sleepLogAnswerDTO);

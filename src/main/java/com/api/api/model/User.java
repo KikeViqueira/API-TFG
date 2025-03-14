@@ -3,6 +3,8 @@ package com.api.api.model;
 import java.util.List;
 import java.util.Objects;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
@@ -52,11 +54,12 @@ public class User {
     @NotBlank(message = "El correo no puede ser vacío") //Restriciones en el controller en lo que se refiere a validación
     private String password;
 
+    //Este atributo se completará cuando el user haga el onboarding, ponemos un valor por defecto en -1 para saber que el user no lo ha hecho
+    @Column(nullable = false)
+    private Integer age = -1;
 
-    //Estos atributos no se tieene que completar a la hora de que el user se haga una cuenta en la app
-
-    private int age;
     private String role;
+
     //Unico campo en la BD que puede ser nulo
     private String profilePicture;
 
@@ -119,6 +122,12 @@ public class User {
     @JsonManagedReference(value = "user-fitbitToken")
     //@JsonIgnore
     private FitbitToken fitbitToken; //Token de Fitbit del user
+
+    //relación uno a muchos entre user y drm
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonManagedReference(value = "user-drm")
+    //@JsonIgnore
+    private List<Drm> drms;
 
 
     //DEFINIMOS EL MÉTODO EQUALS Y HASHCODE PARA QUE SE PUEDAN COMPARAR DOS OBJETOS DE LA CLASE SOUND

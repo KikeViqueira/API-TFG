@@ -58,6 +58,16 @@ public class OnboardingAnswersValidator implements ConstraintValidator<ValidOnbo
             String key = entry.getKey();
             String answer = entry.getValue();
 
+            System.out.println("obejto recibido: "+ value);
+
+            //Si el valor de una de las claves que se esperan es nulo (String vacío) lanzamos error de validación
+            if (answer == null) {
+                context.disableDefaultConstraintViolation();
+                context.buildConstraintViolationWithTemplate("La respuesta para " + key + " no puede ser nula")
+                       .addConstraintViolation();
+                return false;
+            }
+
             if (!ALLOWED_KEYS.contains(key)){ //Si la clave no está en las permitidas
                 context.disableDefaultConstraintViolation();
                 context.buildConstraintViolationWithTemplate("Clave inválida: " + key)
@@ -66,7 +76,6 @@ public class OnboardingAnswersValidator implements ConstraintValidator<ValidOnbo
             }
              // Caso especial para question3 (edad)
             if ("question3".equals(key)) {
-                try {
                     //Intentamos convertir la respuesta a un número, esto es para que no se intente inyectar nada malicioso en esta pregunta en concreto
                     int edad = Integer.parseInt(answer);
                     if (edad < 10 || edad > 100) {
@@ -75,13 +84,7 @@ public class OnboardingAnswersValidator implements ConstraintValidator<ValidOnbo
                             .addConstraintViolation();
                         return false;
                     }
-                } catch (NumberFormatException ex) {
-                    context.disableDefaultConstraintViolation();
-                    context.buildConstraintViolationWithTemplate("La edad debe ser un número válido")
-                        .addConstraintViolation();
-                    return false;
-                }
-                continue;
+                
             }
             // Para las demás preguntas, comprobamos que el valor sea el permitido
             //Recuperamos los valores permitidos para la clave actual

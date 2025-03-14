@@ -87,5 +87,14 @@ public class GlobalExceptionHandler {
     }
 
 
+    //Manejo de excepciones de validación de campos, en caso de que el String que se ha mandado a la validación no se pueda transformar a número debido a que el formato del String no es el adecuado
+    @ExceptionHandler(NumberFormatException.class)
+    public ResponseEntity<?> handleNumberFormatException(NumberFormatException ex, HttpServletRequest request){
+        //Creamos el objeto de error
+        CustomErrorResponseDTO error = new CustomErrorResponseDTO(LocalDateTime.now(), "Error al convertir el String recibido a número: " + ex.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
+
     
 }

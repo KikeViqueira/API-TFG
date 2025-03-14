@@ -29,8 +29,13 @@ public class OnboardingAnswerService {
             onboardingAnswer.setOnboarding(onboarding);
             onboardingAnswer.setQuestion(key);
             onboardingAnswer.setAnswer(onboardingAnswers.get(key));
-            //Una vez creado el objeto lo que tenemos que hacer es guardarlo en la BD, al ser la parte manejadora de la relación con guardar la respuesta ya se actualiza el objeto Onboarding
-            onboardingAnswerRepository.save(onboardingAnswer);
+            /*
+             * Una vez creado el objeto lo que tenemos que hacer es guardarlo en la BD, al ser la parte manejadora de la relación con guardar la respuesta ya se actualiza el objeto Onboarding
+             * 
+             * En caso de que la clave que hemos recuperado es la de la edad, no la guardamos en esta entidad poruqe ya la hemos guardado en la entidad user
+             * No la eliminamos del mapa despues de guardarla en el OnboardingService ya que queremos devolver todas las respuestas que ha dado el user, en el DTO de la respuesta
+            */
+            if (!key.equals("question3")) onboardingAnswerRepository.save(onboardingAnswer);
             //Añadimos a la lista que se va a devolver el objeto que se acaba de guardar
             onboardingAnswerList.add(onboardingAnswer);
         }

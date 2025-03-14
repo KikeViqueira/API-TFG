@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.api.api.DTO.SleepLogAnswerDTO;
-import com.api.api.DTO.SleepLogRequestDTO;
 import com.api.api.exceptions.RelationshipAlreadyExistsException;
 import com.api.api.model.SleepLog;
 import com.api.api.model.SleepLogAnswer;
@@ -120,6 +119,34 @@ public class SleepLogService {
             String dayOfWeek = date.getDayOfWeek().toString();
             results.put(dayOfWeek, durations.getOrDefault(date, 0f)); //En caso de que no haya registro, se asigna 0.
         }
+        return results;
+    }
+
+    /* 
+     * función para recuperar toda la info de los registros que ha hecho el user en los últimos 7 días (Esta función no está asociadad a ningún endpoint)
+     * se ha creado para que servicios como el de DRM o Tips puedan obtener la info de una manera completa para poder enviar el contexto a la IA
+     * */
+    public Map<Long, SleepLogAnswer> getSleepLogsForContext(Long userId) {
+        //Comprobamos que el user exista
+        userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("El usuario no existe"));
+
+        ZoneId zone = ZoneId.systemDefault();
+        LocalDate today = LocalDate.now(zone);
+        // Definimos el rango de los últimos 7 días (incluyendo hoy)
+        LocalDate startDate = today.minusDays(6);
+        ZonedDateTime startOfPeriod = startDate.atStartOfDay(zone);
+        ZonedDateTime endOfPeriod = today.plusDays(1).atStartOfDay(zone).minusNanos(1);
+
+        //Recuperamos todos los registros de sueño del user dentro de la semana
+        List<SleepLog> sleepLogs = sleepLogRepository.findByUser_IdAndTimeStampBetweenOrderByTimeStampAsc(userId, startOfPeriod, endOfPeriod);
+
+        //Creamos un mapa donde guardamos la info de cada uno de los registros
+        Map<Long, SleepLogAnswer> results = new LinkedHashMap<>();
+
+        for (SleepLog sleepLog : sleepLogs) {
+            results.put(sleepLog.getId(), sleepLog.getSleepLogAnswer());
+        }
+
         return results;
     }
 }
