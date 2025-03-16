@@ -69,5 +69,19 @@ public class SleepLogAnswer {
      @JoinColumn(name = "sleepLog_id", nullable = false)
      @JsonBackReference(value = "sleepLogAnswer")
      private SleepLog sleepLog;
+
+
+    //Sobreescribimos el método toString para que nos muestre la información de la entidad de una manera más clara 
+    @Override
+    public String toString() {
+        return "SleepLogAnswer{" +
+               "id=" + id +
+               ", SleepTime=" + SleepTime +
+               ", WakeUpTime=" + WakeUpTime +
+               ", duration=" + String.format("%.0f", duration) +
+               ", Answer1='" + Answer1 + '\'' +
+               ", Answer2='" + Answer2 + '\'' +
+               '}';
+    }
     
 }

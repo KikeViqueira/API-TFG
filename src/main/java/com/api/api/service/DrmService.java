@@ -17,10 +17,13 @@ import com.api.api.exceptions.NoContentException;
 import com.api.api.exceptions.RelationshipAlreadyExistsException;
 import com.api.api.model.Drm;
 import com.api.api.model.DrmAnswer;
+import com.api.api.model.GeminiResponse;
 import com.api.api.model.SleepLogAnswer;
 import com.api.api.model.User;
 import com.api.api.repository.DrmRepository;
 import com.api.api.repository.UserRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -90,7 +93,20 @@ public class DrmService {
                 //recuperamos las respuestas del user al onboarding
                 OnboardingAnswerDTO onboardingAnswerDTO = onboardingService.getOnboardingAnswers(userId);
                 //llamamos ahora a la función de GeminiService que se encarga de generar el informe devolvernoslo
-                String report = geminiService.generateReport(sleepLogsLastWeek, sleepLogsForContext, onboardingAnswerDTO, drmRequestDTO, user.getAge());
+                String response = geminiService.generateReport(sleepLogsLastWeek, sleepLogsForContext, onboardingAnswerDTO, drmRequestDTO, user);
+                /*
+                *De todo los campos que nos devuelve la api de Gemini, solo nos interesa el campo text
+                *Para eso pasamos el JSON que hemos recibido a un objeto de la clase GeminiResponse mediante el uso de ObjectMapper de Jackson
+                */
+                String report = null;
+                ObjectMapper objectMapper = new ObjectMapper();
+                try {
+                    GeminiResponse geminiResponse = objectMapper.readValue(response, GeminiResponse.class);
+                    //Guardamos en un String la parte de la respuesta de la IA que nos interesa
+                    report = geminiResponse.getCandidates().get(0).getContent().getParts().get(0).getText();
+                } catch (JsonProcessingException e) {
+                    System.out.println("Error al pasar la respuesta de la API de la IA al objeto correspondiente: "+ e.getMessage());
+                }
                 //Creamos la instancia de Drm
                 Drm drm = new Drm();
                 drm.setUser(user);
@@ -98,7 +114,7 @@ public class DrmService {
                 //Lo guardamos en la BD para que cuando guardemos las respuestas del cuestionario tengamos el id de la entidad
                 drmRepository.save(drm);
                 //Guardamos las respuestas del formulario en la bd delegando la lógica en el service de DrmAnswerService
-                List<DrmAnswer> drmAnswers = drmAnswerService.saveAnswers(drm, drmRequestDTO.getDrmAnswersUser());
+                List<DrmAnswer> drmAnswers = drmAnswerService.saveAnswers(drm, drmRequestDTO.getData());
                 //Creamos el DTO a devolver al controller
                 return new SaveAnswersDrmAndGenerateReportDTO(drmAnswers, report);
 

@@ -23,4 +23,11 @@ public class OnboardingAnswerDTO {
             this.answers.put(answer.getQuestion(), answer.getAnswer());
         }
     }
+
+    @Override
+    public String toString() {
+        return "OnboardingAnswerDTO{" +
+               "answers=" + answers +
+               '}';
+    }
 }

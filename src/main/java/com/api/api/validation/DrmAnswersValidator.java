@@ -23,7 +23,7 @@ import jakarta.validation.ConstraintValidatorContext;
 */
 
 
-public class DrmAnswersValidator implements ConstraintValidator<ValidOnboardingAnswers, Map<String, String>>{
+public class DrmAnswersValidator implements ConstraintValidator<ValidDrmAnswers, Map<String, String>>{
 
     //Definimos los valores permitidos para las claves de cada par de respuesta recibidas por el user, la pregunta 6 no la tenemos que incluir ya que es opcional la definimos en un nuevo set
     private static final Set<String> MANDATORY_KEYS = Set.of("drm_question1", "drm_question2", "drm_question3", "drm_question4", "drm_question5");

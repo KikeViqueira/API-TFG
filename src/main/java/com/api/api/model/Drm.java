@@ -4,6 +4,8 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 
+import org.checkerframework.checker.units.qual.N;
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
@@ -18,6 +20,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -37,6 +40,13 @@ public class Drm {
     private ZonedDateTime timeStamp;
 
     //Atributo que representas el informe que ha generado la IA respecto a la toma de decisiones del user
+    @NotBlank(message = "El informe no puede ser vacío")
+    /*
+     * Tenemos que marcar el campo de manera que sea text, ya que si no el tipo por default que se crea en la BD es varchar de 255 caracteres
+     * Lo cual si queremos guardar respuestas superiores a esa longitud no nos serviría
+     * 
+     */
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String report;
 
     /**

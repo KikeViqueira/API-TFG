@@ -57,7 +57,14 @@ public class FormRequestDTO {
     public static class DRMRequestDTO {
         @NotEmpty(message = "Las respuestas no pueden estar vacías")
         @ValidDrmAnswers
-        private HashMap<String, String> DrmAnswersUser;
+        private HashMap<String, String> data;
+
+        @Override
+        public String toString() {
+            return "DRMRequestDTO{" +
+                   "data=" + data +
+                   '}';
+        }
     }
     
 

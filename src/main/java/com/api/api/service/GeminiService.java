@@ -14,6 +14,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import com.api.api.DTO.OnboardingAnswerDTO;
 import com.api.api.DTO.FormRequestDTO.DRMRequestDTO;
 import com.api.api.model.SleepLogAnswer;
+import com.api.api.model.User;
 
 @Service
 public class GeminiService {
@@ -87,7 +88,7 @@ public class GeminiService {
     }
 
     //Función para generar un informe sobre la roma de decisiones en base a la info del user
-    public String generateReport(Map<String, Float> sleepLogsLastWeek,Map<Long, SleepLogAnswer> sleepLogsForContext, OnboardingAnswerDTO onboardingAnswerDTO, DRMRequestDTO drmRequestDTO, Integer age){
+    public String generateReport(Map<String, Float> sleepLogsLastWeek,Map<Long, SleepLogAnswer> sleepLogsForContext, OnboardingAnswerDTO onboardingAnswerDTO, DRMRequestDTO drmRequestDTO, User user){
         String apiUrl = "/models/gemini-1.5-flash:generateContent?key=" + apiKey; // Cambiar el modelo a 1.5 Flash
 
         //PROMPT PARA INDICARLE EL FORMATO DEL INFORME DE LA TOMA DE DECISIONES Y QUE ES LO QUE TIENE QUE TENER EN CUENTA PARA HACERLO
@@ -169,6 +170,7 @@ public class GeminiService {
 
         Propósito del Informe:
         El objetivo es generar un breve informe semanal que analice de forma profesional cómo la duración y calidad del sueño, junto con otros factores (actividad física, alimentación, nivel de estrés y concentración), impactan en la calidad de la toma de decisiones del usuario. Se espera que el informe integre la información de los registros diarios, las respuestas del onboarding y las respuestas relacionadas con la toma de decisiones, proporcionando una visión integral del estado del sueño y su influencia en el desempeño diario.
+        El informe tiene que tener tanto una buena argumentación como un buen análisis de la toma de decisiones del user en base a la información que has recibido pasado.
 
         Además, se pasa la edad del usuario (en el valor ageUser) para determinar en qué rango de edad se encuentra, lo que permite personalizar el informe y hacerlo más profesional.
         
@@ -178,10 +180,14 @@ public class GeminiService {
         drmRequestDTO: %s
         sleepLogsForContext: %s
         age: %s
+        userName: %s
 
-        Realiza con toda esta información lo que se te ha pedido en los objetivos, que el informe sea de aproximadamente 10 líneas o un poco mas si es necesario ya que se va a desplegar este texto en un dispositivo móvil.
-        """.formatted(sleepLogsLastWeek.toString(), onboardingAnswerDTO.toString(), drmRequestDTO.toString(), sleepLogsForContext.toString(), age.toString());
+        Realiza con toda esta información lo que se te ha pedido en los objetivos, que el informe sea de aproximadamente 15 líneas o un poco mas si es necesario ya que se va a desplegar este texto en un dispositivo móvil.
+        Devuelve el informe en texto plano, es decir no quiero que le metas estilo a nada de lo que escribas en el.
+        """.formatted(sleepLogsLastWeek.toString(), onboardingAnswerDTO.toString(), drmRequestDTO.toString(), sleepLogsForContext.toString(), user.getAge().toString(), user.getName());
         
+
+        System.out.println(prompt);
 
         //Construímos el cuerpo de la petición
         Map<String, Object> requestBody = Map.of(
