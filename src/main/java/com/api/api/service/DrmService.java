@@ -121,9 +121,6 @@ public class DrmService {
              }else throw new NoContentException("El usuario no ha hecho ningún cuestionario matutino en la última semana");
 
         }else throw new RelationshipAlreadyExistsException("El usuario ya ha realizado el cuestionario DRM hoy");
-
-
-
     }
     
 }

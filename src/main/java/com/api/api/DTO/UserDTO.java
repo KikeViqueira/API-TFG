@@ -11,11 +11,13 @@ public class UserDTO {
      @Getter @Setter
      public static class UserResponseDTO{
         //Atributos que vamos a devolver
+        private Long id;
         private String name;
         private String email;
         private String profilePicture;
 
         public UserResponseDTO(User user) {
+            this.id = user.getId();
             this.name = user.getName();
             this.email = user.getEmail();
             if (user.getProfilePicture()!=null) this.profilePicture = user.getProfilePicture();
