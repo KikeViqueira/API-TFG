@@ -1,14 +1,20 @@
 package com.api.api.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.api.api.DTO.MessageDTO;
 import com.api.api.model.GeminiResponse;
 import com.api.api.model.Message;
 import com.api.api.repository.MessageRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class MessageService {
@@ -25,12 +31,24 @@ public class MessageService {
     }
 
     //Función para mandar un mensaje a la api de gemini como prompt y guardarlo en la bd, asi como la respuesta
-    public String sendMessage(Message message){
+    public String sendMessage(Message message, Long idChat){
+        /*
+         * Primero lo que hemos de hacer es recuperar los mensajes de la conversación que se han guardado en la BD entre user y chat
+         * 
+         * De esta manera cuando vayamos a llamar a la función de enviar mensaje del servicio de gemini, le pasaremos como prompt el mensaje que está enviando
+         * el user ahora mismo, junto a la conversación que ha habido hasta ahora para que la ia tenga el contexto de lo que estamos hablando
+         * 
+         * */
+        List<MessageDTO> messageDTOs = getContextForChat(idChat);
+        //Creamos un String para guardar la respuesta de la IA
         String responseText = null;
         //Antes de mandar el mensaje, añadimos los campos en el objeto Message que hemos recibido
         message.setSender("USER");
         messageRepository.save(message);//Guardamos el mensaje en la bd y se guarda automáticamente la relación con el chat al que forma parte
-        String response = geminiService.sendMessage(message.getContent());
+         /*
+         * Mandamos el mensaje actual del user ala IA más la conversación que ha habido hasta ahora
+         */
+        String response = geminiService.sendMessage(message.getContent() + ", los mensajes que ha habido hasta ahora (un valor del ID menor significa que el mensaje es anterior a los que tienen ID superior) para que entienda el contexto son: " + messageDTOs.toString());
         //Creamos un nuevo objeto Message para guardar la respuesta de la IA en la BD
         Message responseMessage = new Message();
         responseMessage.setSender("IA");
@@ -67,6 +85,21 @@ public class MessageService {
             System.out.println("Error al pasar la respuesta de la API de la IA al objeto correspondiente: "+ e.getMessage());
         }
         return responseText;
+    }
+
+    /*
+     * Función para obtener todos los mensajes de una conversación entre un user y un chat hasta el momento
+     * 
+     * Solo hace falta que pasemos el id del chat ya que en la función del chatService ya hemos comprobado que existe la relación entre el user y el chat 
+     */
+    public List<MessageDTO> getContextForChat(Long idChat){
+        List<MessageDTO> messageDTOs = new ArrayList<>();
+        List<Message> messages = messageRepository.findByChat_IdOrderByIdAsc(idChat);
+        if (!messages.isEmpty()){
+            for (Message message : messages) messageDTOs.add(new MessageDTO(message));
+            return messageDTOs;
+        }
+        else throw new EntityNotFoundException("No se han encontrado mensajes para este chat");
     }
     
 }

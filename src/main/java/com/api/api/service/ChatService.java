@@ -52,13 +52,14 @@ public class ChatService {
         User user = userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
         if (idChat != null){
             //Comprobamos si el chat existe, si no existe lanzamos una excepción
+            //TODO: A LO MEJOR PARA QUE TENGA MAS SENTIDO EL CÓDIGO METERÍA LA SIGUIENTE LÍNEA DESPUES DE COMPROBAR QUE LA RELACIÓN EXISTE
             Chat chat = chatRepository.findById(idChat).orElseThrow(() -> new EntityNotFoundException("Chat no encontrado"));
             //Comprobamos que existe una relación entre el user y el chat
             boolean exits = chatRepository.existsByUserIdAndId(idUser, idChat);
             if (exits){
                 message.setChat(chat); //Añadimos el chat al mensaje
                 //Si existe la relación añadimos el mensaje al chat llamando a MessageService
-                response = messageService.sendMessage(message);
+                response = messageService.sendMessage(message, chat.getId());
                 if (response != null) return response;
                 else throw new AIResponseGenerationException("No se ha podido enviar el mensaje");
                 
@@ -74,7 +75,7 @@ public class ChatService {
                 chatRepository.save(newChat); //Ahora si podemos guardar el chat en la BD
                 //Una vez creado el chat añadimos el mensaje, y la respuesta que obtenemos de la IA en la tabla de mensajes de la BD
                 message.setChat(newChat);
-                response = messageService.sendMessage(message);
+                response = messageService.sendMessage(message, newChat.getId());
                 return response;
             } else throw new AIResponseGenerationException("No se ha podido crear un título para el chat");
         }

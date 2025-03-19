@@ -171,6 +171,8 @@ public class GeminiService {
         Propósito del Informe:
         El objetivo es generar un breve informe semanal que analice de forma profesional cómo la duración y calidad del sueño, junto con otros factores (actividad física, alimentación, nivel de estrés y concentración), impactan en la calidad de la toma de decisiones del usuario. Se espera que el informe integre la información de los registros diarios, las respuestas del onboarding y las respuestas relacionadas con la toma de decisiones, proporcionando una visión integral del estado del sueño y su influencia en el desempeño diario.
         El informe tiene que tener tanto una buena argumentación como un buen análisis de la toma de decisiones del user en base a la información que has recibido pasado.
+        Está bien que meniones algunas de las respuestas que el user ha puesto en los distintos cuestionarios pero haz la redacción del informe de manera profesional y cercana, como si fuese un informe de un profesional de la salud que se lo entrega a un paciente.
+        Y que dicha redacción sea de una forma fluída.
 
         Además, se pasa la edad del usuario (en el valor ageUser) para determinar en qué rango de edad se encuentra, lo que permite personalizar el informe y hacerlo más profesional.
         
