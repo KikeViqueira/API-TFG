@@ -71,10 +71,9 @@ public class SleepLogService {
 
     @Transactional
     //Función para recuperar las respuestas al cuestionario matutino de un user de ese mismo día
-    public SleepLogAnswerDTO getSleepLog(Long userId, Long sleepLogId){
+    public SleepLogAnswerDTO getSleepLog(Long userId){
         //Comprobamos que el user exista y comprobamos que el SleepLog exista
         userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("El usuario no existe"));
-        sleepLogRepository.findById(sleepLogId).orElseThrow(() -> new EntityNotFoundException("El registro de sueño no existe"));
         //Comprobamos que exista el registro correspondiente al user y que se haya hecho en el día actual
         ZoneId zone = ZoneId.systemDefault();
         LocalDate today = LocalDate.now(zone);

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.api.api.DTO.FormRequestDTO;
@@ -37,24 +38,30 @@ public class SleepLogController {
         return ResponseEntity.ok(sleepLogAnswerDTO);
     }
 
-    //Endpoint para recuperar las respuestas al cuestionario matutino de un user (ESTA PENSADO PARA ENSEÑAR SOLO LAS RESPUESTAS QUE SE HAN HECHO AL DÍA ACTUAL, Y MIENTRAS NO ACABE EL DÍA PODER VER QUE HAS RESPONDIDO)
-    @GetMapping("/{userId}/sleep-logs/{sleepLogId}")
-    public ResponseEntity<SleepLogAnswerDTO> getSleepLog(@PathVariable("userId") Long userId, @PathVariable("sleepLogId") Long sleepLogId ){
-        SleepLogAnswerDTO sleepLogAnswerDTO = sleepLogService.getSleepLog(userId, sleepLogId);
-        return ResponseEntity.ok(sleepLogAnswerDTO);
-    }
-
     /*
      * Endpoint para recuperar la duración del sueño de un user durante los últimos 7 días, en principio
+     * o Endpoint para recuperar la respuestas al cuestionario matutino de un user (ESTA PENSADO PARA ENSEÑAR SOLO LAS RESPUESTAS QUE SE HAN HECHO AL DÍA ACTUAL, Y MIENTRAS NO ACABE EL DÍA PODER VER QUE HAS RESPONDIDO)
+     * El comportamiento del controller depende de que se reciba en los parámetros de la request
      * 
-     * Para no devolver toda la info al user, tenemos que hacer un DTO que solo contenga la info que queremos devolver
-     * en este caso solo duration de SleepLogAnswer
+     * /sleep-logs?duration=7 -> Recuperar la duración del sueño de un user durante los últimos 7 días
+     * /sleep-logs?duration=1 -> Recuperar la duración del sueño de un user durante el último día
+     * 
      */
 
     @GetMapping("/{userId}/sleep-logs")
-    public ResponseEntity<Map<String, Float>> getSleepLogsDuration (@PathVariable("userId") Long userId) {
-        Map<String, Float> sleepLogsDuration = sleepLogService.getSleepLogsDuration(userId);
-        return ResponseEntity.ok(sleepLogsDuration);
+    public ResponseEntity<?> getSleepLogsDuration (@RequestParam(value = "duration", defaultValue = "1") String duration,@PathVariable("userId") Long userId) {
+        if ("7".equalsIgnoreCase(duration)){
+            Map<String, Float> sleepLogsDuration = sleepLogService.getSleepLogsDuration(userId);
+            return ResponseEntity.ok(sleepLogsDuration);
+
+        }else if ("1".equalsIgnoreCase(duration)){
+            SleepLogAnswerDTO sleepLogAnswerDTO = sleepLogService.getSleepLog(userId);
+            return ResponseEntity.ok(sleepLogAnswerDTO);
+        }else{
+            //En caso de que el valor recibido no sea 7 ni 1 devolvemos un error informativo
+            return ResponseEntity.badRequest().body("El parámetro duration solo puede ser 7 o 1");
+        }
+        
     }
     
 }

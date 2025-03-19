@@ -3,6 +3,7 @@ package com.api.api.service;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.api.api.DTO.DrmObjectDTO;
 import com.api.api.DTO.OnboardingAnswerDTO;
 import com.api.api.DTO.SaveAnswersDrmAndGenerateReportDTO;
 import com.api.api.DTO.FormRequestDTO.DRMRequestDTO;
@@ -122,5 +124,34 @@ public class DrmService {
 
         }else throw new RelationshipAlreadyExistsException("El usuario ya ha realizado el cuestionario DRM hoy");
     }
+
+    //Función para recuperar el cuestionario DRM que se ha hecho en el día de hoy
+    public String getTodayDrm(Long userId){
+        //Primero comprobamos que el user exista
+        userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("El usuario no existe"));
+        //una vez sabemos que el user existe lo que tenemos que hacer es comprobar si ha hecho el cuestionario de Drm hoy
+        ZoneId zone = ZoneId.systemDefault();
+        LocalDate today = LocalDate.now(zone);
+        ZonedDateTime start = today.atStartOfDay(zone);
+        ZonedDateTime endOfDay = today.plusDays(1).atStartOfDay(zone).minusNanos(1);
+
+        Drm drm = drmRepository.findByUser_IdAndTimeStampBetween(userId, start, endOfDay).orElseThrow(() -> new EntityNotFoundException("El usuario no ha hecho el cuestionario DRM hoy"));
+        //Una vez recuperado devolvemos el campo de report al user
+        return drm.getReport();
+    }
+
+    //Función para recuperar el historial de cuestionarios DRM que ha hecho el user
+    public List<DrmObjectDTO> getHistoricalDrm(Long userId){
+        userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("El usuario no existe"));
+        //Recuperamos todos los cuestionarios DRM que ha hecho el user
+        List<Drm> drms = drmRepository.findAllByUser_Id(userId);
+        //Comprobamos que la lista recuperado tenga algún elemento
+        if (!drms.isEmpty()){
+            //Creamos una lista de DTOs para devolver al controller
+            List<DrmObjectDTO> drmsDTO = new ArrayList<>();
+            for (Drm drm : drms) drmsDTO.add(new DrmObjectDTO(drm));
+            return drmsDTO;
+        } else throw new EntityNotFoundException("El usuario no ha hecho ningún cuestionario DRM");
+    } 
     
 }
