@@ -31,7 +31,12 @@ import lombok.Setter;
 @NoArgsConstructor
 public class Sound {
 
-    //TODO: Tenemos que comprobar que el archivo que se subo solo pueda ser de tipo audio (FrontEnd)
+    /*
+     * Al tener solo una relación y tener esta la etiqueta @JsonBackReference, no es neceario hacer un DTO para evitar el lazy loading
+     * ya que en este caso al serializar el objeto nunca se va a tener en cuenta el campo de la relación en este caso owner
+     * 
+     * Aún así, hacemos dos DTOs en un formato adecuado para que cuando sea recibido por el frontend no haya problemas
+     */
 
     //Atrubutos de la entidad Sound
     @Id

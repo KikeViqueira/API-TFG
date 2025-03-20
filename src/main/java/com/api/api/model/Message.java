@@ -1,5 +1,6 @@
 package com.api.api.model;
 
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
@@ -41,9 +42,13 @@ public class Message {
 
     //Lo mismo que en el caso de sender, pero en este caso ya lo añade hibernate
     @Column(nullable = false)
-    private ZonedDateTime time; //Tiene en cuenta la zona horaria en la que se encuentra el user
+    private LocalDateTime time; //Tiene en cuenta la zona horaria en la que se encuentra el user
 
     //DEFINIMOS LAS RELACIONES, EN ESTE CASO SOLO HAY QUE LOS MENSAJES SOLO PERTENECEN A UN CHAT
+    /*
+     * Al tener solo una relación y además teniendo el JsonBackReference podemos devolver un objeto Message en el controlador
+     * sin tener que gestionar el LazyInitializationException debido a que este campo nunca de va a serializar
+     */
     @ManyToOne
     @JoinColumn(name = "idChat", nullable = false)
     @JsonBackReference(value = "chat-messages")
@@ -53,6 +58,6 @@ public class Message {
     //Función para cuando se cree un mensaje se añada la fecha actual en base a la zona horaria en la que esta el user
     @PrePersist
     public void onCreate(){
-        this.time = ZonedDateTime.now(ZoneId.systemDefault()); //Conseguimos la hora y fecha en la zona horaria en la que está el user
+        this.time = LocalDateTime.now();
     }
 }

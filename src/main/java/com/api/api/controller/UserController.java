@@ -11,10 +11,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import com.api.api.DTO.ChatDTO;
+import com.api.api.DTO.ChatResponseDTO;
 import com.api.api.DTO.TipDTO;
 import com.api.api.DTO.UserDTO;
-import com.api.api.model.Chat;
+import com.api.api.model.Message;
 import com.api.api.model.User;
 import com.api.api.service.PatchUtils;
 import com.api.api.service.UserService;
@@ -127,23 +127,23 @@ public class UserController {
     //TODO: ENDPOINTS RELACIONADOS CON LOS CHATS QUE PERTENECEN A UN USER (TIENE SENTIDO HACERLOS AQUI YA QUE ESTÁN RELACIONADOS CON LA LÓGICA DEL USER)
     //Endpoint para recuperar el historial de chats de un usuario
     @GetMapping("/{idUser}/chats")
-    public ResponseEntity<List<ChatDTO>> getChats(@PathVariable("idUser") Long idUser){
-        List<ChatDTO> chats = userService.getChats(idUser);
+    public ResponseEntity<List<ChatResponseDTO>> getChats(@PathVariable("idUser") Long idUser){
+        List<ChatResponseDTO> chats = userService.getChats(idUser);
         return ResponseEntity.ok(chats);
     }
 
     //Endpoint para eliminar uno o varios chats de un user
     @DeleteMapping("/{idUser}/chats")
     //Recibimos en el cuerpo de la solicitud la lista de los ids de los chats que se quieren eliminar
-    public ResponseEntity<List<ChatDTO>> deleteChats(@PathVariable("idUser") Long idUser, @RequestBody List<Long> idChats){
-        List<ChatDTO> chats = userService.deleteChats(idUser, idChats);
+    public ResponseEntity<List<ChatResponseDTO>> deleteChats(@PathVariable("idUser") Long idUser, @RequestBody List<Long> idChats){
+        List<ChatResponseDTO> chats = userService.deleteChats(idUser, idChats);
         return ResponseEntity.ok(chats);
     }
 
     //Endpoint para cargar la conversación de un chat
     @GetMapping("/{idUser}/chats/{idChat}")
-    public ResponseEntity<Chat> getChat(@PathVariable("idUser") Long idUser, @PathVariable("idChat") Long idChat){
-        Chat chat = userService.getChat(idUser, idChat);
-        return ResponseEntity.ok(chat);
+    public ResponseEntity<List<Message>> getChat(@PathVariable("idUser") Long idUser, @PathVariable("idChat") Long idChat){
+        List<Message> messages = userService.getChat(idUser, idChat);
+        return ResponseEntity.ok(messages);
     }
 }

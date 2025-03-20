@@ -33,6 +33,9 @@ public class GeminiService {
     public String sendMessage(String message){ 
         String apiUrl = "/models/gemini-1.5-flash:generateContent?key=" + apiKey; // Cambiar el modelo a 1.5 Flash
 
+        System.out.println("\n\nMensaje que estamos mandado a la IA: "+ message + "\n\n");
+
+
         //PROMPT PARA INDICARLE EL FORMATO DE LA RESPUESTA A LOS MENSAJES DEL USER
         String prompt = "Responde a lo que te dice el user siempre basándote en teorías de la psicología de manera clara (si lo que te ha dicho tiene que ver con sus sueños o hábitos), en el resto de casos contesta brevemente que no estas diseñado para responder temas distintos. Quiero que respondas al user de manera profesional pero cercana y respuestas medias/cortas como si fuese una conversación de Whatsapp pero en detalle pero yendo al grano y sin expandirte demasiado pero sin ser cortante.";
 

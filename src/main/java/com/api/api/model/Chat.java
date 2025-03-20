@@ -1,9 +1,13 @@
 package com.api.api.model;
 
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+
+import org.springframework.cglib.core.Local;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -40,7 +44,7 @@ public class Chat {
 
     //Se llenara el campo gracias a la función que hemos creado en el prePersist
     @Column(nullable = false)
-    private ZonedDateTime date;
+    private LocalDateTime date;
 
     /*DEFINIMOS LAS RELACIONES DE LA CLASE*/
 
@@ -59,6 +63,6 @@ public class Chat {
     //Funcion para que se llene el campo date automáticamente
     @PrePersist
     protected void onCreate(){
-        this.date = ZonedDateTime.now(ZoneId.systemDefault()); //Conseguimos la hora y fecha en la zona horaria en la que está el user
+        this.date = LocalDateTime.now();
     }
 }

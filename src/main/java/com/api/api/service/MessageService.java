@@ -11,10 +11,8 @@ import com.api.api.model.GeminiResponse;
 import com.api.api.model.Message;
 import com.api.api.repository.MessageRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class MessageService {
@@ -47,8 +45,12 @@ public class MessageService {
         messageRepository.save(message);//Guardamos el mensaje en la bd y se guarda automáticamente la relación con el chat al que forma parte
          /*
          * Mandamos el mensaje actual del user ala IA más la conversación que ha habido hasta ahora
+         * Dependiendo de si hay mensajes hasta ahora o no
          */
-        String response = geminiService.sendMessage(message.getContent() + ", los mensajes que ha habido hasta ahora (un valor del ID menor significa que el mensaje es anterior a los que tienen ID superior) para que entienda el contexto son: " + messageDTOs.toString());
+        String response = null;
+        if (messageDTOs != null && !messageDTOs.isEmpty()) response = geminiService.sendMessage(message.getContent() + ", los mensajes que ha habido hasta ahora (un valor del ID menor significa que el mensaje es anterior a los que tienen ID superior) para que entienda el contexto son: " + messageDTOs.toString());
+        else response = geminiService.sendMessage(message.getContent());
+
         //Creamos un nuevo objeto Message para guardar la respuesta de la IA en la BD
         Message responseMessage = new Message();
         responseMessage.setSender("IA");
@@ -99,7 +101,7 @@ public class MessageService {
             for (Message message : messages) messageDTOs.add(new MessageDTO(message));
             return messageDTOs;
         }
-        else throw new EntityNotFoundException("No se han encontrado mensajes para este chat");
+        else return null; //Devolvemos null porque no queremos que se lance una excepción si no hay mensajes en la conversación hasta ahora
     }
     
 }

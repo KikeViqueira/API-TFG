@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.api.api.DTO.SoundDTO;
+import com.api.api.DTO.SoundDTO.DeleteSoundDTO;
+import com.api.api.DTO.SoundDTO.ResponseSoundDTO;
 import com.api.api.model.Sound;
 import com.api.api.service.SoundService;
 
@@ -32,9 +34,9 @@ public class SoundController {
 
     //Endpoint para obtener todos los sonidos estáticos
     @GetMapping
-    public ResponseEntity<List<SoundDTO>> getAllStaticsSounds(){
+    public ResponseEntity<List<ResponseSoundDTO>> getAllStaticsSounds(){
         //llamamos a la función del servicio que se encarga de devolvernos la lista de ellos
-        List<SoundDTO> staticSounds = soundService.getAllStaticSounds();
+        List<ResponseSoundDTO> staticSounds = soundService.getAllStaticSounds();
         return ResponseEntity.ok(staticSounds);
     }
 
@@ -42,24 +44,24 @@ public class SoundController {
     //TODO: ENDPOINT PARA OBTENER LOS SONIDOS QUE EL USER HA SUBIDO A LA APP, SOLO PUEDEN LLAMARLO LOS DUEÑOS DEL AUDIO
     //Endpoint para obtener los sonidos de los users 
     @GetMapping("/{idUser}")
-    public ResponseEntity<List<SoundDTO>> getUserSounds(@PathVariable("idUser") Long idUser ){
-        List<SoundDTO> userSounds = soundService.getUserSounds(idUser);
+    public ResponseEntity<List<ResponseSoundDTO>> getUserSounds(@PathVariable("idUser") Long idUser ){
+        List<ResponseSoundDTO> userSounds = soundService.getUserSounds(idUser);
         return ResponseEntity.ok(userSounds);
     }
 
     //Endpoint para que el user pueda crear un sonido
     @PostMapping("/{idUser}")
-    public ResponseEntity<SoundDTO> createSound(@PathVariable("idUser") Long idUser, @RequestBody @Valid Sound sound){
+    public ResponseEntity<ResponseSoundDTO> createSound(@PathVariable("idUser") Long idUser, @RequestBody @Valid Sound sound){
         //llamamos a la función encargada de crear el sonido
-        SoundDTO createdSound = soundService.createSound(idUser, sound);
+        ResponseSoundDTO createdSound = soundService.createSound(idUser, sound);
         return ResponseEntity.ok(createdSound);
     }
 
     //TODO: HACER EL ENDPOINT DE ELIMINAR UN SONIDO SI EL USUARIO YA NO LO QUIERE
     @DeleteMapping("/{idUser}/{idSound}")
-    public ResponseEntity<SoundDTO> deleteSoundUser(@PathVariable("idUser") Long idUser, @PathVariable("idSound") Long idSound){
+    public ResponseEntity<DeleteSoundDTO> deleteSoundUser(@PathVariable("idUser") Long idUser, @PathVariable("idSound") Long idSound){
         //llamamos a la función que se encarga de esta lógica
-        SoundDTO soundDTO = soundService.deleteSoundUser(idUser, idSound);
+        DeleteSoundDTO soundDTO = soundService.deleteSoundUser(idUser, idSound);
         return ResponseEntity.ok(soundDTO);
     }
 }
