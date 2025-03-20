@@ -66,7 +66,7 @@ public class SoundService {
         User user = userRepository.findById(id).orElse(null);
         if (user != null){
             //Comprobamos que el sonido que el user quiere crear ya no lo haya subido anteriormente
-            boolean exists = soundRepository.existsByOwnerIdAndFileUrl(id, sound.getFileUrl());
+            boolean exists = soundRepository.existsByOwnerIdAndSource(id, sound.getSource());
             if (!exists){
                 //Si el sonido no existe en la BD entonces lo creamos
                 sound.setDefault(false);
@@ -85,7 +85,7 @@ public class SoundService {
             //Tenemos que mirar si el sonido que está intentando eliminar el user es estático, estos solo los puede eliminar un admin
             if (sound.isDefault()) throw new AccessDeniedException("No se puede eliminar un sonido estático");
             //Tenemos que comprobar que exista la relación entre ambas entidades
-            boolean exits = soundRepository.existsByOwnerIdAndFileUrl(idUser, sound.getFileUrl()); 
+            boolean exits = soundRepository.existsByOwnerIdAndSource(idUser, sound.getSource()); 
             //la realación existe por lo que podemos eliminar el sonido de la bd y hibernate ya desvinculara el sonido del user
             if (exits){
                 soundRepository.delete(sound);

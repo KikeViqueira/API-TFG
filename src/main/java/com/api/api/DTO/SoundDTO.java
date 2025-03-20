@@ -14,7 +14,6 @@ public class SoundDTO {
          */
         private Long id;
         private String name;
-        //tenemos que llamarle source ya que es como usamos la propiedad en el frontend
         private String source;
         private Boolean isDefault;
         private Boolean isLooping;
@@ -22,7 +21,7 @@ public class SoundDTO {
         public ResponseSoundDTO(Sound sound){
             this.id = sound.getId();
             this.name = sound.getName();
-            this.source = sound.getFileUrl();
+            this.source = sound.getSource();
             this.isDefault = sound.isDefault();
             //Por defecto al cuando recuperemos o creeemos un sonido, no estará en bucle
             this.isLooping = false;
@@ -39,7 +38,7 @@ public class SoundDTO {
         public DeleteSoundDTO(Sound sound){
             this.id = sound.getId();
             this.name = sound.getName();
-            this.source = sound.getFileUrl();
+            this.source = sound.getSource();
         }
     }
 }

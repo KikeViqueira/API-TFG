@@ -50,7 +50,7 @@ public class Sound {
 
     @NotBlank(message = "La URL del archivo no puede ser vacía")
     @Column(nullable = false)
-    private String fileUrl;
+    private String source;
 
     @Column(nullable = false)
     private boolean isDefault;
@@ -74,11 +74,11 @@ public class Sound {
         if (o == null || getClass() != o.getClass()) return false;
         Sound sound = (Sound) o;
         //Dos sonidos son iguales si tienen la misma URL
-        return fileUrl.equals(sound.fileUrl);
+        return source.equals(sound.source);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(fileUrl); //Devuelve un hash del objeto tip
+        return Objects.hash(source); //Devuelve un hash del objeto tip
     }
 }

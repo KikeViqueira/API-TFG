@@ -19,7 +19,7 @@ public interface SoundRepository extends JpaRepository<Sound, Long> {
     List<Sound> findByOwnerId(Long userId); // Busca todos los sonidos donde owner.id = userId
 
     //Creamos una función para encontrar saber si un sonido ya esta relacionado con el user que llama a la función de subir un audio
-    boolean existsByOwnerIdAndFileUrl(Long idUser, String fileUrl); //Busca si existe un sonido con el owner.id = idUser y fileUrl = fileUrl
+    boolean existsByOwnerIdAndSource(Long idUser, String fileUrl); //Busca si existe un sonido con el owner.id = idUser y fileUrl = fileUrl
 
     
 } 
