@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import com.api.api.DTO.ChatResponseDTO;
 import com.api.api.DTO.TipDTO;
 import com.api.api.DTO.UserDTO;
+import com.api.api.DTO.UserDTO.UserResponseDTO;
+import com.api.api.DTO.UserDTO.UserUpdateDTO;
 import com.api.api.model.Message;
 import com.api.api.model.User;
 import com.api.api.service.PatchUtils;
@@ -27,13 +29,11 @@ import jakarta.validation.Valid;
 public class UserController {
 
     private UserService userService;
-    private PatchUtils patchUtils;
 
     //Definimos el constructor de la clase
     @Autowired //Inyección de dependencias en el constructor de la clase
     public UserController(UserService userService, PatchUtils patchUtils) {
         this.userService = userService;
-        this.patchUtils = patchUtils;
     }
 
     //Endpoint para crear el usuario en el registro y guardarlo en la BD
@@ -50,54 +50,19 @@ public class UserController {
     }
 
     //Endpoint para la actualización de la información de un user
-    @PatchMapping("/{email}") //TODO: NO SE SI TENEMOS QUE MIRAR SI LA DATA QUE SE VA ACTUALIZAR TIENE VALORES DISTINTOS A LOS QUE LE PASA EL USER, PQ SI NO LA LLAMADA NO TENDRIA MUCHO SENTIDO?
-    //TODO: NO SE SI ES BUENA IDEA DEJAR CAMBIAR EL CORREO ELECTRONICO DE UN USUARIO
-    //Spring ya convierte el String de la URL a un Long en este caso
-    public ResponseEntity<?> updateUser(@PathVariable("email") String email, @RequestBody List<Map<String, Object>> updates){
-        try {
-            //Recuperamos el user de la BD y vemos si existe o no
-            User user = userService.getUser(email);
-
-            //En caso de que el user exista comprobamos que en la lista de operaciones no haya ningun path de un atributo no modificable
-            //Primero hacemos una lista de los paths que no se pueden modificar
-            List<String> pathsNoModificables = List.of("/id", "/name","/age", "/role");
-
-            for (Map<String,Object> update : updates) {
-                String path = (String) update.get("path");
-                //En caso de que el path de la operación que quiere hacer el user no este permitida devolvemos Bad Request
-                if (pathsNoModificables.contains(path)){
-                    HashMap<String, String> errorResponse = new HashMap<>();
-                    errorResponse.put("Error", "No se puede modificar el campo "+ path);
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-                }
-                //Hacemos caso especial para el caso de que el user cambie la contraseña de la cuenta, la recibimos en texto plano y tenemos que encriptarla
-                else if(path.equals("/password")){
-                    String rawPassword = (String) update.get("value");
-                    BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-                    String encodedPassword = passwordEncoder.encode(rawPassword);
-                    update.put("value", encodedPassword); //Actualizamos el valor de la contraseña que vamos a aplicar en el patch
-                }
-            }
-            //Una vez comprobado los atributos que va a modificar el user, llamamos a patchUtils
-            User userActualizado = patchUtils.patch(user, updates);
-            //Guardamos el user actualizado en la BD, el que nos devuelve el service lo transformamos al DTO correspondiente para mostrar solo la info necesaria
-            UserDTO.UserUpdateDTO updateUserDTO = new UserDTO.UserUpdateDTO(userService.updateUser(userActualizado));
-            //Devolvemos ok y la info actualizada
-            return ResponseEntity.ok(updateUserDTO);
-        } catch (JsonPatchException e) {
-            HashMap<String, String> errorResponse = new HashMap<>();
-            errorResponse.put("error", "Error al aplicar el patch "+ e.getMessage());
-            return ResponseEntity.status(400).body(errorResponse);
-        }
+    @PatchMapping("/{idUser}") //TODO: NO SE SI TENEMOS QUE MIRAR SI LA DATA QUE SE VA ACTUALIZAR TIENE VALORES DISTINTOS A LOS QUE LE PASA EL USER, PQ SI NO LA LLAMADA NO TENDRIA MUCHO SENTIDO?
+    public ResponseEntity<UserUpdateDTO> updateUser(@PathVariable("idUser") Long idUser, @RequestBody List<Map<String, Object>> updates) throws JsonPatchException {
+        //llamamos a la función que se encarga de actualizar la info del user
+        UserUpdateDTO userUpdateDTO = userService.updateUser(idUser, updates);
+        return ResponseEntity.ok(userUpdateDTO);
     }
 
     //Endpoint para obtener la info de un user en base a su email
-    @GetMapping("/{email}")
-    public ResponseEntity<UserDTO.UserResponseDTO> getUser(@PathVariable("email") String email){
+    @GetMapping("/{idUser}")
+    public ResponseEntity<UserDTO.UserResponseDTO> getUser(@PathVariable("idUser") Long idUser){
         //llamamos a la función que recupera el user de la BD y comprobamos que exista
-        User user = userService.getUser(email);
-        UserDTO.UserResponseDTO userDTO = new UserDTO.UserResponseDTO(user);
-        return ResponseEntity.ok(userDTO);
+        User user = userService.getUser(idUser);
+        return ResponseEntity.ok(new UserResponseDTO(user));
     }
 
     //TODO: REPASARLOS

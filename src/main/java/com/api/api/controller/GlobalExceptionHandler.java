@@ -17,10 +17,10 @@ import com.api.api.DTO.CustomErrorResponseDTO;
 import com.api.api.exceptions.AIResponseGenerationException;
 import com.api.api.exceptions.NoContentException;
 import com.api.api.exceptions.RelationshipAlreadyExistsException;
+import com.github.fge.jsonpatch.JsonPatchException;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.ConstraintViolationException;
 
 /*
     * Para mantener los controllers limpios y evitar tener lógica de manejo de errores repetida,
@@ -39,12 +39,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     } 
 
+    //Tenemos que manejar las excepciones de tipo patch cuando estamos intentando actualizar campos no permitidos en la BD
+    @ExceptionHandler(JsonPatchException.class)
+    public ResponseEntity<?> handleJsonPatchException(JsonPatchException ex, HttpServletRequest request){
+        //Creamos el objeto de error
+        CustomErrorResponseDTO error = new CustomErrorResponseDTO(LocalDateTime.now(), "Error al aplicar el patch: " + ex.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    } 
+
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException ex, HttpServletRequest request){
         //Creamos el objeto de error
-        CustomErrorResponseDTO error = new CustomErrorResponseDTO(LocalDateTime.now(), "Conflicto: " + ex.getMessage(), request.getRequestURI());
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+        CustomErrorResponseDTO error = new CustomErrorResponseDTO(LocalDateTime.now(), "Petición construída de manera errónea: " + ex.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     } 
 
     @ExceptionHandler(NoContentException.class)
