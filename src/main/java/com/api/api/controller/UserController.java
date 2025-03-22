@@ -65,31 +65,9 @@ public class UserController {
         return ResponseEntity.ok(new UserResponseDTO(user));
     }
 
-    //TODO: REPASARLOS
-    //Endpoint para recuperar los tips favoritos de un user
-    @GetMapping("/{email}/favorites")
-    public ResponseEntity<List<TipDTO.TipFavDTO>> getFavoritesTips(@PathVariable("email") String email){
-        List<TipDTO.TipFavDTO> favoriteTips = userService.getFavoritesTips(email);
-        return ResponseEntity.ok(favoriteTips);
-    }
-
-    //Endpoint para eliminar un tip de los favoritos de un user
-    @DeleteMapping("/{id}/favorites/{idTip}")
-    public ResponseEntity<TipDTO.TipFavDTO> deleteFavoriteTip(@PathVariable("id") Long id, @PathVariable("idTip") Long idTip){
-        //llamamos a la función del service que se encarga de esta lógica
-        TipDTO.TipFavDTO tipDTO = userService.deleteFavoriteTip(id, idTip);
-        return ResponseEntity.ok(tipDTO);
-    }
-
-    //Endpoint para añadir un tip a los favoritos de un user
-    @PostMapping("/{id}/favorites/{idTip}")
-    public ResponseEntity<TipDTO.TipFavDTO> addFavoriteTip(@PathVariable("id") Long id, @PathVariable("idTip") Long idTip){
-        //Llamamos a la función del service que se encarga de esta lógica
-        TipDTO.TipFavDTO tipDTO = userService.addFavoriteTip(id, idTip);
-        return ResponseEntity.status(HttpStatus.CREATED).body(tipDTO); //Guardado correctamente en la lista de favoritos del user
-    }
-
-    //TODO: ENDPOINTS RELACIONADOS CON LOS CHATS QUE PERTENECEN A UN USER (TIENE SENTIDO HACERLOS AQUI YA QUE ESTÁN RELACIONADOS CON LA LÓGICA DEL USER)
+    /*
+     * Endpoints relacionados con los chats con los que e user interacciona
+     */
     //Endpoint para recuperar el historial de chats de un usuario
     @GetMapping("/{idUser}/chats")
     public ResponseEntity<List<ChatResponseDTO>> getChats(@PathVariable("idUser") Long idUser){

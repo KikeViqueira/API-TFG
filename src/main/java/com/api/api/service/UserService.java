@@ -124,65 +124,8 @@ public class UserService {
     }
 
     /*
-     * Debemos poner @Transactional en los métodos del servicio cuando necesitemos que todas las operaciones de base de datos
-     *  que se realizan en ese método se ejecuten como una sola transacción. Esto significa que si ocurre algún error en medio,
-     *  se deshacen todas las operaciones, garantizando la consistencia de los datos. También es útil en métodos que cargan datos perezosamente
-     * (lazy loading) para que las asociaciones se resuelvan correctamente mientras la transacción esté activa.
+     * Funciones que se usan para la gestión de los chats de un user
      */
-
-    @Transactional
-    //Recuperamos los tips guardados como favoritos por un user
-    public List<TipDTO.TipFavDTO> getFavoritesTips(String email){
-        List<TipDTO.TipFavDTO> tips = new ArrayList<>();
-        //Comprobamos si el user existe
-        User user = userRepository.findByEmail(email).orElse(null);
-        if (user != null) {
-            if (!user.getFavoriteTips().isEmpty()){
-                //Pasamos cada uno de los tips a su DTO correspondiente, ya que en la sección de favoritos solo queremos mostrar el título
-                for (Tip tip: user.getFavoriteTips()) tips.add(new TipDTO.TipFavDTO(tip));
-                return tips;
-            } else throw new NoContentException("EL usuario no tiene tips favoritos");
-        } else throw new EntityNotFoundException("No hay tips favoritos para el usuario con email: "+email);
-    }
-
-    @Transactional
-    //Función para eliminar un tip de la lista de favoritos del user
-    public TipDTO.TipFavDTO deleteFavoriteTip(long userId, long idTip){
-        //Comprobamos si el user existe y el tip tambien
-        User user = userRepository.findById(userId).orElse(null);
-        Tip tip = tipRepository.findById(idTip).orElse(null);
-        if (user != null){ //Comprobamos si el user tiene tiene el tip en la lista de favoritos
-            if (tip != null && user.getFavoriteTips().contains(tip)){
-                //Eliminamos el tip en caso de que el user lo tenga en favs
-                user.getFavoriteTips().remove(tip);
-                userRepository.save(user);
-                TipDTO.TipFavDTO tipFavDTO = new TipDTO.TipFavDTO(tip);
-                return tipFavDTO;
-            }else throw new EntityNotFoundException("No se ha encontrado el tip con id: "+idTip+" en la lista de favoritos del user");
-            
-        }else throw new EntityNotFoundException("No se ha encontrado al usuario con id: "+ userId);
-    }
-
-    @Transactional //TODO: TENEMOS QUE MARCAR EL METODO COMO TRANSACTIONAL CUANDO ACCEDE A UN ATRIBUTO QUE REPRESENTA UNA RELACION
-    //Función para añadir un tip a la lista de favoritos del user
-    public TipDTO.TipFavDTO addFavoriteTip(Long idUser, Long idTip){
-        //Comprobamos que el user existe y el tip existen en la BD
-        User user = userRepository.findById(idUser).orElse(null);
-        Tip tip = tipRepository.findById(idTip).orElse(null);
-        if (user != null){
-            //Tenemos que comprobar si el tip no esta ya en la lista de favoritos
-            if (tip != null && !user.getFavoriteTips().contains(tip)){
-                user.getFavoriteTips().add(tip);
-                userRepository.save(user);
-                //No hace falta guardar nada en la entidad tip ya que la encargada de la relación es la de User, asique Hibernate ya se ocupa solo de mantener la relación
-                return new TipDTO.TipFavDTO(tip);
-            }else throw new IllegalArgumentException("El tip ya está en la lista de favoritos del user");
-        } else throw new EntityNotFoundException("No se ha encontrado al usuario con id: "+idUser);
-    }
-
-
-
-    //TODO: FUNCIONES QUE SE USAN POR LOS ENDPOINTS RELACIONADOS CON LOS CHATS DEL USER
     //Función para recuperar el historial de chats de un usuario
     @Transactional //Para que no de error al hacer la consulta
     public List<ChatResponseDTO> getChats(Long idUser){
