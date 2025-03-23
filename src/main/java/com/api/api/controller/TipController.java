@@ -53,7 +53,7 @@ public class TipController {
     
     //Endpoint para crear un tip en la BD, 
     //TODO: REHACER ESTE ENDPOINT PARA QUE LA IA DEVUELVA EL CUERPO AL SERVICE Y ESTE LO GUARDE EN LA BD
-    @PostMapping
+    @PostMapping("/{idUser}/tips")
     public ResponseEntity<?> createTip(@RequestBody @Valid Tip tip){
         //llamamos a la función que se encarga de crear un tip y guardarlo en la BD
         TipDTO.TipResponseDTO tipCreado = tipService.createTip(tip);

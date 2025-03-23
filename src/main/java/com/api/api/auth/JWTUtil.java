@@ -25,10 +25,25 @@ public class JWTUtil {
     @Value("${jwt.expiration}") //En milisegundos
     private Long expiration;
 
+    @Value("${jwt.refreshExpiration}") //En milisegundos
+    private Long refreshExpiration; //Tiempo de expiración del token de refresco
+
     //Generamos el token con la información del user
     public String generateToken(String email){
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
+        return Jwts.builder()
+                .setSubject(email)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)),SignatureAlgorithm.HS512)//Nos aseguramos de que la clave cumpla con los requisitos de tamaño
+                .compact();
+    }
+
+    //Definimos el nuevo método para genera el token de refresco
+    public String generateRefreshToken(String email){
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + refreshExpiration);
         return Jwts.builder()
                 .setSubject(email)
                 .setIssuedAt(now)

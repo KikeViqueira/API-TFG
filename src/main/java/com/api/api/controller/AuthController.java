@@ -1,6 +1,11 @@
 package com.api.api.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.catalina.connector.Response;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -37,15 +42,35 @@ public class AuthController {
         //Creamos el token de autenticación a partir de las credenciales del usuario
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
 
-        //Si la autenticación es correcta, generamos el token de acceso
-        String jwt = jwtUtil.generateToken(loginRequest.getEmail());
+        //Si la autenticación es correcta, generamos el token de acceso y el de refresco
+        String accessToken = jwtUtil.generateToken(loginRequest.getEmail());
+        String refreshToken = jwtUtil.generateRefreshToken(loginRequest.getEmail());
 
-        //Se puede retorna un objeto JSON que devuelva el token y datos adicionales si son necesarios
-        return ResponseEntity.ok(new JWTAuthResponse(jwt));
-
+        //Se puede retorna obejeto json que contiene los tokens
+        return ResponseEntity.ok(new JWTAuthResponse(accessToken, refreshToken));
     }
 
-    
+    //Endpoint para la renovación del token en base al refresh token
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refreshToken(@RequestBody HashMap<String, String> request) {
+        //Extraemos el token de refresco de la petición
+        String refreshToken = request.get("refreshToken");
+
+        if (refreshToken == null || !jwtUtil.validateToken(refreshToken)){
+            //Devolvemos un error al usuario diciendo que no tiene acceso a la petición
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Refresh token caducado o inválido");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        }
+
+        //Extraemos el email del token de refresco en caso contrario
+        String email = jwtUtil.getUsernameFromJWT(refreshToken);
+        //generamos un nuevo access token y un nuevo refresh token (El token de refresco aunque no haya caducado se renueva por temas de seguridad)
+        String newAccessToken = jwtUtil.generateToken(email);
+        String newRefreshToken = jwtUtil.generateRefreshToken(email);
+
+        return ResponseEntity.ok(new JWTAuthResponse(newAccessToken, newRefreshToken));
+    }
 }
 
 //Clase para la respuesta que mandamos en la respuesta del endpoitn del login
@@ -53,9 +78,12 @@ public class AuthController {
 @Setter
 class JWTAuthResponse {
 
-    private String token;
+    private String accessToken;
 
-    public JWTAuthResponse(String token) {
-        this.token = token;
+    private String refreshToken;
+
+    public JWTAuthResponse(String accessToken, String refreshToken) {
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
     }
 }
