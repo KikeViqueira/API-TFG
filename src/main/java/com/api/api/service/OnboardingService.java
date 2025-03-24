@@ -1,5 +1,6 @@
 package com.api.api.service;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 
@@ -46,13 +47,13 @@ public class OnboardingService {
         boolean completed = onboardingAnswerRepository.existsByOnboarding_Id(onboarding.getId());
 
         if (!completed){
-            /**
+            /*
              * Si no lo ha completado delegamos la lógica en el servicio de respuestas para que las guarde en la BD de una manera correcta
              * 
              * Este servicio solo guardará las respuestas String que necesitamos guardar en identificador de la pregunta para entender el contexto de la respuesta
-             * En el caso de Edad, es mejor crear un atributo en el objeto User para guardar la edad y no guardarla en las respuestas del Onboarding, ya que se entiende por el propio valor que es la edad
+             * En el caso de Fecha de nacimeiento, es mejor crear un atributo en el objeto User para guardarla y no guardarla en las respuestas del Onboarding, ya que se entiende por el propio valor que es la fecha de nacimiento del user
              * */
-            user.setAge(Integer.parseInt(answers.get("question3")));
+            user.setBirthDate(LocalDate.parse(answers.get("question3")));
             List<OnboardingAnswer> onboardingAnswersList = onboardingAnswerService.saveOnboardingAnswers(answers, onboarding);
             //Una vez recuperamos el array de respuestas con el obejto ya bien creado lo parseamos al tipo correspondiente para devolver solo la info que interesa
             return new OnboardingAnswerDTO(onboardingAnswersList);

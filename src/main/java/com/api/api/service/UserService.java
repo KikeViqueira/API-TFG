@@ -1,32 +1,23 @@
 package com.api.api.service;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.api.api.DTO.ChatResponseDTO;
-import com.api.api.DTO.SoundDTO;
-import com.api.api.DTO.TipDTO;
 import com.api.api.DTO.UserDTO;
-import com.api.api.DTO.UserDTO.UserResponseDTO;
 import com.api.api.DTO.UserDTO.UserUpdateDTO;
 import com.api.api.exceptions.NoContentException;
 import com.api.api.model.Chat;
 import com.api.api.model.Message;
 import com.api.api.model.Onboarding;
-import com.api.api.model.Sound;
-import com.api.api.model.Tip;
 import com.api.api.model.User;
 import com.api.api.repository.ChatRepository;
 import com.api.api.repository.OnboardingRepository;
-import com.api.api.repository.SoundRepository;
 import com.api.api.repository.TipRepository;
 import com.api.api.repository.UserRepository;
 import com.github.fge.jsonpatch.JsonPatchException;
@@ -58,7 +49,8 @@ public class UserService {
     public UserDTO.UserResponseDTO registerUser(User user) {
 
         //tenemos que comprobar que el user no exista ya en la BD
-        if (userRepository.findByEmail(user.getEmail()) == null){
+        User userRecuperado = userRepository.findByEmail(user.getEmail()).orElse(null);
+        if (userRecuperado == null){
             user.setPassword(passwordEncoder.encode(user.getPassword())); // Encripta la contraseña
             //Cuando un user crea una cuenta tenemos que poner valores por defecto tanto en el role (inmutable) como en la imagen de perfil (modificable en el futuro)
             user.setRole("USER");
@@ -82,6 +74,19 @@ public class UserService {
     @Transactional
     public User getUser(Long id){
         User userRecuperado = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        return userRecuperado;
+    }
+
+    /*
+     * Función para recuperar la info de un user en la BD en base al email que se ha proporcionado:
+     * 
+     * Es llamada por la función de registrar para verificar si existe ya un usuario con ese email y
+     * también es llamada por el endpoint del login para recuperar la info del user y asi poder devolver el id en la respuesta
+     * del endpoint junto a los tokens.
+    */
+    @Transactional
+    public User getUserByEmail(String email){
+        User userRecuperado = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
         return userRecuperado;
     }
 

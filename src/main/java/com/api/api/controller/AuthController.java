@@ -3,18 +3,17 @@ package com.api.api.controller;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.catalina.connector.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import com.api.api.DTO.LoginRequest;
 import com.api.api.auth.JWTUtil;
 import com.api.api.model.User;
+import com.api.api.service.UserService;
 
 import jakarta.validation.Valid;
 import lombok.Getter;
@@ -36,6 +35,9 @@ public class AuthController {
     @Autowired
     private JWTUtil jwtUtil;
 
+    @Autowired
+    private UserService userService;
+
     //ENDPOINT PARA EL LOGIN
     @PostMapping("/login")
     public ResponseEntity<?> Login(@RequestBody @Valid LoginRequest loginRequest) {
@@ -46,8 +48,11 @@ public class AuthController {
         String accessToken = jwtUtil.generateToken(loginRequest.getEmail());
         String refreshToken = jwtUtil.generateRefreshToken(loginRequest.getEmail());
 
+        //Obtenemos usando la función del service de user el id del usuario para devolverlo en la llamada al endpoint y así poder guardarlo en el front
+        User user = userService.getUserByEmail(loginRequest.getEmail());
+
         //Se puede retorna obejeto json que contiene los tokens
-        return ResponseEntity.ok(new JWTAuthResponse(accessToken, refreshToken));
+        return ResponseEntity.ok(new JWTAuthResponse.JWTAuthLogin(accessToken, refreshToken, user.getId()));
     }
 
     //Endpoint para la renovación del token en base al refresh token
@@ -68,22 +73,37 @@ public class AuthController {
         //generamos un nuevo access token y un nuevo refresh token (El token de refresco aunque no haya caducado se renueva por temas de seguridad)
         String newAccessToken = jwtUtil.generateToken(email);
         String newRefreshToken = jwtUtil.generateRefreshToken(email);
-
-        return ResponseEntity.ok(new JWTAuthResponse(newAccessToken, newRefreshToken));
+        
+        return ResponseEntity.ok(new JWTAuthResponse.JWTAuthRefresh(newAccessToken, newRefreshToken));
     }
 }
 
-//Clase para la respuesta que mandamos en la respuesta del endpoitn del login
-@Getter
-@Setter
+//Clases para las respuestas que mandamos en la respuesta del endpoitn del login y del refresh
 class JWTAuthResponse {
+    @Getter @Setter
+    public static class JWTAuthLogin {
+        private String accessToken;
 
-    private String accessToken;
+        private String refreshToken;
+    
+        private Long userId;
+    
+        public JWTAuthLogin(String accessToken, String refreshToken, Long userId) {
+            this.accessToken = accessToken;
+            this.refreshToken = refreshToken;
+            this.userId = userId;
+        }
+    }
 
-    private String refreshToken;
+    @Getter @Setter
+    public static class JWTAuthRefresh {
+        private String accessToken;
 
-    public JWTAuthResponse(String accessToken, String refreshToken) {
-        this.accessToken = accessToken;
-        this.refreshToken = refreshToken;
+        private String refreshToken;
+    
+        public JWTAuthRefresh(String accessToken, String refreshToken) {
+            this.accessToken = accessToken;
+            this.refreshToken = refreshToken;
+        }
     }
 }

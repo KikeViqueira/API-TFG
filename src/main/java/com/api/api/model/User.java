@@ -1,9 +1,9 @@
 package com.api.api.model;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.List;
 import java.util.Objects;
-
-import org.springframework.beans.factory.annotation.Value;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -54,9 +54,9 @@ public class User {
     @NotBlank(message = "El correo no puede ser vacío") //Restriciones en el controller en lo que se refiere a validación
     private String password;
 
-    //Este atributo se completará cuando el user haga el onboarding, ponemos un valor por defecto en -1 para saber que el user no lo ha hecho
-    @Column(nullable = false)
-    private Integer age = -1;
+    //Este atributo se completará cuando el user haga el onboarding, por lo que puede ser nulo al crear la entidad que representa al user
+    @Column(nullable = true)
+    private LocalDate birthDate;
 
     private String role;
 
@@ -143,5 +143,14 @@ public class User {
     @Override
     public int hashCode() {
         return Objects.hash(email); //Devuelve un hash del objeto tip
+    }
+
+     /*
+     * Calcula la edad del usuario basándose en su fecha de nacimiento.
+     * Retorna -1 si birthDate es null.
+     */
+    public int getAge() {
+        if (birthDate == null) return -1;
+        return Period.between(birthDate, LocalDate.now()).getYears();
     }
 }

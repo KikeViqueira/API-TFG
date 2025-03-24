@@ -1,7 +1,12 @@
 package com.api.api.validation;
 
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.format.DateTimeParseException;
 import java.util.Map;
 import java.util.Set;
+
+import org.springframework.cglib.core.Local;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
@@ -76,15 +81,23 @@ public class OnboardingAnswersValidator implements ConstraintValidator<ValidOnbo
             }
              // Caso especial para question3 (edad)
             if ("question3".equals(key)) {
-                    //Intentamos convertir la respuesta a un número, esto es para que no se intente inyectar nada malicioso en esta pregunta en concreto
-                    int edad = Integer.parseInt(answer);
-                    if (edad < 10 || edad > 100) {
+                   try {
+                        //Asumimos que el formato que recibimos es el ISO
+                        LocalDate fechaNacimiento = LocalDate.parse(answer);
+                        LocalDate fechaActual = LocalDate.now();
+                        int edad = Period.between(fechaNacimiento, fechaActual).getYears();
+                        if (edad < 10 || edad > 100) {
+                            context.disableDefaultConstraintViolation();
+                            context.buildConstraintViolationWithTemplate("La edad derivada de la fecha debe estar entre 10 y 100")
+                                .addConstraintViolation();
+                            return false;
+                        }
+                   } catch (DateTimeParseException e) {
                         context.disableDefaultConstraintViolation();
-                        context.buildConstraintViolationWithTemplate("La edad debe estar entre 10 y 100")
+                        context.buildConstraintViolationWithTemplate("La fecha de nacimiento no es válida. Formato esperado: YYYY-MM-DD")
                             .addConstraintViolation();
                         return false;
-                    }
-                
+                   }
             }
             // Para las demás preguntas, comprobamos que el valor sea el permitido
             //Recuperamos los valores permitidos para la clave actual

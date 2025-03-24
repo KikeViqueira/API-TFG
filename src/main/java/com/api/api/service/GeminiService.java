@@ -184,12 +184,13 @@ public class GeminiService {
         onboardingAnswerDTO: %s
         drmRequestDTO: %s
         sleepLogsForContext: %s
-        age: %s
+        fecha de nacimiento: %s
+        edad (Si vale -1 significa que la fech de nacimiento es null): %s
         userName: %s
 
         Realiza con toda esta información lo que se te ha pedido en los objetivos, que el informe sea de aproximadamente 15 líneas o un poco mas si es necesario ya que se va a desplegar este texto en un dispositivo móvil.
         Devuelve el informe en texto plano, es decir no quiero que le metas estilo a nada de lo que escribas en el.
-        """.formatted(sleepLogsLastWeek.toString(), onboardingAnswerDTO.toString(), drmRequestDTO.toString(), sleepLogsForContext.toString(), user.getAge().toString(), user.getName());
+        """.formatted(sleepLogsLastWeek.toString(), onboardingAnswerDTO.toString(), drmRequestDTO.toString(), sleepLogsForContext.toString(), user.getBirthDate().toString(), String.valueOf(user.getAge()) , user.getName());
         
 
         System.out.println(prompt);

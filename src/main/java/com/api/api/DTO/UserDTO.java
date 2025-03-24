@@ -1,5 +1,7 @@
 package com.api.api.DTO;
 
+import java.time.LocalDate;
+
 import com.api.api.model.User;
 import lombok.*;
 
@@ -14,12 +16,14 @@ public class UserDTO {
         private Long id;
         private String name;
         private String email;
+        private LocalDate birthDate;
         private String profilePicture;
 
         public UserResponseDTO(User user) {
             this.id = user.getId();
             this.name = user.getName();
             this.email = user.getEmail();
+            if(user.getBirthDate()!= null) this.birthDate= user.getBirthDate();
             if (user.getProfilePicture()!=null) this.profilePicture = user.getProfilePicture();
         }
      }
@@ -27,13 +31,10 @@ public class UserDTO {
      //Definimos el DTO que solo tendra los atributos que se podrán actualizar
      @Getter @Setter
      public static class UserUpdateDTO{
-        private String email;
         private String profilePicture;
         private String password; //TODO: no se si es bueno devolver la contraseña en el DTO aunque sea un campo que se actualiza
 
-
         public UserUpdateDTO(User user) {
-            this.email = user.getEmail();
             this.profilePicture = user.getProfilePicture();
             this.password = user.getPassword();
         }
