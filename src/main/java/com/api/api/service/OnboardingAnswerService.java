@@ -11,7 +11,6 @@ import com.api.api.model.Onboarding;
 import com.api.api.model.OnboardingAnswer;
 import com.api.api.repository.OnboardingAnswerRepository;
 
-import jakarta.transaction.Transactional;
 
 @Service
 public class OnboardingAnswerService {

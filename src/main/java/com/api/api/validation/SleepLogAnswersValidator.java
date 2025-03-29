@@ -2,7 +2,10 @@ package com.api.api.validation;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
 import java.util.Set;
@@ -56,10 +59,10 @@ public class SleepLogAnswersValidator implements ConstraintValidator<ValidSleepL
                 }
             }
 
-            // Si es un campo de tiempo, validar el formato ISO-8601
+            // Si es un campo de tiempo, validar el formato
             if (TIME_KEYS.contains(key)) {
                 try {
-                    Instant.parse(answer);
+                    LocalDateTime.parse(answer, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
                 } catch (DateTimeParseException e) {
                     context.disableDefaultConstraintViolation();
                     context.buildConstraintViolationWithTemplate("El formato de " + key + " es inválido; se requiere ISO-8601")
@@ -94,15 +97,15 @@ public class SleepLogAnswersValidator implements ConstraintValidator<ValidSleepL
         // Si se recibieron ambos campos de tiempo, se verifica que wakeTime sea posterior a sleepTime y que la diferencia no supere 24 horas.
         if (sleepTimeStr != null && wakeTimeStr != null) {
             try {
-                Instant sleepTime = Instant.parse(sleepTimeStr);
-                Instant wakeTime = Instant.parse(wakeTimeStr);
+                LocalDateTime sleepTime = LocalDateTime.parse(sleepTimeStr, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                LocalDateTime wakeTime = LocalDateTime.parse(wakeTimeStr, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
                 if (!wakeTime.isAfter(sleepTime)) {
                     context.disableDefaultConstraintViolation();
                     context.buildConstraintViolationWithTemplate("La hora de despertar debe ser posterior a la hora de dormir")
                            .addConstraintViolation();
                     return false;
                 }
-                long diffMillis = wakeTime.toEpochMilli() - sleepTime.toEpochMilli();
+                long diffMillis = java.time.Duration.between(sleepTime, wakeTime).toMillis();
                 if (diffMillis > 86400000L) {
                     context.disableDefaultConstraintViolation();
                     context.buildConstraintViolationWithTemplate("La diferencia entre la hora de dormir y despertar no puede superar las 24 horas")

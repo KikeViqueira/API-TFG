@@ -1,10 +1,7 @@
 package com.api.api.service;
 
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -58,11 +55,10 @@ public class DrmService {
         User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("El usuario no existe"));
 
         //Comprobamos que el user ya no haya hecho un cuestionario hoy
-        ZoneId zone = ZoneId.systemDefault();
-        LocalDate today = LocalDate.now(zone);
-        ZonedDateTime start = today.atStartOfDay(zone);
-        ZonedDateTime endOfDay = today.plusDays(1).atStartOfDay(zone).minusNanos(1); //las 23:59 del día anterior
-        boolean alreadyExists = drmRepository.existsByUser_IdAndTimeStampBetween(userId, start, endOfDay);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
+        LocalDateTime endOfDay = startOfDay.plusDays(1).minusNanos(1);
+        boolean alreadyExists = drmRepository.existsByUser_IdAndTimeStampBetween(userId, startOfDay, endOfDay);
 
         if (!alreadyExists){
             /*
@@ -94,7 +90,7 @@ public class DrmService {
                 Map<Long, SleepLogAnswer> sleepLogsForContext = sleepLogService.getSleepLogsForContext(userId);
                 //recuperamos las respuestas del user al onboarding
                 OnboardingAnswerDTO onboardingAnswerDTO = onboardingService.getOnboardingAnswers(userId);
-                //llamamos ahora a la función de GeminiService que se encarga de generar el informe devolvernoslo
+                //llamamos ahora a la función de GeminiService que se encarga de generar el informe
                 String response = geminiService.generateReport(sleepLogsLastWeek, sleepLogsForContext, onboardingAnswerDTO, drmRequestDTO, user);
                 /*
                 *De todo los campos que nos devuelve la api de Gemini, solo nos interesa el campo text
@@ -126,18 +122,17 @@ public class DrmService {
     }
 
     //Función para recuperar el cuestionario DRM que se ha hecho en el día de hoy
-    public String getTodayDrm(Long userId){
+    public DrmObjectDTO getTodayDrm(Long userId){
         //Primero comprobamos que el user exista
         userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("El usuario no existe"));
         //una vez sabemos que el user existe lo que tenemos que hacer es comprobar si ha hecho el cuestionario de Drm hoy
-        ZoneId zone = ZoneId.systemDefault();
-        LocalDate today = LocalDate.now(zone);
-        ZonedDateTime start = today.atStartOfDay(zone);
-        ZonedDateTime endOfDay = today.plusDays(1).atStartOfDay(zone).minusNanos(1);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
+        LocalDateTime endOfDay = startOfDay.plusDays(1).minusNanos(1);
 
-        Drm drm = drmRepository.findByUser_IdAndTimeStampBetween(userId, start, endOfDay).orElseThrow(() -> new EntityNotFoundException("El usuario no ha hecho el cuestionario DRM hoy"));
-        //Una vez recuperado devolvemos el campo de report al user
-        return drm.getReport();
+        Drm drm = drmRepository.findByUser_IdAndTimeStampBetween(userId, startOfDay, endOfDay).orElseThrow(() -> new EntityNotFoundException("El usuario no ha hecho el cuestionario DRM hoy"));
+        //Una vez recuperado devolvemos el DTO correspondiente
+        return new DrmObjectDTO(drm);
     }
 
     //Función para recuperar el historial de cuestionarios DRM que ha hecho el user

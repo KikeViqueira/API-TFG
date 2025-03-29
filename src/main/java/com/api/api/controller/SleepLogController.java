@@ -44,7 +44,7 @@ public class SleepLogController {
      * El comportamiento del controller depende de que se reciba en los parámetros de la request
      * 
      * /sleep-logs?duration=7 -> Recuperar la duración del sueño de un user durante los últimos 7 días
-     * /sleep-logs?duration=1 -> Recuperar la duración del sueño de un user durante el último día
+     * /sleep-logs?duration=1 -> Recuperar las respuestas al cuestionario matutino de un user (solo se puede ver el día actual, no se pueden ver respuestas anteriores)
      * 
      */
 

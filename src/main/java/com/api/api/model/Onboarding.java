@@ -1,17 +1,13 @@
 package com.api.api.model;
 
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.HashMap;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -21,9 +17,6 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -43,7 +36,7 @@ public class Onboarding {
 
     //Se llenara el campo gracias a la función que hemos creado en el prePersist
     @Column(nullable = false)
-    private ZonedDateTime timeStamp;
+    private LocalDateTime timeStamp;
 
     /*
      * RELACIONES QUE INVOLUCRAN A LA ENTIDAD ONBOARDING
@@ -76,6 +69,6 @@ public class Onboarding {
     //Funcion para que se llene el campo date automáticamente
     @PrePersist
     protected void onCreate(){
-        this.timeStamp = ZonedDateTime.now(ZoneId.systemDefault()); //Conseguimos la hora y fecha en la zona horaria en la que está el user
+        this.timeStamp = LocalDateTime.now();
     }
 }

@@ -1,10 +1,8 @@
 package com.api.api.model;
 
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 
-import org.checkerframework.checker.units.qual.N;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -37,7 +35,7 @@ public class Drm {
 
     //Se llenara el campo gracias a la función que hemos creado en el prePersist
     @Column(nullable = false)
-    private ZonedDateTime timeStamp;
+    private LocalDateTime timeStamp;
 
     //Atributo que representas el informe que ha generado la IA respecto a la toma de decisiones del user
     @NotBlank(message = "El informe no puede ser vacío")
@@ -72,7 +70,7 @@ public class Drm {
     //Funcion para que se llene el campo date automáticamente
     @PrePersist
     protected void onCreate(){
-        this.timeStamp = ZonedDateTime.now(ZoneId.systemDefault()); //Conseguimos la hora y fecha en la zona horaria en la que está el user
+        this.timeStamp = LocalDateTime.now();
     }
     
 }

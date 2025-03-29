@@ -1,6 +1,7 @@
 package com.api.api.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -47,12 +48,11 @@ public class SleepLogService {
         sleepLog.setUser(user);
        
         //llamamos a la función que se encarga de guardar las respuestas en la tabla de SleepLogAnswers pero antes tenemos que calcular el inicio y fin del día
-        ZoneId zone = ZoneId.systemDefault();
-        LocalDate today = LocalDate.now(zone);
-        ZonedDateTime start = today.atStartOfDay(zone);
-        ZonedDateTime endOfDay = today.plusDays(1).atStartOfDay(zone).minusNanos(1);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
+        LocalDateTime endOfDay = startOfDay.plusDays(1).minusNanos(1);
 
-        boolean alreadyExists = sleepLogRepository.existsByUser_IdAndTimeStampBetween(userId, start, endOfDay);
+        boolean alreadyExists = sleepLogRepository.existsByUser_IdAndTimeStampBetween(userId, startOfDay, endOfDay);
         if (!alreadyExists){
             /*
             * Guardamos la entidad en la BD para generarle un id y asi poder pasarle el objeto a la función que se encarga de guardar las respuestas en SleepLogAnswerService
@@ -75,12 +75,11 @@ public class SleepLogService {
         //Comprobamos que el user exista y comprobamos que el SleepLog exista
         userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("El usuario no existe"));
         //Comprobamos que exista el registro correspondiente al user y que se haya hecho en el día actual
-        ZoneId zone = ZoneId.systemDefault();
-        LocalDate today = LocalDate.now(zone);
-        ZonedDateTime start = today.atStartOfDay(zone);
-        ZonedDateTime endOfDay = today.plusDays(1).atStartOfDay(zone).minusNanos(1);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
+        LocalDateTime endOfDay = startOfDay.plusDays(1).minusNanos(1);
         //Recuperamos el registro de sueño del user
-        SleepLog sleepLog = sleepLogRepository.findByUser_IdAndTimeStampBetween(userId, start, endOfDay).orElseThrow(() -> new EntityNotFoundException("El usuario no ha hecho el registro de sueño hoy"));
+        SleepLog sleepLog = sleepLogRepository.findByUser_IdAndTimeStampBetween(userId, startOfDay, endOfDay).orElseThrow(() -> new EntityNotFoundException("El usuario no ha hecho el registro de sueño hoy"));
         //Una vez tenemos el registro del user podemos devolver su correspondiente respuesta
         return new SleepLogAnswerDTO(sleepLog.getSleepLogAnswer());
     }
@@ -91,12 +90,12 @@ public class SleepLogService {
         //Comprobamos que el user exista
         userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("El usuario no existe"));
 
-        ZoneId zone = ZoneId.systemDefault();
-        LocalDate today = LocalDate.now(zone);
+        // Obtenemos la fecha de hoy (según la zona del sistema, ya que LocalDate.now() lo hace por defecto)
+        LocalDate today = LocalDate.now();
         // Definimos el rango de los últimos 7 días (incluyendo hoy)
         LocalDate startDate = today.minusDays(6);
-        ZonedDateTime startOfPeriod = startDate.atStartOfDay(zone);
-        ZonedDateTime endOfPeriod = today.plusDays(1).atStartOfDay(zone).minusNanos(1);
+        LocalDateTime startOfPeriod = startDate.atStartOfDay();
+        LocalDateTime endOfPeriod = today.plusDays(1).atStartOfDay().minusNanos(1);
 
         //Recuperamos todos los registros de sueño del user dentro de la semana
         List<SleepLog> sleepLogs = sleepLogRepository.findByUser_IdAndTimeStampBetweenOrderByTimeStampAsc(userId, startOfPeriod, endOfPeriod);
@@ -129,12 +128,12 @@ public class SleepLogService {
         //Comprobamos que el user exista
         userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("El usuario no existe"));
 
-        ZoneId zone = ZoneId.systemDefault();
-        LocalDate today = LocalDate.now(zone);
+        // Obtenemos la fecha de hoy (según la zona del sistema, ya que LocalDate.now() lo hace por defecto)
+        LocalDate today = LocalDate.now();
         // Definimos el rango de los últimos 7 días (incluyendo hoy)
         LocalDate startDate = today.minusDays(6);
-        ZonedDateTime startOfPeriod = startDate.atStartOfDay(zone);
-        ZonedDateTime endOfPeriod = today.plusDays(1).atStartOfDay(zone).minusNanos(1);
+        LocalDateTime startOfPeriod = startDate.atStartOfDay();
+        LocalDateTime endOfPeriod = today.plusDays(1).atStartOfDay().minusNanos(1);
 
         //Recuperamos todos los registros de sueño del user dentro de la semana
         List<SleepLog> sleepLogs = sleepLogRepository.findByUser_IdAndTimeStampBetweenOrderByTimeStampAsc(userId, startOfPeriod, endOfPeriod);

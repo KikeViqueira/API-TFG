@@ -1,5 +1,6 @@
 package com.api.api.DTO;
 
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +16,7 @@ public class DrmObjectDTO {
     //Campos del objeto Drm que vamos a devolver al user
     private Long id;
 
-    private ZonedDateTime timeStamp;
+    private LocalDateTime timeStamp;
 
     private String report;
 

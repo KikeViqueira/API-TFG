@@ -1,5 +1,6 @@
 package com.api.api.model;
 
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -39,11 +40,11 @@ public class SleepLogAnswer {
 
     @NotNull(message = "La hora en la que el user se ha ido a dormir no puede ser vacía")
     @Column(nullable = false)
-    private ZonedDateTime SleepTime;
+    private LocalDateTime SleepTime;
 
     @NotNull(message = "La hora en la que el user se ha despertado no puede ser vacía")
     @Column(nullable = false)
-    private ZonedDateTime WakeUpTime;
+    private LocalDateTime WakeUpTime;
 
     
     @NotNull(message = "La duración no puede ser nula")

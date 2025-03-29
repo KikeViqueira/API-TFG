@@ -59,8 +59,8 @@ public class DrmController {
             return ResponseEntity.ok(drms);
        }
        else if("daily".equalsIgnoreCase(period)){
-            String report = drmService.getTodayDrm(userId);
-            return ResponseEntity.ok(report);
+            DrmObjectDTO drmObjectDTO = drmService.getTodayDrm(userId);
+            return ResponseEntity.ok(drmObjectDTO);
        }
        else{
             //En caso de que period tenga otro valor devolvemos un error informativo

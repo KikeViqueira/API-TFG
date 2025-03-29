@@ -1,6 +1,6 @@
 package com.api.api.repository;
 
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,7 +20,7 @@ public interface SleepLogRepository extends JpaRepository<SleepLog, Long> {
      * algún registro de sueño entre las fechas/horas que también ha recibido por parámetros, si es true sabemos que el user ya ha hecho el registro
      */
 
-     boolean existsByUser_IdAndTimeStampBetween(Long userId, ZonedDateTime start, ZonedDateTime end);
+     boolean existsByUser_IdAndTimeStampBetween(Long userId, LocalDateTime start, LocalDateTime end);
 
      /*
      * Función para obtener el objeto SleepLog de un user dado su id y la fecha
@@ -29,7 +29,7 @@ public interface SleepLogRepository extends JpaRepository<SleepLog, Long> {
      * asi no dejamos que acceda a respuestas anteriores
      */
 
-     Optional<SleepLog> findByUser_IdAndTimeStampBetween(Long userId, ZonedDateTime start, ZonedDateTime end);
+     Optional<SleepLog> findByUser_IdAndTimeStampBetween(Long userId, LocalDateTime start, LocalDateTime end);
 
     /*
     * Definimos la función para obtener todos los objetos SleepLog de un user dado su id y un rango de fechas
@@ -37,6 +37,6 @@ public interface SleepLogRepository extends JpaRepository<SleepLog, Long> {
     * Esto es preferible a manipular manualmente el objeto de User para obtener las respuestas.
     */
 
-    List<SleepLog> findByUser_IdAndTimeStampBetweenOrderByTimeStampAsc(Long userId, ZonedDateTime start, ZonedDateTime end);
+    List<SleepLog> findByUser_IdAndTimeStampBetweenOrderByTimeStampAsc(Long userId, LocalDateTime start, LocalDateTime end);
     
 }

@@ -1,11 +1,8 @@
 package com.api.api.model;
 
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.List;
+import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.CascadeType;
@@ -15,7 +12,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
@@ -36,7 +32,7 @@ public class SleepLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private ZonedDateTime timeStamp;
+    private LocalDateTime timeStamp;
 
     /*
      * RELACIONES QUE INVOLUCRAN A LA ENTIDAD SLEEPLOG:
@@ -59,7 +55,7 @@ public class SleepLog {
     //Creamos la función para rellenar el campo de fecha automáticamente cuando la entidad vaya a ser guardada en la BD
     @PrePersist
     protected void onCreate(){
-        this.timeStamp = ZonedDateTime.now(ZoneId.systemDefault()); //Conseguimos la hora y fecha en la zona horaria en la que está el user
+        this.timeStamp = LocalDateTime.now(); //Conseguimos la hora y fecha en la zona horaria en la que está el user
     }
     
 }
