@@ -1,18 +1,14 @@
 package com.api.api.controller;
 
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import com.api.api.DTO.ChatResponseDTO;
-import com.api.api.DTO.TipDTO;
+import com.api.api.DTO.ChatResponseDTO.*;
 import com.api.api.DTO.UserDTO;
 import com.api.api.DTO.UserDTO.UserResponseDTO;
 import com.api.api.DTO.UserDTO.UserUpdateDTO;
@@ -70,16 +66,16 @@ public class UserController {
      */
     //Endpoint para recuperar el historial de chats de un usuario
     @GetMapping("/{idUser}/chats")
-    public ResponseEntity<List<ChatResponseDTO>> getChats(@PathVariable("idUser") Long idUser){
-        List<ChatResponseDTO> chats = userService.getChats(idUser);
+    public ResponseEntity<List<ChatDetailsDTO>> getChats(@PathVariable("idUser") Long idUser){
+        List<ChatDetailsDTO> chats = userService.getChats(idUser);
         return ResponseEntity.ok(chats);
     }
 
     //Endpoint para eliminar uno o varios chats de un user
     @DeleteMapping("/{idUser}/chats")
     //Recibimos en el cuerpo de la solicitud la lista de los ids de los chats que se quieren eliminar
-    public ResponseEntity<List<ChatResponseDTO>> deleteChats(@PathVariable("idUser") Long idUser, @RequestBody List<Long> idChats){
-        List<ChatResponseDTO> chats = userService.deleteChats(idUser, idChats);
+    public ResponseEntity<List<ChatDeletedDTO>> deleteChats(@PathVariable("idUser") Long idUser, @RequestBody List<Long> idChats){
+        List<ChatDeletedDTO> chats = userService.deleteChats(idUser, idChats);
         return ResponseEntity.ok(chats);
     }
 

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.api.api.DTO.ChatResponse;
 import com.api.api.DTO.ChatResponseDTO;
 import com.api.api.model.Message;
 import com.api.api.service.ChatService;
@@ -36,10 +37,10 @@ public class ChatController {
      * Si no existe creamos el chat y añadimos el mensaje, que en este caso sera el primero del chat
     */
     @PostMapping("/{idUser}/{idChat}/messages")
-    public ResponseEntity<ChatResponseDTO> addMessageToChat(@PathVariable("idUser") Long idUser,@PathVariable("idChat") String idChatStr, @RequestBody @Valid Message message){
+    public ResponseEntity<ChatResponse> addMessageToChat(@PathVariable("idUser") Long idUser,@PathVariable("idChat") String idChatStr, @RequestBody @Valid Message message){
         //Si el idChat es null, creamos un Long con valor null, si no lo parseamos a Long
         Long idChat = idChatStr.equals("null") ? null : Long.parseLong(idChatStr);
-        ChatResponseDTO chatResponseDTO = chatService.addMessageToChat(idUser, idChat, message);
+        ChatResponse chatResponseDTO = chatService.addMessageToChat(idUser, idChat, message);
         return ResponseEntity.status(HttpStatus.CREATED).body(chatResponseDTO);
     } 
 }

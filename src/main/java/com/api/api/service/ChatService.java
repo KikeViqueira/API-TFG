@@ -13,7 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException.MethodNotAllowed;
 import org.springframework.web.server.MethodNotAllowedException;
 
-import com.api.api.DTO.ChatResponseDTO;
+import com.api.api.DTO.ChatResponse;
+import com.api.api.DTO.ChatResponseDTO.*;
 import com.api.api.exceptions.AIResponseGenerationException;
 import com.api.api.exceptions.NoContentException;
 import com.api.api.model.Chat;
@@ -53,7 +54,7 @@ public class ChatService {
 
     @Transactional
     //Función para que el user pueda mandar un mensaje a un chat existente o crear uno nuevo con el primer mensaje que ha enviado
-    public ChatResponseDTO addMessageToChat(Long idUser, Long idChat, Message message){
+    public ChatResponse addMessageToChat(Long idUser, Long idChat, Message message){
         //tenemos que comprobar si el chat y el user existen
         String response = null;
         User user = userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
@@ -70,7 +71,7 @@ public class ChatService {
                     //Si existe la relación añadimos el mensaje al chat llamando a MessageService
                     response = messageService.sendMessage(message, chat.getId());
                     //Solo nos interesa devolver un ChatResponseDTO con el mensaje que la IA ha generado
-                    if (response != null) return new ChatResponseDTO(response);
+                    if (response != null) return new IAResponseDTO(response);
                     else throw new AIResponseGenerationException("No se ha podido enviar el mensaje");
 
                 } else throw new MethodNotAllowedException("addMessageToChat para chats que no son del día actual.", null);
@@ -89,7 +90,7 @@ public class ChatService {
                 message.setChat(newChat);
                 response = messageService.sendMessage(message, newChat.getId());
                 //Nos interesa devolver en el objeto tanto la info del chat que se ha creado como el mensaje que nos ha devuelto la IA
-                if (response != null) return new ChatResponseDTO(newChat, response);
+                if (response != null) return new ChatCreatedDTO(newChat, response);
                 else throw new AIResponseGenerationException("No se ha podido enviar el mensaje");
             } else throw new AIResponseGenerationException("No se ha podido crear un título para el chat");
         }

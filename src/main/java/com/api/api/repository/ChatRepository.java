@@ -1,6 +1,7 @@
 package com.api.api.repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -19,5 +20,11 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
      */
 
     boolean existsByIdAndDateBetween(Long id, LocalDateTime startOfDay, LocalDateTime endOfDay);
+
+    //Función para devolver los chats que pertenecen al usuario y están en la lista de Ids, esta función se utilizará para el endpoint de eliminación de chats
+    List<Chat> findByUserIdAndIdIn(Long userId, List<Long> chatIds);
+
+    //Función para recuperar todos los chats de un usuario
+    List<Chat> findByUserId(Long userId);
     
 }

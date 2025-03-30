@@ -1,5 +1,6 @@
 package com.api.api.service;
 
+import org.springframework.security.access.AccessDeniedException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -8,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.api.api.DTO.ChatResponseDTO;
+import com.api.api.DTO.ChatResponseDTO.*;
 import com.api.api.DTO.UserDTO;
 import com.api.api.DTO.UserDTO.UserUpdateDTO;
 import com.api.api.exceptions.NoContentException;
@@ -17,6 +18,7 @@ import com.api.api.model.Message;
 import com.api.api.model.Onboarding;
 import com.api.api.model.User;
 import com.api.api.repository.ChatRepository;
+import com.api.api.repository.MessageRepository;
 import com.api.api.repository.OnboardingRepository;
 import com.api.api.repository.TipRepository;
 import com.api.api.repository.UserRepository;
@@ -33,6 +35,9 @@ public class UserService {
 
     @Autowired
     private TipRepository tipRepository;
+
+    @Autowired
+    private MessageRepository messageRepository;
 
     @Autowired
     private ChatRepository chatRepository;
@@ -133,49 +138,49 @@ public class UserService {
      */
     //Función para recuperar el historial de chats de un usuario
     @Transactional //Para que no de error al hacer la consulta
-    public List<ChatResponseDTO> getChats(Long idUser){
+    public List<ChatDetailsDTO> getChats(Long idUser){
         //Comprobamos si el user existe en la BD
         User user = userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
-        if (user.getChats().isEmpty()) throw new NoContentException("El usuario no tiene chats");
+        //Recuperamos todos los chats que están asociados al user que ha hecho la petición
+        List<Chat> chatsOfUser = chatRepository.findByUserId(idUser);
+        if (chatsOfUser.isEmpty()) throw new NoContentException("El usuario no tiene chats");
         else{
-            List<ChatResponseDTO> chatsRecuperados = new ArrayList<>();
-            for (Chat chat : user.getChats()) chatsRecuperados.add(new ChatResponseDTO(chat));
+            List<ChatDetailsDTO> chatsRecuperados = new ArrayList<>();
+            for (Chat chat : user.getChats()) chatsRecuperados.add(new ChatDetailsDTO(chat));
             return chatsRecuperados;
         }
     }
 
     //Función para eliminar uno o varios chats de un user
     @Transactional
-    public List<ChatResponseDTO> deleteChats(Long idUser, List<Long> idChats){
+    public List<ChatDeletedDTO> deleteChats(Long idUser, List<Long> idChats){
         //Comprobamos si el user existe
         User user = userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
-        //Recuperamos los chats que si que existen en la BD y comparamos longitudes para ver si estan todos o no
-        List<Chat> chats = chatRepository.findAllById(idChats);
-        if (chats.size() == idChats.size()){
-            /*
-            * LA LONGITUD DE AMBAS LISTAS SON IGUALES POR LO QUE PODEMOS ELIMINAR TODOS LOS CHATS*/
-            user.getChats().removeAll(chats);
-            userRepository.save(user);
-            chatRepository.deleteAll(chats);
-            List<ChatResponseDTO> chatsRecuperados = new ArrayList<>();
-            for (Chat chat : chats) chatsRecuperados.add(new ChatResponseDTO(chat));
-            return chatsRecuperados;
-        } else throw new EntityNotFoundException("Uno o más chats no se han encontrado.");
+        //Recuperamos la lista de chats que pertenecen al usuario y están en la lista de Ids
+        List<Chat> chats = chatRepository.findByUserIdAndIdIn(idUser, idChats);
+        if ( chats.size() != idChats.size()) throw new AccessDeniedException("Uno o más chats no pertenecen al usuario");
+        //Si no se ha disparado la excepción podemos eliminar los chats tanto de la entidad del user como de la BD
+        user.getChats().removeAll(chats);
+        userRepository.save(user);
+        chatRepository.deleteAll(chats);
+        List<ChatDeletedDTO> chatsRecuperados = new ArrayList<>();
+        for (Chat chat : chats) chatsRecuperados.add(new ChatDeletedDTO(chat));
+        return chatsRecuperados;
     }
 
     //Función para recuperar la conversación de un chat
     @Transactional
     public List<Message> getChat(Long idUser, Long idChat){
+        //TODO: AQUI LO QUE TENEMOS QUE HACER ES QUE EN BASE AL CHAT SEA EL DE HOY O NO INDICARLE AL FRONTEND QUE SI SE PUEDE ESCRIBIR EN EL O NO
         //Comprobamos si el user existe
         userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
         //Comprobamos si el chat existe
-        Chat chat = chatRepository.findById(idChat).orElseThrow(() -> new EntityNotFoundException("Chat no encontrado"));
+        chatRepository.findById(idChat).orElseThrow(() -> new EntityNotFoundException("Chat no encontrado"));
         //Comprobamos si existe una relación entre el user y el chat
         if (chatRepository.existsByUserIdAndId(idUser, idChat)){
-            //Devolvemos la lista de mensajes del chat
-            return chat.getMessages();
+            //Devolvemos la lista de mensajes del chat llamando a la función del repositorio de mensajes que nos los devuelve ya de manera ordenada (ascendiente)
+            List<Message> messages = messageRepository.findByChat_IdOrderByIdAsc(idChat);
+            return messages;
         } else throw new IllegalArgumentException("El usuario no tiene acceso a este chat");
     }
-
-
 }
