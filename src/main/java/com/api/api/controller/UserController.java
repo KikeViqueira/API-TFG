@@ -12,9 +12,8 @@ import com.api.api.DTO.ChatResponseDTO.*;
 import com.api.api.DTO.UserDTO;
 import com.api.api.DTO.UserDTO.UserResponseDTO;
 import com.api.api.DTO.UserDTO.UserUpdateDTO;
-import com.api.api.model.Message;
 import com.api.api.model.User;
-import com.api.api.service.PatchUtils;
+import com.api.api.service.ChatService;
 import com.api.api.service.UserService;
 import com.github.fge.jsonpatch.JsonPatchException;
 
@@ -24,13 +23,11 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/users")
 public class UserController {
 
+    @Autowired //Inyección de dependencias
     private UserService userService;
 
-    //Definimos el constructor de la clase
-    @Autowired //Inyección de dependencias en el constructor de la clase
-    public UserController(UserService userService, PatchUtils patchUtils) {
-        this.userService = userService;
-    }
+    @Autowired
+    private ChatService chatService;
 
     //Endpoint para crear el usuario en el registro y guardarlo en la BD
     @PostMapping
@@ -46,7 +43,7 @@ public class UserController {
     }
 
     //Endpoint para la actualización de la información de un user
-    @PatchMapping("/{idUser}") //TODO: NO SE SI TENEMOS QUE MIRAR SI LA DATA QUE SE VA ACTUALIZAR TIENE VALORES DISTINTOS A LOS QUE LE PASA EL USER, PQ SI NO LA LLAMADA NO TENDRIA MUCHO SENTIDO?
+    @PatchMapping("/{idUser}")
     public ResponseEntity<UserUpdateDTO> updateUser(@PathVariable("idUser") Long idUser, @RequestBody List<Map<String, Object>> updates) throws JsonPatchException {
         //llamamos a la función que se encarga de actualizar la info del user
         UserUpdateDTO userUpdateDTO = userService.updateUser(idUser, updates);
@@ -67,7 +64,7 @@ public class UserController {
     //Endpoint para recuperar el historial de chats de un usuario
     @GetMapping("/{idUser}/chats")
     public ResponseEntity<List<ChatDetailsDTO>> getChats(@PathVariable("idUser") Long idUser){
-        List<ChatDetailsDTO> chats = userService.getChats(idUser);
+        List<ChatDetailsDTO> chats = chatService.getChats(idUser);
         return ResponseEntity.ok(chats);
     }
 
@@ -75,14 +72,14 @@ public class UserController {
     @DeleteMapping("/{idUser}/chats")
     //Recibimos en el cuerpo de la solicitud la lista de los ids de los chats que se quieren eliminar
     public ResponseEntity<List<ChatDeletedDTO>> deleteChats(@PathVariable("idUser") Long idUser, @RequestBody List<Long> idChats){
-        List<ChatDeletedDTO> chats = userService.deleteChats(idUser, idChats);
+        List<ChatDeletedDTO> chats = chatService.deleteChats(idUser, idChats);
         return ResponseEntity.ok(chats);
     }
 
     //Endpoint para cargar la conversación de un chat
     @GetMapping("/{idUser}/chats/{idChat}")
-    public ResponseEntity<List<Message>> getChat(@PathVariable("idUser") Long idUser, @PathVariable("idChat") Long idChat){
-        List<Message> messages = userService.getChat(idUser, idChat);
-        return ResponseEntity.ok(messages);
+    public ResponseEntity<ChatMessagesDTO> getChat(@PathVariable("idUser") Long idUser, @PathVariable("idChat") Long idChat){
+        ChatMessagesDTO conversation = chatService.getChat(idUser, idChat);
+        return ResponseEntity.ok(conversation);
     }
 }

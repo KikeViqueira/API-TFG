@@ -174,8 +174,14 @@ public class GeminiService {
         Propósito del Informe:
         El objetivo es generar un breve informe semanal que analice de forma profesional cómo la duración y calidad del sueño, junto con otros factores (actividad física, alimentación, nivel de estrés y concentración), impactan en la calidad de la toma de decisiones del usuario. Se espera que el informe integre la información de los registros diarios, las respuestas del onboarding y las respuestas relacionadas con la toma de decisiones, proporcionando una visión integral del estado del sueño y su influencia en el desempeño diario.
         El informe tiene que tener tanto una buena argumentación como un buen análisis de la toma de decisiones del user en base a la información que has recibido pasado.
-        Está bien que meniones algunas de las respuestas que el user ha puesto en los distintos cuestionarios pero haz la redacción del informe de manera profesional y cercana, como si fuese un informe de un profesional de la salud que se lo entrega a un paciente.
+        Está bien que menciones algunas de las respuestas que el user ha puesto en los distintos cuestionarios pero haz la redacción del informe de manera profesional y cercana, como si fuese un informe de un profesional de la salud que se lo entrega a un paciente.
         Y que dicha redacción sea de una forma fluída.
+
+        Resumen del objetivo para que lo puedas entender mejor:
+        Utilizando estos datos, genera un informe semanal en texto plano, sin títulos, encabezados o secciones (pero si que puedes usar parrafos). El informe debe ser un análisis profesional y cercano sobre cómo la duración y calidad del sueño han impactado la toma de decisiones del usuario, indicando de manera clara y fundamentada qué aspectos podría estar haciendo mal o qué problemas podría estar presentando.
+        Incluye ejemplos y valores específicos cuando sea relevante.
+        QUIERO QUE HAGAS UNA CONCLUSIÓN COMPLETA Y PROFESIONAL DE COMO TODA LA INFO QUE TE DA EL USER IMPACTA EN LA TOMA DE DECISIONES, NO QUIERO QUE LE DES RECOMENDACIONES PARA MEJORAR LA SITUACIÓN PQ DE ESTO
+        SE ENCARGARÁ OTRA PERSONA. Al empezar el informe si quieres te puedes referir al usario pero de una manera profesional.
 
         Además, se pasa la edad del usuario (en el valor ageUser) para determinar en qué rango de edad se encuentra, lo que permite personalizar el informe y hacerlo más profesional.
         
@@ -189,7 +195,6 @@ public class GeminiService {
         userName: %s
 
         Realiza con toda esta información lo que se te ha pedido en los objetivos, que el informe sea de aproximadamente 15 líneas o un poco mas si es necesario ya que se va a desplegar este texto en un dispositivo móvil.
-        Devuelve el informe en texto plano, es decir no quiero que le metas estilo a nada de lo que escribas en el.
         """.formatted(sleepLogsLastWeek.toString(), onboardingAnswerDTO.toString(), drmRequestDTO.toString(), sleepLogsForContext.toString(), user.getBirthDate().toString(), String.valueOf(user.getAge()) , user.getName());
         
 

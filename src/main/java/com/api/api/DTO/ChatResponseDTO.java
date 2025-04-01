@@ -1,7 +1,7 @@
 package com.api.api.DTO;
 
 import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
+import java.util.List;
 
 import com.api.api.model.Chat;
 
@@ -14,7 +14,8 @@ public class ChatResponseDTO {
 
     /*
          * Info del chat que queremos mostrar, dependiendo del contexto en algunos lados será la info del chat,
-         *  en otros la respuesta de la IA y cuando se crea el chat será la info del chat y el mensaje devuelto por la IA
+         *  en otros la respuesta de la IA, cuando se crea el chat será la info del chat y el mensaje devuelto por la IA y
+         * cuando se elimina un chat
          */
 
          @Getter @Setter
@@ -22,20 +23,11 @@ public class ChatResponseDTO {
             private Long id;
             private String name;
             private LocalDateTime date;
-            private boolean isEditable = false; //por defecto no es editable, solo lo será si el chat es del día de hoy
             
             public ChatDetailsDTO(Chat chat) {
                 this.id = chat.getId();
                 this.name = chat.getName();
                 this.date = chat.getDate();
-            }
-
-            //Constructor para indicar que el chat es de hoy y por lo tanto se puede escribir en el
-            public ChatDetailsDTO(Chat chat, boolean isEditable) {
-                this.id = chat.getId();
-                this.name = chat.getName();
-                this.date = chat.getDate();
-                this.isEditable = isEditable;
             }
         }
 
@@ -72,6 +64,29 @@ public class ChatResponseDTO {
             public ChatDeletedDTO(Chat chat) {
                 this.id = chat.getId();
                 this.name = chat.getName();
+            }
+        }
+
+        /*
+        * Clase que nos devuelve la lista de mensajes de un chat, ordenados por el id del mensaje, ya que al ser un chat no es necesario saber la fecha y hora del mensaje
+        *  ya que al estar ordenados por id ya sabemos el orden en el que se han enviado
+        *
+        * Además en el DTO devolvemos la bandera de si el chat es editable o no para que en el FrontEnd sepa si se puede hablar con el chat o no
+        */
+        @Getter @Setter
+        public static class ChatMessagesDTO{
+            private List<MessageDTO> messages;
+            private boolean isEditable = false; //bandera para saber si el chat es editable o no, si es de hoy es editable, si no es de hoy no es editable
+
+             //Constructor para crear el DTO si el chat no es de hoy
+             public ChatMessagesDTO(List<MessageDTO> messages) {
+                this.messages = messages;
+            }
+
+            //Constructor para crear el DTO si el chat es de hoy
+            public ChatMessagesDTO(List<MessageDTO> messages, boolean isEditable) {
+                this.messages = messages;
+                this.isEditable = isEditable;
             }
         }
 
