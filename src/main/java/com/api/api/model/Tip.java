@@ -4,7 +4,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
@@ -42,7 +41,6 @@ public class Tip {
 
     /*La relacion muchos a muchos entre user y tips ya esta definida en la entidad User, por lo que para conectarla
      desde este lado tenemos que hacer una mappedBy al atributo que representa dicha relacion en la clase User */
-     //TODO: @ManyToMany(mappedBy = "favoriteTips", fetch = FetchType.EAGER)
      @ManyToMany(mappedBy = "favoriteTips")
      @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
      private Set<User> users; //Lista de users que han marcado este tip como favorito
@@ -50,7 +48,6 @@ public class Tip {
      /*Relación uno a uno entre un tip y sus detalles*/
      @OneToOne(mappedBy = "tip", cascade = CascadeType.ALL) //Entiendo que lo que indica esto es que todo lo que se haga de cambios en la entidad, se reflejará en la otra que está relacionada
      @JsonManagedReference(value = "tipDetails")
-     @JsonIgnore
      private TipDetail tipDetail;
 
 

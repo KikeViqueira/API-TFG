@@ -1,19 +1,34 @@
 package com.api.api.service;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.api.api.repository.DrmRepository;
+import com.api.api.repository.TipDetailRepository;
 import com.api.api.repository.TipRepository;
 import com.api.api.repository.UserRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
+import com.api.api.DTO.DrmObjectDTO;
+import com.api.api.DTO.OnboardingAnswerDTO;
 import com.api.api.DTO.TipDTO;
+import com.api.api.DTO.TipDTO.TipGeneratedWithAiDTO;
+import com.api.api.DTO.TipDTO.TipResponseDTO;
+import com.api.api.exceptions.JsonMappingTipException;
 import com.api.api.exceptions.NoContentException;
+import com.api.api.model.GeminiResponse;
+import com.api.api.model.SleepLogAnswer;
 import com.api.api.model.Tip;
 import com.api.api.model.TipDetail;
 import com.api.api.model.User;
@@ -27,14 +42,33 @@ public class TipService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private DrmRepository drmRepository;
+
+    @Autowired
+    private TipDetailRepository tipDetailRepository;
+
+    @Autowired
+    private SleepLogService sleepLogService;
+
+    @Autowired
+    private OnboardingService onboardingService;
+
+    @Autowired
+    private DrmService drmService;
+
+    @Autowired
+    private GeminiService geminiService;
+
     /*
      * Estos primeros métodos son para la gestión de los tips en la app en base a la acción del user
      */
-    //Función para obtener todos los tips de la BD
-    public List<TipDTO.TipResponseDTO> getTips(){
-        //En caso de que no haya tips devolvemos null
-        List<Tip> tips = tipRepository.findAll();
-        if (tips.isEmpty()) throw new EntityNotFoundException("No hay tips en la BD");
+    //Función para obtener todos los tips de la BD relacionados con un user
+    public List<TipDTO.TipResponseDTO> getTips(Long idUser){
+        userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("El usuario no existe"));
+        //Recuperamos los tips del user
+        List<Tip> tips = tipRepository.findByUser_Id(idUser);
+        if (tips.isEmpty()) throw new EntityNotFoundException("No hay tips en la BD que se correspondan con el user");
         else{
             //Hacemos la conversión
             List<TipDTO.TipResponseDTO> tipsResponse = new ArrayList<>();
@@ -54,13 +88,96 @@ public class TipService {
     }
 
     //Función para guardar un tip en la BD
-    public TipDTO.TipResponseDTO createTip(Tip tip){
-        //primero tenemos que comprobar que el tip que se está intentando crear no existe ya en la BD
-        if (geTipByTitle(tip.getTitle()) != null){
-            throw new IllegalArgumentException("El tip que se está intentando crear ya existe.");
-        }else{
-            Tip tipCreado = tipRepository.save(tip);
-            return new TipDTO.TipResponseDTO(tipCreado);
+    public TipResponseDTO createTip(Long userId){
+        User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("El usuario no existe"));
+        /**
+         * Para poder generar el tip el usuario ha tenido que hacer lo siguiente:
+         * 1. Hacer el onboarding
+         * 2. Hacer el cuestionario DRM de hoy, ya que es ahí donde se genera un tip personalizado para el user
+         * 3. Tener un sleep log en lo que llevamos de semana mínimo
+         */
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
+        LocalDateTime endOfDay = startOfDay.plusDays(1).minusNanos(1);
+        boolean exists = drmRepository.existsByUser_IdAndTimeStampBetween(userId, startOfDay, endOfDay);
+
+        if(exists){
+            //Si existe lo tenemos que recuperar
+            DrmObjectDTO drmObjectDTO = drmService.getTodayDrm(userId);
+
+            //Recuperamos los sleep logs de la semana
+            Map <String, Float> sleepLogsLastWeek = sleepLogService.getSleepLogsDuration(userId);
+            //Comprobamos que haya el menos un registro válido de lo que hemos recuperado
+            if (sleepLogsLastWeek.values().stream().anyMatch(value -> value != 0)){
+                //Conseguimos tanto el onboarding como las respuestas completas a esos sleep logs válidos para que la IA tenga un mayor contexto
+                Map<Long, SleepLogAnswer> sleepLogsForContext = sleepLogService.getSleepLogsForContext(userId);
+                OnboardingAnswerDTO onboarding = onboardingService.getOnboardingAnswers(userId);
+
+                //LLAMAMOS A LA FUNCIÖN DE LA API PARA QUE GENERE EL TIP PERSONALIZADO //TODO: TENEMOS QUE HACER QUE EN CASO DE QUE EL USER AL QUE LE ESTAMOS GENERANDOEL TIP YA TENGA OTROS, RECUPERARLOS Y PASARSELOS A LA IA
+                String response = geminiService.generateTip(sleepLogsLastWeek, sleepLogsForContext, onboarding, drmObjectDTO, user);
+                /*
+                *De todo los campos que nos devuelve la api de Gemini, solo nos interesa el campo text
+                *Para eso pasamos el JSON que hemos recibido a un objeto de la clase GeminiResponse mediante el uso de ObjectMapper de Jackson
+                */
+                String tipGenerated = null;
+                ObjectMapper objectMapper = new ObjectMapper();
+                try {
+                    GeminiResponse geminiResponse = objectMapper.readValue(response, GeminiResponse.class);
+                    //Guardamos en un String la parte de la respuesta de la IA que nos interesa (Se supone que va a tener formato JSON obligatorio)
+                    tipGenerated = geminiResponse.getCandidates().get(0).getContent().getParts().get(0).getText();
+                } catch (JsonProcessingException e) {
+                    System.out.println("Error al pasar la respuesta de la API de la IA al objeto correspondiente: "+ e.getMessage());
+                }
+                //Comprobamos que el tip generado no sea null
+                if (Objects.nonNull(tipGenerated)){
+                     //Una vez tenemos la respuesta lo que tenemos que hacer es parsearla a formato Json y guardar la info en la entidad correspondiente (De esta lógica se encarga el método saveTipFromJson)
+                    TipResponseDTO tipResponseDTO = saveTipFromJson(tipGenerated);
+                    //En el caso de que se haya guardado correctamente devolvemos la respuesta, en caso contrario lanzamos una excepción
+                    if (Objects.nonNull(tipResponseDTO)) return tipResponseDTO;
+                    else throw new JsonMappingTipException("Error al parsear la respuesta de la IA en su entidad correspondiente");
+                } else throw new NoContentException("La IA no ha devuelto un tip personalizado para el usuario");
+            } else throw new NoContentException("El usuario no ha hecho ningún cuestionario matutino en la última semana");
+        } else throw new NoContentException("El usuario no ha hecho el cuestionario DRM de hoy, por lo que no se puede generar un tip personalizado para él.");
+    }
+
+    /*
+     * Método que recibe un JSON string, lo parsea y guarda la entidad Tip junto con su TipDetail.
+     *
+     * @param jsonString JSON que contiene los campos de Tip y TipDetail.
+     * @return La entidad TipResponseDTO persistida o null si ocurrió un error.
+     */
+    private TipResponseDTO saveTipFromJson(String jsonString) {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            // Parseamos el JSON a TipDTO
+            TipGeneratedWithAiDTO tipDTO = mapper.readValue(jsonString, TipGeneratedWithAiDTO.class);
+
+            // Creamos la entidad Tip y asignamos los campos correspondientes
+            Tip tip = new Tip();
+            tip.setTitle(tipDTO.getTitle());
+            tip.setDescription(tipDTO.getDescription());
+            tip.setIcon(tipDTO.getIcon());
+
+            // Creamos la entidad TipDetail y asignamos sus campos
+            TipDetail tipDetail = new TipDetail();
+            tipDetail.setFullDescription(tipDTO.getFullDescription());
+            tipDetail.setBenefits(tipDTO.getBenefits());
+            tipDetail.setSteps(tipDTO.getSteps());
+
+            // Establecemos la relación bidireccional. Si guardasemos el tip y el detalle sin hacer esto cada uno tendría su propio id
+            tip.setTipDetail(tipDetail);
+            tipDetail.setTip(tip);
+
+            // Persistimos las entidades
+            tipRepository.save(tip);
+            tipDetailRepository.save(tipDetail);
+
+            return new TipResponseDTO(tipDTO);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 

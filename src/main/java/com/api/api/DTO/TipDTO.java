@@ -1,5 +1,7 @@
 package com.api.api.DTO;
 
+import java.util.List;
+
 import com.api.api.model.Tip;
 import lombok.Getter;
 import lombok.Setter;
@@ -24,20 +26,41 @@ public class TipDTO {
     @Getter
     @Setter
     public static class TipResponseDTO {
-        //Hacemos un DTO para indicar como tiene que serla respuesta de la api cuando creamos un tip
+        //Objeto que vamos a devolver al user cuando se haga un tip o cuando se recuperen los tips a enseñar en la app
         private Long id;
         private String title;
-        private String description;
         private String icon;
+        private String description;
 
         public TipResponseDTO(Tip tip){
             this.id = tip.getId();
             this.title = tip.getTitle();
-            this.description = tip.getDescription();
             this.icon = tip.getIcon();
+            this.description = tip.getDescription();
+        }
+
+        public TipResponseDTO(TipGeneratedWithAiDTO tipDTO){
+            this.id = tipDTO.getId();
+            this.title = tipDTO.getTitle();
+            this.icon = tipDTO.getIcon();
+            this.description = tipDTO.getDescription();
         }
     }
 
-
+    @Getter
+    @Setter
+    public static class TipGeneratedWithAiDTO {
+        /*
+         * Hacemos un DTO para guardar en el los valores que vienen del json String de la respuesta de la IA
+         * Sirve como paso intermedio y despues asignar a las entidades de Tip y TipDetail los valores correspondientes
+         * */
+        private Long id;
+        private String title;
+        private String description;
+        private String icon;
+        private String fullDescription;
+        private List<String> benefits;
+        private List<String> steps;
+    }
     
 }

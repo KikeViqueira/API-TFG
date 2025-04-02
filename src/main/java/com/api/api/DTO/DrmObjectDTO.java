@@ -1,11 +1,9 @@
 package com.api.api.DTO;
 
 import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 import com.api.api.model.Drm;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -16,6 +14,7 @@ public class DrmObjectDTO {
     //Campos del objeto Drm que vamos a devolver al user
     private Long id;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDateTime timeStamp;
 
     private String report;

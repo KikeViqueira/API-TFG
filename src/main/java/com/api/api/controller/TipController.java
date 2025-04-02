@@ -2,28 +2,14 @@ package com.api.api.controller;
 
 import java.util.List;
 
-import org.apache.catalina.connector.Response;
-import org.hibernate.annotations.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import com.api.api.DTO.TipDTO;
-import com.api.api.DTO.UserDTO;
-import com.api.api.model.Tip;
-import com.api.api.model.TipDetail;
-import com.api.api.model.User;
-import com.api.api.service.PatchUtils;
 import com.api.api.service.TipService;
-import com.api.api.service.UserService;
-import com.github.fge.jsonpatch.JsonPatchException;
 
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.Valid;
-import lombok.val;
 
 @RestController
 @RequestMapping("/api/users")
@@ -45,18 +31,17 @@ public class TipController {
 
     //Endpoint para recuperar los tips que el user ha generado y guardado en la BD
     @GetMapping("/{idUser}/tips")
-    public ResponseEntity<List<TipDTO.TipResponseDTO>> getTips(){
+    public ResponseEntity<List<TipDTO.TipResponseDTO>> getTips(@PathVariable("idUser") Long idUser){
         //llamamos a la función que se encarga de recuperar los tips de la BD
-        List<TipDTO.TipResponseDTO> tips = tipService.getTips();
+        List<TipDTO.TipResponseDTO> tips = tipService.getTips(idUser);
         return ResponseEntity.ok(tips);
     }
     
     //Endpoint para crear un tip en la BD, 
-    //TODO: REHACER ESTE ENDPOINT PARA QUE LA IA DEVUELVA EL CUERPO AL SERVICE Y ESTE LO GUARDE EN LA BD
     @PostMapping("/{idUser}/tips")
-    public ResponseEntity<?> createTip(@RequestBody @Valid Tip tip){
+    public ResponseEntity<?> createTip(@PathVariable("idUser") Long idUser){
         //llamamos a la función que se encarga de crear un tip y guardarlo en la BD
-        TipDTO.TipResponseDTO tipCreado = tipService.createTip(tip);
+        TipDTO.TipResponseDTO tipCreado = tipService.createTip(idUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(tipCreado);
     }
 
