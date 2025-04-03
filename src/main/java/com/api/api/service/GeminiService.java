@@ -14,6 +14,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import com.api.api.DTO.DrmObjectDTO;
 import com.api.api.DTO.OnboardingAnswerDTO;
 import com.api.api.DTO.FormRequestDTO.DRMRequestDTO;
+import com.api.api.DTO.TipDTO.TipResponseDTO;
 import com.api.api.model.SleepLogAnswer;
 import com.api.api.model.User;
 
@@ -219,7 +220,7 @@ public class GeminiService {
 
 
      //Función para generar un tip que mejores los hábitos en general del user
-     public String generateTip(Map<String, Float> sleepLogsLastWeek,Map<Long, SleepLogAnswer> sleepLogsForContext, OnboardingAnswerDTO onboardingAnswerDTO, DrmObjectDTO drmObjectDTO, User user){
+     public String generateTip(Map<String, Float> sleepLogsLastWeek,Map<Long, SleepLogAnswer> sleepLogsForContext, OnboardingAnswerDTO onboardingAnswerDTO, DrmObjectDTO drmObjectDTO, User user, List<TipResponseDTO> userTips){
         String apiUrl = "/models/gemini-1.5-flash:generateContent?key=" + apiKey; // Cambiar el modelo a 1.5 Flash
 
         //PROMPT PARA INDICARLE EL FORMATO DEL INFORME DE LA TOMA DE DECISIONES Y QUE ES LO QUE TIENE QUE TENER EN CUENTA PARA HACERLO
@@ -290,6 +291,13 @@ public class GeminiService {
                     • Para "65+":      minHours = 7,   idealHours = 7.5, maxHours = 8.
             - phases: (Información sobre las fases del sueño que se registra, pero no es necesario analizarla ya que aún no está implementado.)
 
+        6. Lista de tips que el user ya tiene guardados (userTips):
+        Este objeto que se te ha pasado contien los tips que ya se le han generado al user para que textos contexto y asi poder generar tips no repetidos.
+        Este objeto contiene los siguientes campos:
+            - title: El título del tip.
+            - icon: El icono del tip.
+            - description: Una breve descripción del tip.    
+
         Propósito del Informe:
         El objetivo es generar un breve informe semanal que analice de forma profesional cómo la duración y calidad del sueño, junto con otros factores (actividad física, alimentación, nivel de estrés y concentración), impactan en la calidad de la toma de decisiones del usuario. Se espera que el informe integre la información de los registros diarios, las respuestas del onboarding y las respuestas relacionadas con la toma de decisiones, proporcionando una visión integral del estado del sueño y su influencia en el desempeño diario.
         El informe tiene que tener tanto una buena argumentación como un buen análisis de la toma de decisiones del user en base a la información que has recibido pasado.
@@ -312,6 +320,7 @@ public class GeminiService {
         fecha de nacimiento: %s
         edad (Si vale -1 significa que la fech de nacimiento es null): %s
         userName: %s
+        userTips: %s (Puede ser a veces que no haya tips, en ese caso tienes decisión libre de como hacerlo pero no puedes repetir los tips que ya tiene el user)
 
         Por favor, responde exclusivamente con un objeto JSON que contenga los siguientes campos y valores, respetando estrictamente el formato indicado y sin incluir ningún comentario, explicación o contenido extra. La respuesta debe ser un JSON válido y utilizar un tono profesional
         que ayude aluser a mejorar su calidad de vida y hábitos, y que esteobjeto no esté repetido en la lista de tips que ya tiene el user. El JSON debe contener los siguientes campos (ES UN EJEMPLO PARA QUE SEPAS QUE ESTRUCTURA TIENES QUE DEVOLVER):
@@ -329,7 +338,7 @@ public class GeminiService {
                 "Paso 2"
             ]
         }
-        """.formatted(sleepLogsLastWeek.toString(), onboardingAnswerDTO.toString(), drmObjectDTO.toString(), sleepLogsForContext.toString(), user.getBirthDate().toString(), String.valueOf(user.getAge()) , user.getName());
+        """.formatted(sleepLogsLastWeek.toString(), onboardingAnswerDTO.toString(), drmObjectDTO.toString(), sleepLogsForContext.toString(), user.getBirthDate().toString(), String.valueOf(user.getAge()) , user.getName(), userTips.toString());
         
 
         System.out.println(prompt);

@@ -26,5 +26,8 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
 
     //Función para recuperar todos los chats de un usuario
     List<Chat> findByUserId(Long userId);
+
+    //Función para recuperar todos los chats de un usuario dentro de un rango de fechas
+    List<Chat> findByUser_IdAndDateBetween(Long userId, LocalDateTime startDate, LocalDateTime endDate);
     
 }

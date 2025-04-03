@@ -45,6 +45,16 @@ public class TipDTO {
             this.icon = tipDTO.getIcon();
             this.description = tipDTO.getDescription();
         }
+
+        //Tenemos que implementar el método de ToString para que al hacer un System.out.println(tipDTO) se imprima el objeto como queremos
+        @Override
+        public String toString() {
+            return "TipResponseDTO{" +
+                    "' title='" + title + '\'' +
+                    ", icon='" + icon + '\'' +
+                    ", description='" + description + '\'' +
+                    '}';
+        }
     }
 
     @Getter

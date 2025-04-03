@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.api.api.DTO.TipDTO;
+import com.api.api.DTO.TipDTO.TipResponseDTO;
 import com.api.api.service.TipService;
 
 
@@ -39,7 +40,7 @@ public class TipController {
     
     //Endpoint para crear un tip en la BD, 
     @PostMapping("/{idUser}/tips")
-    public ResponseEntity<?> createTip(@PathVariable("idUser") Long idUser){
+    public ResponseEntity<TipResponseDTO> createTip(@PathVariable("idUser") Long idUser){
         //llamamos a la función que se encarga de crear un tip y guardarlo en la BD
         TipDTO.TipResponseDTO tipCreado = tipService.createTip(idUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(tipCreado);

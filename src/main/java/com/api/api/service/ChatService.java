@@ -1,12 +1,16 @@
 package com.api.api.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.MethodNotAllowedException;
 
 import com.api.api.DTO.ChatResponse;
@@ -53,19 +57,19 @@ public class ChatService {
     public ChatResponse addMessageToChat(Long idUser, Long idChat, Message message){
         //tenemos que comprobar si el chat y el user existen
         String response = null;
-        User user = userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        User user = this.userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
         if (idChat != null){
             //Comprobamos si el chat existe, si no existe lanzamos una excepción
-            Chat chat = chatRepository.findById(idChat).orElseThrow(() -> new EntityNotFoundException("Chat no encontrado"));
+            Chat chat = this.chatRepository.findById(idChat).orElseThrow(() -> new EntityNotFoundException("Chat no encontrado"));
             //Comprobamos que existe una relación entre el user y el chat
-            boolean exits = chatRepository.existsByUserIdAndId(idUser, idChat);
+            boolean exits = this.chatRepository.existsByUserIdAndId(idUser, idChat);
             //Comprobamos si existe relación entre el chat y el user
             if (exits){
                 //Comprobamos si el chat es de hoy o no, si no es de hoy no se le puede mandar el mensaje
                 if (isChatOfToday(idChat)){
                     message.setChat(chat); //Añadimos el chat al mensaje
                     //Si existe la relación añadimos el mensaje al chat llamando a MessageService
-                    response = messageService.sendMessage(message, chat.getId());
+                    response = this.messageService.sendMessage(message, chat.getId());
                     //Solo nos interesa devolver un ChatResponseDTO con el mensaje que la IA ha generado
                     if (response != null) return new IAResponseDTO(response);
                     else throw new AIResponseGenerationException("No se ha podido enviar el mensaje");
@@ -77,14 +81,14 @@ public class ChatService {
         else{
             Chat newChat = createChat(user);
             //Primero tenemos que crear un título para el chat en base al primer mensaje que se ha enviado
-            String title = messageService.createTitle(message);
+            String title = this.messageService.createTitle(message);
             //Si el título es distinto de null, añadimos la info al chat y lo guardamos y enviamos el mensaje
             if (title != null){
                 newChat.setName(title);
-                chatRepository.save(newChat); //Ahora si podemos guardar el chat en la BD
+                this.chatRepository.save(newChat); //Ahora si podemos guardar el chat en la BD
                 //Una vez creado el chat añadimos el mensaje, y la respuesta que obtenemos de la IA en la tabla de mensajes de la BD
                 message.setChat(newChat);
-                response = messageService.sendMessage(message, newChat.getId());
+                response = this.messageService.sendMessage(message, newChat.getId());
                 //Nos interesa devolver en el objeto tanto la info del chat que se ha creado como el mensaje que nos ha devuelto la IA
                 if (response != null) return new ChatCreatedDTO(newChat, response);
                 else throw new AIResponseGenerationException("No se ha podido enviar el mensaje");
@@ -94,15 +98,53 @@ public class ChatService {
 
 
     /*
-     * Funciones que se usan para la gestión de los chats de un user
+     * Funciones que se usan para la gestión de los chats de un user:
+     * 1. Recupera el historial de los chats de un user
+     * 2. Recupera os chats que ha tenido el user en los últimos tres meses
+     * 3. Recupera los chats que hay een un rango de fechas que puede especificar el user
+     * 
+     * Esto se lo indicamos al método en base a un parámetro que le pasamos en la petición (filter)
      */
-    //Función para recuperar el historial de chats de un usuario
     @Transactional //Para que no de error al hacer la consulta
-    public List<ChatDetailsDTO> getChats(Long idUser){
+    public List<ChatDetailsDTO> getChats(Long idUser,
+        @RequestParam(name="filter", required = false, defaultValue = "history") String filter,
+        @RequestParam(name = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+        @RequestParam(name = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+    ){
         //Comprobamos si el user existe en la BD
-        User user = userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
-        //Recuperamos todos los chats que están asociados al user que ha hecho la petición
-        List<Chat> chatsOfUser = chatRepository.findByUserId(idUser);
+        User user = this.userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        //Definimos la lista donde guardaremos los chats que se recuperen de la BD
+        List<Chat> chatsOfUser = new ArrayList<>();
+        //Comprobamos el valor del parámetro filter y en base a eso recuperamos los chats de la BD
+        switch (filter.toLowerCase()) {
+            case "history":
+                //Recuperamos todos los chats que tiene el user
+                chatsOfUser = this.chatRepository.findByUserId(idUser);
+                break;
+            case "last3Months":
+                //Recuperamos los chats que tiene el user en los últimos tres meses
+                LocalDateTime now = LocalDateTime.now();
+                LocalDateTime startDateLast3Months = now.minusMonths(3).withHour(0).withMinute(0).withSecond(0).withNano(0);
+                LocalDateTime endDateLast3Months = now.withHour(23).withMinute(59).withSecond(59).withNano(999999999);
+                chatsOfUser = this.chatRepository.findByUser_IdAndDateBetween(idUser, startDateLast3Months, endDateLast3Months);
+                break;
+            
+            case "range":
+                //Comprobamos que el rango de fechas es correcto, si no lo es lanzamos una excepción
+                if (Objects.isNull(startDate) || Objects.isNull(endDate)) throw new IllegalArgumentException("El rango de fechas no es correcto. Debe especificar tanto la fecha de inicio como la fecha de fin.");
+                if (startDate.isAfter(endDate)) throw new IllegalArgumentException("La fecha de inicio no puede ser posterior a la fecha de fin.");
+                //Recuperamos los chats que tiene el user en el rango de fechas que ha especificado, tenemos que poner la hora de inicio a 00:00:00 y la hora de fin a 23:59:59.999999999 para que nos devuelva todos los chats que hay en ese rango
+                //Si no podríamos estar no estar recuperando chats que si que están en el rango que se ha especificado
+                LocalDateTime startDateRange = startDate.atStartOfDay();
+                LocalDateTime endDateRange = endDate.atTime(23, 59, 59, 999999999);
+                chatsOfUser = this.chatRepository.findByUser_IdAndDateBetween(idUser, startDateRange, endDateRange);
+                break;
+    
+            default:
+                //No debería entrar aquí, pero por si acaso lanzamos una excepción
+                throw new IllegalArgumentException("El valor del parámetro filter no es correcto. Los valores válidos son: history, last3Months o range.");
+        }
+
         if (chatsOfUser.isEmpty()) throw new NoContentException("El usuario no tiene chats");
         else{
             List<ChatDetailsDTO> chatsRecuperados = new ArrayList<>();
@@ -115,14 +157,14 @@ public class ChatService {
     @Transactional
     public List<ChatDeletedDTO> deleteChats(Long idUser, List<Long> idChats){
         //Comprobamos si el user existe
-        User user = userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        User user = this.userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
         //Recuperamos la lista de chats que pertenecen al usuario y están en la lista de Ids
-        List<Chat> chats = chatRepository.findByUserIdAndIdIn(idUser, idChats);
+        List<Chat> chats = this.chatRepository.findByUserIdAndIdIn(idUser, idChats);
         if ( chats.size() != idChats.size()) throw new AccessDeniedException("Uno o más chats no pertenecen al usuario");
         //Si no se ha disparado la excepción podemos eliminar los chats tanto de la entidad del user como de la BD
         user.getChats().removeAll(chats);
-        userRepository.save(user);
-        chatRepository.deleteAll(chats);
+        this.userRepository.save(user);
+        this.chatRepository.deleteAll(chats);
         List<ChatDeletedDTO> chatsRecuperados = new ArrayList<>();
         for (Chat chat : chats) chatsRecuperados.add(new ChatDeletedDTO(chat));
         return chatsRecuperados;
@@ -156,6 +198,6 @@ public class ChatService {
         LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
         LocalDateTime endOfDay = startOfDay.plusDays(1).minusNanos(1);
 
-        return chatRepository.existsByIdAndDateBetween(chatId, startOfDay, endOfDay);
+        return this.chatRepository.existsByIdAndDateBetween(chatId, startOfDay, endOfDay);
     }
 }

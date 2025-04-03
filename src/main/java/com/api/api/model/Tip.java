@@ -3,6 +3,7 @@ package com.api.api.model;
 import java.util.Objects;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
@@ -37,13 +38,23 @@ public class Tip {
     @Column(nullable = false)
     private String icon;
 
+    //Campo de la entidad que nos indica si el user tiene el tip como favorito o no
+    @Column(nullable = false)
+    private boolean isFavorite = false; //Por defecto, el tip no es favorito
+
     //DEFINIMOS LAS RELACIONES QUE TIENE LA ENTIDAD TIP CON EL RESTO DE ENTIDADES DE NUESTRA BD
 
     /*La relacion muchos a muchos entre user y tips ya esta definida en la entidad User, por lo que para conectarla
-     desde este lado tenemos que hacer una mappedBy al atributo que representa dicha relacion en la clase User */
+     desde este lado tenemos que hacer una mappedBy al atributo que representa dicha relacion en la clase User
      @ManyToMany(mappedBy = "favoriteTips")
      @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-     private Set<User> users; //Lista de users que han marcado este tip como favorito
+     private Set<User> users; //Lista de users que han marcado este tip como favorito*/
+
+     //Relación uno a muchos entre los tips y el user
+     @ManyToOne
+     @JoinColumn(name = "user_id")
+     @JsonBackReference(value = "userTips")
+     private User user;
 
      /*Relación uno a uno entre un tip y sus detalles*/
      @OneToOne(mappedBy = "tip", cascade = CascadeType.ALL) //Entiendo que lo que indica esto es que todo lo que se haga de cambios en la entidad, se reflejará en la otra que está relacionada

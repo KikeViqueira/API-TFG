@@ -78,10 +78,8 @@ public class User {
      * Al usar un generador de identificadores (por ejemplo, el valor del campo "id"),
      * Jackson serializa cada objeto una única vez y, en apariciones posteriores, solo usa el id para referenciarlo.
      * Esto previene la recursión infinita en relaciones bidireccionales.
-
-     * */
-
-    //Un user puede tener varios tips en favoritos, y el mismo tip puede ser el favorito de varios users (Relación muchos a muchos)
+     * 
+    Un user puede tener varios tips en favoritos, y el mismo tip puede ser el favorito de varios users (Relación muchos a muchos)
     @ManyToMany
     @JoinTable(
         name = "user_favs", //Indicamos el nombre de la tabla intermedia en la BD que representa la relación entre las dos entidades
@@ -89,8 +87,15 @@ public class User {
         inverseJoinColumns = @JoinColumn(name="tip_id") //Lo mismo que la anterior pero diciendo el nombre de la columna que hace referencia a la primaria de la tabla con la que se relaciona user (tip)
     )
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-    //@JsonIgnore
+    @JsonIgnore
     private List<Tip> favoriteTips; //Lista de tips que el user ha marcado como favoritos
+
+     * */
+
+     //Relación uno a muchos entre user y tips (Un user puede tener varios tips, pero un tip solo puede pertenecer a un user)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL) //Si eliminamos un user, se eliminan los tips que el ha subido
+    @JsonManagedReference(value = "userTips")
+    private List<Tip> tips; //Lista de tips que ha subido el user
 
     //Relación uno a muchos entre user y sonidos (Esta es especial solo para los sonidos que ha subido el user)
     //MappedBy hace referencia al campo owner en la entidad Sound (lado Many de la relación)
