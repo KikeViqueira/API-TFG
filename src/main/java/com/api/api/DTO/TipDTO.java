@@ -39,13 +39,6 @@ public class TipDTO {
             this.description = tip.getDescription();
         }
 
-        public TipResponseDTO(TipGeneratedWithAiDTO tipDTO){
-            this.id = tipDTO.getId();
-            this.title = tipDTO.getTitle();
-            this.icon = tipDTO.getIcon();
-            this.description = tipDTO.getDescription();
-        }
-
         //Tenemos que implementar el método de ToString para que al hacer un System.out.println(tipDTO) se imprima el objeto como queremos
         @Override
         public String toString() {
@@ -59,12 +52,25 @@ public class TipDTO {
 
     @Getter
     @Setter
+    public static class TipGeneratedDTO {
+        private String title;
+        private String icon;
+        private String description;
+
+        public TipGeneratedDTO(TipGeneratedWithAiDTO tipDTO){
+            this.title = tipDTO.getTitle();
+            this.icon = tipDTO.getIcon();
+            this.description = tipDTO.getDescription();
+        }
+    }
+
+    @Getter
+    @Setter
     public static class TipGeneratedWithAiDTO {
         /*
          * Hacemos un DTO para guardar en el los valores que vienen del json String de la respuesta de la IA
          * Sirve como paso intermedio y despues asignar a las entidades de Tip y TipDetail los valores correspondientes
          * */
-        private Long id;
         private String title;
         private String description;
         private String icon;

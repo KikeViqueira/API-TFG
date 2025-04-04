@@ -7,8 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.api.api.DTO.TipDTO;
-import com.api.api.DTO.TipDTO.TipResponseDTO;
+import com.api.api.DTO.TipDTO.*;
 import com.api.api.service.TipService;
 
 
@@ -32,17 +31,17 @@ public class TipController {
 
     //Endpoint para recuperar los tips que el user ha generado y guardado en la BD
     @GetMapping("/{idUser}/tips")
-    public ResponseEntity<List<TipDTO.TipResponseDTO>> getTips(@PathVariable("idUser") Long idUser){
+    public ResponseEntity<List<TipResponseDTO>> getTips(@PathVariable("idUser") Long idUser){
         //llamamos a la función que se encarga de recuperar los tips de la BD
-        List<TipDTO.TipResponseDTO> tips = tipService.getTips(idUser);
+        List<TipResponseDTO> tips = this.tipService.getTips(idUser);
         return ResponseEntity.ok(tips);
     }
     
     //Endpoint para crear un tip en la BD, 
     @PostMapping("/{idUser}/tips")
-    public ResponseEntity<TipResponseDTO> createTip(@PathVariable("idUser") Long idUser){
+    public ResponseEntity<TipGeneratedDTO> createTip(@PathVariable("idUser") Long idUser){
         //llamamos a la función que se encarga de crear un tip y guardarlo en la BD
-        TipDTO.TipResponseDTO tipCreado = tipService.createTip(idUser);
+        TipGeneratedDTO tipCreado = this.tipService.createTip(idUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(tipCreado);
     }
 
@@ -50,7 +49,7 @@ public class TipController {
     @DeleteMapping("/{idUser}/tips/{id}")
     public ResponseEntity<?> deleteTip(@PathVariable Long id){
         //llamamos a la función que se encarga de eliminar el tip de la BD
-        TipDTO.TipResponseDTO tipEliminado = tipService.deleteTip(id);
+        TipResponseDTO tipEliminado = this.tipService.deleteTip(id);
         return ResponseEntity.ok(tipEliminado);
     }
 
@@ -58,7 +57,7 @@ public class TipController {
     @GetMapping("/{idUser}/tips/{id}")
     public ResponseEntity<?> getDetailTip(@PathVariable Long id){
         //llamamos a la función del service y en base a los que nos devuelva devolvemos un status u otro
-        return ResponseEntity.ok(tipService.getDetailsTip(id));
+        return ResponseEntity.ok(this.tipService.getDetailsTip(id));
     }
 
     /*
@@ -66,24 +65,24 @@ public class TipController {
      */
     //Endpoint para recuperar los tips favoritos de un user
     @GetMapping("/{idUser}/favorites-tips")
-    public ResponseEntity<List<TipDTO.TipFavDTO>> getFavoritesTips(@PathVariable("idUser") Long idUser){
-        List<TipDTO.TipFavDTO> favoriteTips = tipService.getFavoritesTips(idUser);
+    public ResponseEntity<List<TipFavDTO>> getFavoritesTips(@PathVariable("idUser") Long idUser){
+        List<TipFavDTO> favoriteTips = this.tipService.getFavoritesTips(idUser);
         return ResponseEntity.ok(favoriteTips);
     }
 
     //Endpoint para eliminar un tip de los favoritos de un user
     @DeleteMapping("/{idUser}/favorites-tips/{idUserTip}")
-    public ResponseEntity<TipDTO.TipFavDTO> deleteFavoriteTip(@PathVariable("id") Long id, @PathVariable("idTip") Long idTip){
+    public ResponseEntity<TipFavDTO> deleteFavoriteTip(@PathVariable("id") Long id, @PathVariable("idTip") Long idTip){
         //llamamos a la función del service que se encarga de esta lógica
-        TipDTO.TipFavDTO tipDTO = tipService.deleteFavoriteTip(id, idTip);
+        TipFavDTO tipDTO = this.tipService.deleteFavoriteTip(id, idTip);
         return ResponseEntity.ok(tipDTO);
     }
 
     //Endpoint para añadir un tip a los favoritos de un user
     @PostMapping("/{id}/favorites-tips/{idTip}")
-    public ResponseEntity<TipDTO.TipFavDTO> addFavoriteTip(@PathVariable("id") Long id, @PathVariable("idTip") Long idTip){
+    public ResponseEntity<TipFavDTO> addFavoriteTip(@PathVariable("id") Long id, @PathVariable("idTip") Long idTip){
         //Llamamos a la función del service que se encarga de esta lógica
-        TipDTO.TipFavDTO tipDTO = tipService.addFavoriteTip(id, idTip);
+        TipFavDTO tipDTO = this.tipService.addFavoriteTip(id, idTip);
         return ResponseEntity.status(HttpStatus.CREATED).body(tipDTO); //Guardado correctamente en la lista de favoritos del user
     }
 }

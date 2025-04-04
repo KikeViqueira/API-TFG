@@ -64,7 +64,7 @@ public class UserController {
     //Endpoint para recuperar el historial de chats de un usuario
     @GetMapping("/{idUser}/chats")
     public ResponseEntity<List<ChatDetailsDTO>> getChats(@PathVariable("idUser") Long idUser){
-        List<ChatDetailsDTO> chats = chatService.getChats(idUser);
+        List<ChatDetailsDTO> chats = chatService.getChats(idUser, null, null, null); // Provide appropriate values for the additional parameters
         return ResponseEntity.ok(chats);
     }
 

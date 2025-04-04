@@ -13,6 +13,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,14 +32,14 @@ public class TipDetail {
     private Long id;
 
     @NotBlank(message = "La descripción no puede ser vacía")
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String fullDescription;
 
-    @NotBlank(message = "Los beneficios no pueden ser vacíos")
+    @NotEmpty(message = "Los beneficios no pueden ser vacíos")
     @Column(nullable = false)
     private List<String> benefits;
 
-    @NotBlank(message = "Los pasos no pueden ser vacíos")
+    @NotEmpty(message = "Los pasos no pueden ser vacíos")
     @Column(nullable = false)
     private List<String> steps;
 

@@ -298,18 +298,6 @@ public class GeminiService {
             - icon: El icono del tip.
             - description: Una breve descripción del tip.    
 
-        Propósito del Informe:
-        El objetivo es generar un breve informe semanal que analice de forma profesional cómo la duración y calidad del sueño, junto con otros factores (actividad física, alimentación, nivel de estrés y concentración), impactan en la calidad de la toma de decisiones del usuario. Se espera que el informe integre la información de los registros diarios, las respuestas del onboarding y las respuestas relacionadas con la toma de decisiones, proporcionando una visión integral del estado del sueño y su influencia en el desempeño diario.
-        El informe tiene que tener tanto una buena argumentación como un buen análisis de la toma de decisiones del user en base a la información que has recibido pasado.
-        Está bien que menciones algunas de las respuestas que el user ha puesto en los distintos cuestionarios pero haz la redacción del informe de manera profesional y cercana, como si fuese un informe de un profesional de la salud que se lo entrega a un paciente.
-        Y que dicha redacción sea de una forma fluída.
-
-        Resumen del objetivo para que lo puedas entender mejor:
-        Utilizando estos datos, genera un informe semanal en texto plano, sin títulos, encabezados o secciones (pero si que puedes usar parrafos). El informe debe ser un análisis profesional y cercano sobre cómo la duración y calidad del sueño han impactado la toma de decisiones del usuario, indicando de manera clara y fundamentada qué aspectos podría estar haciendo mal o qué problemas podría estar presentando.
-        Incluye ejemplos y valores específicos cuando sea relevante.
-        QUIERO QUE HAGAS UNA CONCLUSIÓN COMPLETA Y PROFESIONAL DE COMO TODA LA INFO QUE TE DA EL USER IMPACTA EN LA TOMA DE DECISIONES, NO QUIERO QUE LE DES RECOMENDACIONES PARA MEJORAR LA SITUACIÓN PQ DE ESTO
-        SE ENCARGARÁ OTRA PERSONA. Al empezar el informe si quieres te puedes referir al usario pero de una manera profesional.
-
         Además, se pasa la edad del usuario (en el valor ageUser) para determinar en qué rango de edad se encuentra, lo que permite personalizar el informe y hacerlo más profesional.
         
         Ya tienes la estructura para que entiendas la info que se te pasa del user, te la paso a continuación:
@@ -320,8 +308,11 @@ public class GeminiService {
         fecha de nacimiento: %s
         edad (Si vale -1 significa que la fech de nacimiento es null): %s
         userName: %s
-        userTips: %s (Puede ser a veces que no haya tips, en ese caso tienes decisión libre de como hacerlo pero no puedes repetir los tips que ya tiene el user)
+        userTips: %s (Puede ser a veces que no haya tips, en ese caso tienes decisión libre de como hacerlo pero no puedes repetir los tips que ya tiene el user, en caso de que haya tips el
+        título del nuevo que se va a hacer debe ser único y no repetido con los que ya tiene el user, debe ser único)
 
+        OBEJTIVO DEL TIP:
+        El objetivo es generar un tip que ayude al user a mejorar su calidad de vida y hábitos, y que este tip no esté repetido en la lista de tips que ya tiene el user. El tip debe ser claro, conciso y fácil de entender, y debe incluir un título, una breve descripción, un icono, una descripción completa, beneficios y pasos a seguir para implementar el tip en la vida diaria del usuario.
         Por favor, responde exclusivamente con un objeto JSON que contenga los siguientes campos y valores, respetando estrictamente el formato indicado y sin incluir ningún comentario, explicación o contenido extra. La respuesta debe ser un JSON válido y utilizar un tono profesional
         que ayude aluser a mejorar su calidad de vida y hábitos, y que esteobjeto no esté repetido en la lista de tips que ya tiene el user. El JSON debe contener los siguientes campos (ES UN EJEMPLO PARA QUE SEPAS QUE ESTRUCTURA TIENES QUE DEVOLVER):
         {
@@ -338,6 +329,7 @@ public class GeminiService {
                 "Paso 2"
             ]
         }
+        Solo quiero que respondas dandome este json que represemta el tip de manera completa y nada más. Además en la respuesta que egeneres quiero que devuelvas el formato pero sin el ``json , si no que devuelvas el json directamente en formato String.
         """.formatted(sleepLogsLastWeek.toString(), onboardingAnswerDTO.toString(), drmObjectDTO.toString(), sleepLogsForContext.toString(), user.getBirthDate().toString(), String.valueOf(user.getAge()) , user.getName(), userTips.toString());
         
 

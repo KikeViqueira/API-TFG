@@ -76,7 +76,7 @@ public class TipService {
     }
 
     //Función para guardar un tip en la BD
-    public TipResponseDTO createTip(Long userId){
+    public TipGeneratedDTO createTip(Long userId){
         User user = this.userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("El usuario no existe"));
         /**
          * Para poder generar el tip el usuario ha tenido que hacer lo siguiente:
@@ -126,15 +126,17 @@ public class TipService {
                     GeminiResponse geminiResponse = objectMapper.readValue(response, GeminiResponse.class);
                     //Guardamos en un String la parte de la respuesta de la IA que nos interesa (Se supone que va a tener formato JSON obligatorio)
                     tipGenerated = geminiResponse.getCandidates().get(0).getContent().getParts().get(0).getText();
+                    System.out.println("Response de la IA: "+ tipGenerated);
+
                 } catch (JsonProcessingException e) {
                     System.out.println("Error al pasar la respuesta de la API de la IA al objeto correspondiente: "+ e.getMessage());
                 }
                 //Comprobamos que el tip generado no sea null
                 if (Objects.nonNull(tipGenerated)){
                      //Una vez tenemos la respuesta lo que tenemos que hacer es parsearla a formato Json y guardar la info en la entidad correspondiente (De esta lógica se encarga el método saveTipFromJson)
-                    TipResponseDTO tipResponseDTO = saveTipFromJson(tipGenerated);
+                    TipGeneratedDTO newTipGenerated = saveTipFromJson(tipGenerated, user);
                     //En el caso de que se haya guardado correctamente devolvemos la respuesta, en caso contrario lanzamos una excepción
-                    if (Objects.nonNull(tipResponseDTO)) return tipResponseDTO;
+                    if (Objects.nonNull(newTipGenerated)) return newTipGenerated;
                     else throw new JsonMappingTipException("Error al parsear la respuesta de la IA en su entidad correspondiente");
                 } else throw new NoContentException("La IA no ha devuelto un tip personalizado para el usuario");
             } else throw new NoContentException("El usuario no ha hecho ningún cuestionario matutino en la última semana");
@@ -147,17 +149,21 @@ public class TipService {
      * @param jsonString JSON que contiene los campos de Tip y TipDetail.
      * @return La entidad TipResponseDTO persistida o null si ocurrió un error.
      */
-    private TipResponseDTO saveTipFromJson(String jsonString) {
+    private TipGeneratedDTO saveTipFromJson(String jsonString, User user) {
+        // Limpiar los delimitadores de triple backticks (y etiqueta "json" opcional) si existen
+        String cleanedJson = jsonString.replaceAll("(?s)^```(json)?\\s*|```\\s*$", "").trim();
         ObjectMapper mapper = new ObjectMapper();
         try {
             // Parseamos el JSON a TipDTO
-            TipGeneratedWithAiDTO tipDTO = mapper.readValue(jsonString, TipGeneratedWithAiDTO.class);
+            TipGeneratedWithAiDTO tipDTO = mapper.readValue(cleanedJson, TipGeneratedWithAiDTO.class);
 
             // Creamos la entidad Tip y asignamos los campos correspondientes
             Tip tip = new Tip();
             tip.setTitle(tipDTO.getTitle());
             tip.setDescription(tipDTO.getDescription());
             tip.setIcon(tipDTO.getIcon());
+            //Relacionamos el tip que se ha creado con el user que esta logeado en la app
+            tip.setUser(user);
 
             // Creamos la entidad TipDetail y asignamos sus campos
             TipDetail tipDetail = new TipDetail();
@@ -173,7 +179,7 @@ public class TipService {
             this.tipRepository.save(tip);
             this.tipDetailRepository.save(tipDetail);
 
-            return new TipResponseDTO(tipDTO);
+            return new TipGeneratedDTO(tipDTO);
 
         } catch (IOException e) {
             e.printStackTrace();
