@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.api.api.model.Chat;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -22,6 +23,7 @@ public class ChatResponseDTO {
         public static class ChatDetailsDTO {
             private Long id;
             private String name;
+            @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
             private LocalDateTime date;
             
             public ChatDetailsDTO(Chat chat) {

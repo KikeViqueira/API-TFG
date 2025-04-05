@@ -30,7 +30,6 @@ public class Message {
     private Long id;
 
     //Se recibe el valor vacío y se asigna el valor en el service del mensaje
-    @NotBlank(message = "El mensaje remitente no puede ser vacío")
     @Column(nullable = false, columnDefinition = "TEXT")
     private String sender;
 

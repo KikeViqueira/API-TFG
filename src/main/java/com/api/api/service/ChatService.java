@@ -7,10 +7,8 @@ import java.util.List;
 import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.MethodNotAllowedException;
 
 import com.api.api.DTO.ChatResponse;
@@ -70,8 +68,8 @@ public class ChatService {
                     message.setChat(chat); //Añadimos el chat al mensaje
                     //Si existe la relación añadimos el mensaje al chat llamando a MessageService
                     response = this.messageService.sendMessage(message, chat.getId());
-                    //Solo nos interesa devolver un ChatResponseDTO con el mensaje que la IA ha generado
-                    if (response != null) return new IAResponseDTO(response);
+                    //Solo nos interesa devolver un ChatResponseDTO con el mensaje que la IA ha generado, usamos .trim() para quitar los espacios en blanco al principio y al final
+                    if (response != null) return new IAResponseDTO(response.trim());
                     else throw new AIResponseGenerationException("No se ha podido enviar el mensaje");
 
                 } else throw new MethodNotAllowedException("addMessageToChat para chats que no son del día actual.", null);
@@ -84,13 +82,13 @@ public class ChatService {
             String title = this.messageService.createTitle(message);
             //Si el título es distinto de null, añadimos la info al chat y lo guardamos y enviamos el mensaje
             if (title != null){
-                newChat.setName(title);
+                newChat.setName(title.trim());
                 this.chatRepository.save(newChat); //Ahora si podemos guardar el chat en la BD
                 //Una vez creado el chat añadimos el mensaje, y la respuesta que obtenemos de la IA en la tabla de mensajes de la BD
                 message.setChat(newChat);
                 response = this.messageService.sendMessage(message, newChat.getId());
                 //Nos interesa devolver en el objeto tanto la info del chat que se ha creado como el mensaje que nos ha devuelto la IA
-                if (response != null) return new ChatCreatedDTO(newChat, response);
+                if (response != null) return new ChatCreatedDTO(newChat, response.trim());
                 else throw new AIResponseGenerationException("No se ha podido enviar el mensaje");
             } else throw new AIResponseGenerationException("No se ha podido crear un título para el chat");
         }
@@ -99,18 +97,14 @@ public class ChatService {
 
     /*
      * Funciones que se usan para la gestión de los chats de un user:
-     * 1. Recupera el historial de los chats de un user
-     * 2. Recupera os chats que ha tenido el user en los últimos tres meses
-     * 3. Recupera los chats que hay een un rango de fechas que puede especificar el user
+     * 1. Recupera el historial de los chats de un user (valor de filter = history)
+     * 2. Recupera os chats que ha tenido el user en los últimos tres meses (filter = last3Months)
+     * 3. Recupera los chats que hay een un rango de fechas que puede especificar el user (filter = range)
      * 
      * Esto se lo indicamos al método en base a un parámetro que le pasamos en la petición (filter)
      */
     @Transactional //Para que no de error al hacer la consulta
-    public List<ChatDetailsDTO> getChats(Long idUser,
-        @RequestParam(name="filter", required = false, defaultValue = "history") String filter,
-        @RequestParam(name = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-        @RequestParam(name = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
-    ){
+    public List<ChatDetailsDTO> getChats(Long idUser, String filter, LocalDate startDate, LocalDate endDate){
         //Comprobamos si el user existe en la BD
         User user = this.userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
         //Definimos la lista donde guardaremos los chats que se recuperen de la BD
@@ -121,6 +115,7 @@ public class ChatService {
                 //Recuperamos todos los chats que tiene el user
                 chatsOfUser = this.chatRepository.findByUserId(idUser);
                 break;
+
             case "last3Months":
                 //Recuperamos los chats que tiene el user en los últimos tres meses
                 LocalDateTime now = LocalDateTime.now();

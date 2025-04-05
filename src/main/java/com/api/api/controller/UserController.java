@@ -1,10 +1,12 @@
 package com.api.api.controller;
 
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -58,13 +60,20 @@ public class UserController {
         return ResponseEntity.ok(new UserResponseDTO(user));
     }
 
-    /*
-     * Endpoints relacionados con los chats con los que e user interacciona
+     /*
+     * Funciones que se usan para la gestión de los chats de un user:
+     * 1. Recupera el historial de los chats de un user (valor de filter = history)
+     * 2. Recupera os chats que ha tenido el user en los últimos tres meses (filter = last3Months)
+     * 3. Recupera los chats que hay een un rango de fechas que puede especificar el user (filter = range)
+     * 
+     * Esto se lo indicamos al método en base a un parámetro que le pasamos en la petición (filter)
      */
-    //Endpoint para recuperar el historial de chats de un usuario
     @GetMapping("/{idUser}/chats")
-    public ResponseEntity<List<ChatDetailsDTO>> getChats(@PathVariable("idUser") Long idUser){
-        List<ChatDetailsDTO> chats = chatService.getChats(idUser, null, null, null); // Provide appropriate values for the additional parameters
+    public ResponseEntity<List<ChatDetailsDTO>> getChats(@PathVariable("idUser") Long idUser,
+        @RequestParam(name="filter", required = false, defaultValue = "history") String filter,
+        @RequestParam(name = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+        @RequestParam(name = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate){
+        List<ChatDetailsDTO> chats = chatService.getChats(idUser, filter, startDate, endDate); // Provide appropriate values for the additional parameters
         return ResponseEntity.ok(chats);
     }
 
