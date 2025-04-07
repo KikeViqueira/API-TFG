@@ -66,6 +66,16 @@ public class FormRequestDTO {
                    '}';
         }
     }
+
+    //DTO para recibir el formulario de cambio de contraseña
+    @Getter @Setter
+    public static class ChangePasswordRequestDTO {
+        @NotBlank(message = "La contraseña no puede estar vacía")
+        private String oldPassword;
+
+        @NotBlank(message = "La nueva contraseña no puede estar vacía")
+        private String newPassword;
+    }
     
 
    /* @NotNull(message = "La respuesta a la pregunta 1 no puede estar vacía")

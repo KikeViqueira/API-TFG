@@ -3,16 +3,19 @@ package com.api.api.service;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.catalina.mapper.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.api.api.DTO.UserDTO;
+import com.api.api.DTO.FormRequestDTO.ChangePasswordRequestDTO;
 import com.api.api.DTO.UserDTO.UserUpdateDTO;
 import com.api.api.model.Onboarding;
 import com.api.api.model.User;
 import com.api.api.repository.OnboardingRepository;
 import com.api.api.repository.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.JsonPatchException;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -30,24 +33,27 @@ public class UserService {
     @Autowired
     private PatchUtils patchUtils;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Transactional
     public UserDTO.UserResponseDTO registerUser(User user) {
 
         //tenemos que comprobar que el user no exista ya en la BD
-        User userRecuperado = userRepository.findByEmail(user.getEmail()).orElse(null);
+        User userRecuperado = this.userRepository.findByEmail(user.getEmail()).orElse(null);
         if (userRecuperado == null){
-            user.setPassword(passwordEncoder.encode(user.getPassword())); // Encripta la contraseña
+            user.setPassword(this.passwordEncoder.encode(user.getPassword())); // Encripta la contraseña
             //Cuando un user crea una cuenta tenemos que poner valores por defecto tanto en el role (inmutable) como en la imagen de perfil (modificable en el futuro)
             user.setRole("USER");
             user.setProfilePicture("http://localhost:8080/images/placeholder.jpg");
-            userRepository.save(user); //Guardamos el user en la BD
+            this.userRepository.save(user); //Guardamos el user en la BD
 
             //Tenemos que crear también el objeto Onboarding para el user y lo guardamos en la BD
             Onboarding onboarding = new Onboarding();
             onboarding.setUser(user);
-            onboardingRepository.save(onboarding);
+            this.onboardingRepository.save(onboarding);
 
             //Parseamos la info que se le devolverá al controller mediante su DTO correspondiente
             UserDTO.UserResponseDTO userResponseDTO = new UserDTO.UserResponseDTO(user);
@@ -60,7 +66,7 @@ public class UserService {
     //Función para recuperar la info de un user en la BD en base al id que se ha proporcionado
     @Transactional
     public User getUser(Long id){
-        User userRecuperado = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        User userRecuperado = this.userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
         return userRecuperado;
     }
 
@@ -73,7 +79,7 @@ public class UserService {
     */
     @Transactional
     public User getUserByEmail(String email){
-        User userRecuperado = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        User userRecuperado = this.userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
         return userRecuperado;
     }
 
@@ -81,7 +87,7 @@ public class UserService {
     @Transactional
     public UserUpdateDTO updateUser(Long id, List<Map<String, Object>> updates) throws JsonPatchException{
         //Recuperamos el user de la BD y vemos si existe o no
-        User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        User user = this.userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
 
         //En caso de que el user exista comprobamos que en la lista de operaciones no haya ningun path de un atributo no modificable
         //Primero hacemos una lista de los paths que no se pueden modificar
@@ -96,11 +102,15 @@ public class UserService {
             }
             //Hacemos caso especial para el caso de que el user cambie la contraseña de la cuenta, la recibimos en texto plano y tenemos que encriptarla
             else if(path.equals("/password")){
-                String rawPassword = (String) update.get("value");
-                //Comparamos si la contraseña que se quiere cambiar es la misma que la que ya tiene el user
-                if (passwordEncoder.matches(rawPassword, user.getPassword())) throw new IllegalArgumentException("La contraseña nueva no puede ser igual a la anterior");
-                BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-                String encodedPassword = passwordEncoder.encode(rawPassword);
+                //El valor de la contraseña tiene que ser el DTO que se ha definido en el DTO de formRequest                
+                ChangePasswordRequestDTO changePasswordRequestDTO = this.objectMapper.convertValue(update.get("value"), ChangePasswordRequestDTO.class);
+                //tenemos que comprobar que la contraseña vieja que ha pasado el user tiene que ser la misma que la que está en la BD 
+                String oldPassword = changePasswordRequestDTO.getOldPassword();
+                if (!this.passwordEncoder.matches(oldPassword, user.getPassword())) throw new IllegalArgumentException("La contraseña antigua no es correcta");
+                //Una vez que se ha pasado esta comprobación miramos si la nueva contraseña es la misma que la que ya tiene el user, y si es así lanzamos una excepción
+                String newPassword = changePasswordRequestDTO.getNewPassword();
+                if (this.passwordEncoder.matches(newPassword, user.getPassword())) throw new IllegalArgumentException("La nueva contraseña no puede ser igual a la anterior");
+                String encodedPassword = this.passwordEncoder.encode(newPassword);
                 update.put("value", encodedPassword); //Actualizamos el valor de la contraseña que vamos a aplicar en el patch
             }else if(path.equals("/profilePicture")){
                 //En caso de que el user quiera cambiar la imagen de perfil, comprobamos que la imagen que se quiere poner es válida
@@ -109,9 +119,9 @@ public class UserService {
             }
         }
         //Una vez comprobado los atributos que va a modificar el user, llamamos a patchUtils
-        User userActualizado = patchUtils.patch(user, updates);
+        User userActualizado = this.patchUtils.patch(user, updates);
         //Guardamos el user actualizado en la BD
-        userRepository.save(userActualizado);
+        this.userRepository.save(userActualizado);
         return new UserDTO.UserUpdateDTO(userActualizado);
     }
 

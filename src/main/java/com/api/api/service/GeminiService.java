@@ -329,6 +329,8 @@ public class GeminiService {
                 "Paso 2"
             ]
         }
+        Nota: El campo 'icon' debe ser uno de los siguientes valores: shield, sleep, fitness, food, alert, book, music, heart.
+
         Solo quiero que respondas dandome este json que represemta el tip de manera completa y nada más. Además en la respuesta que egeneres quiero que devuelvas el formato pero sin el ``json , si no que devuelvas el json directamente en formato String.
         """.formatted(sleepLogsLastWeek.toString(), onboardingAnswerDTO.toString(), drmObjectDTO.toString(), sleepLogsForContext.toString(), user.getBirthDate().toString(), String.valueOf(user.getAge()) , user.getName(), userTips.toString());
         
