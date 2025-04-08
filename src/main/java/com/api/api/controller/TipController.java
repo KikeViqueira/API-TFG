@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.api.api.DTO.TipDetailDTO;
 import com.api.api.DTO.TipDTO.*;
 import com.api.api.service.TipService;
 
@@ -41,21 +42,21 @@ public class TipController {
     @PostMapping("/{idUser}/tips")
     public ResponseEntity<TipGeneratedDTO> createTip(@PathVariable("idUser") Long idUser){
         //llamamos a la función que se encarga de crear un tip y guardarlo en la BD
-        TipGeneratedDTO tipCreado = this.tipService.createTip(idUser);
-        return ResponseEntity.status(HttpStatus.CREATED).body(tipCreado);
+        TipGeneratedDTO tipCreated = this.tipService.createTip(idUser);
+        return ResponseEntity.status(HttpStatus.CREATED).body(tipCreated);
     }
 
-    //Endpoint para eliminar un tip de la sección de tips de la app
+    //Endpoint para eliminar un tip o varios de la sección de tips de la app
     @DeleteMapping("/{idUser}/tips/{id}")
-    public ResponseEntity<?> deleteTip(@PathVariable Long id){
+    public ResponseEntity<List<TipResponseDTO>> deleteTip(@PathVariable("idUser") Long idUser, @RequestBody List<Long> ids){
         //llamamos a la función que se encarga de eliminar el tip de la BD
-        TipResponseDTO tipEliminado = this.tipService.deleteTip(id);
-        return ResponseEntity.ok(tipEliminado);
+        List<TipResponseDTO> deletedTips = this.tipService.deleteTip(idUser,ids);
+        return ResponseEntity.ok(deletedTips);
     }
 
     //Endpoint para recuperar la info detallada del tip en el que el user pincha en la app
     @GetMapping("/{idUser}/tips/{id}")
-    public ResponseEntity<?> getDetailTip(@PathVariable Long id){
+    public ResponseEntity<TipDetailDTO> getDetailTip(@PathVariable("idUser") Long id){
         //llamamos a la función del service y en base a los que nos devuelva devolvemos un status u otro
         return ResponseEntity.ok(this.tipService.getDetailsTip(id));
     }
@@ -72,7 +73,7 @@ public class TipController {
 
     //Endpoint para eliminar un tip de los favoritos de un user
     @DeleteMapping("/{idUser}/favorites-tips/{idUserTip}")
-    public ResponseEntity<TipFavDTO> deleteFavoriteTip(@PathVariable("id") Long id, @PathVariable("idTip") Long idTip){
+    public ResponseEntity<TipFavDTO> deleteFavoriteTip(@PathVariable("idUser") Long id, @PathVariable("idUserTip") Long idTip){
         //llamamos a la función del service que se encarga de esta lógica
         TipFavDTO tipDTO = this.tipService.deleteFavoriteTip(id, idTip);
         return ResponseEntity.ok(tipDTO);

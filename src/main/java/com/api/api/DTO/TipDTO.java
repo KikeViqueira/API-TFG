@@ -3,6 +3,9 @@ package com.api.api.DTO;
 import java.util.List;
 
 import com.api.api.model.Tip;
+
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -53,14 +56,18 @@ public class TipDTO {
     @Getter
     @Setter
     public static class TipGeneratedDTO {
+        private Long id; //Valor del id del tip que se ha generado en la BD al guardarse
         private String title;
         private String icon;
         private String description;
+        private String color;
 
-        public TipGeneratedDTO(TipGeneratedWithAiDTO tipDTO){
+        public TipGeneratedDTO(TipGeneratedWithAiDTO tipDTO, Long idTip){
+            this.id = idTip;
             this.title = tipDTO.getTitle();
             this.icon = tipDTO.getIcon();
             this.description = tipDTO.getDescription();
+            this.color = tipDTO.getColor();
         }
     }
 
@@ -74,6 +81,7 @@ public class TipDTO {
         private String title;
         private String description;
         private String icon;
+        private String color;
         private String fullDescription;
         private List<String> benefits;
         private List<String> steps;

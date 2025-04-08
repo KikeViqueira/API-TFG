@@ -11,9 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.api.api.DTO.ChatResponseDTO.*;
-import com.api.api.DTO.UserDTO;
-import com.api.api.DTO.UserDTO.UserResponseDTO;
-import com.api.api.DTO.UserDTO.UserUpdateDTO;
+import com.api.api.DTO.UserDTO.*;
 import com.api.api.model.User;
 import com.api.api.service.ChatService;
 import com.api.api.service.UserService;
@@ -35,7 +33,7 @@ public class UserController {
     @PostMapping
     public ResponseEntity<?> registerUser(@RequestBody @Valid User user) { //Valid para que se apliquen las restricciones de la clase User
         //llamamos a la función que se encarga de registrar el user en la BD
-        UserDTO.UserResponseDTO userResponseDTO = userService.registerUser(user);
+        UserResponseDTO userResponseDTO = userService.registerUser(user);
         //Creamos el mapa para enseñar la info que se ha creado en el endpoint si se ha ejecutado con éxito
         Map<String, Object> mapResponse = Map.of(
             "message", "User created successfully",
@@ -54,7 +52,7 @@ public class UserController {
 
     //Endpoint para obtener la info de un user en base a su email
     @GetMapping("/{idUser}")
-    public ResponseEntity<UserDTO.UserResponseDTO> getUser(@PathVariable("idUser") Long idUser){
+    public ResponseEntity<UserResponseDTO> getUser(@PathVariable("idUser") Long idUser){
         //llamamos a la función que recupera el user de la BD y comprobamos que exista
         User user = userService.getUser(idUser);
         return ResponseEntity.ok(new UserResponseDTO(user));

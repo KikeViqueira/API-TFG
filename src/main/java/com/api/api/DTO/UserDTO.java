@@ -31,12 +31,18 @@ public class UserDTO {
      //Definimos el DTO que solo tendra los atributos que se podrán actualizar
      @Getter @Setter
      public static class UserUpdateDTO{
-        private String profilePicture;
-        private String password; //TODO: no se si es bueno devolver la contraseña en el DTO aunque sea un campo que se actualiza
+        private String newProfilePicture;
+        private boolean passwordChanged = false; //Valor por defecto para este campo
 
+        //Constructor para cambiar solo el valor de la foto de perfil
         public UserUpdateDTO(User user) {
-            this.profilePicture = user.getProfilePicture();
-            this.password = user.getPassword();
+            this.newProfilePicture = user.getProfilePicture();
+        }
+
+        //Constructor solo para cambiar el valor de la contraseña, se devuelve la foto de perfil que tenga el user en ese momento
+        public UserUpdateDTO(User user,boolean passwordChanged) {
+            this.newProfilePicture = user.getProfilePicture();
+            this.passwordChanged = passwordChanged;
         }
      }
 

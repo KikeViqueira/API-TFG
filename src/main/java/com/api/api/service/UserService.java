@@ -3,7 +3,6 @@ package com.api.api.service;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.catalina.mapper.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -88,7 +87,6 @@ public class UserService {
     public UserUpdateDTO updateUser(Long id, List<Map<String, Object>> updates) throws JsonPatchException{
         //Recuperamos el user de la BD y vemos si existe o no
         User user = this.userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
-
         //En caso de que el user exista comprobamos que en la lista de operaciones no haya ningun path de un atributo no modificable
         //Primero hacemos una lista de los paths que no se pueden modificar
         List<String> pathsNoModificables = List.of("/id", "/name","/age", "/role", "/email");
@@ -122,7 +120,10 @@ public class UserService {
         User userActualizado = this.patchUtils.patch(user, updates);
         //Guardamos el user actualizado en la BD
         this.userRepository.save(userActualizado);
-        return new UserDTO.UserUpdateDTO(userActualizado);
+        //Dependiendo de el valor del path que se ha enviado al método, llamamos a un constructor o a otro del DTO de updateUserDTO
+        String path = (String) updates.get(0).get("path");
+        if (path.equals("/password")) return new UserDTO.UserUpdateDTO(userActualizado, false);
+        else return new UserDTO.UserUpdateDTO(userActualizado);
     }
 
     

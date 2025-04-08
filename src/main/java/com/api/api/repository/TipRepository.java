@@ -29,4 +29,7 @@ public interface TipRepository extends JpaRepository<Tip, Long>  {
 
     //Definimos la función para recuperar la lista de tips favoritos que tiene un user
     List<Tip> findByUser_IdAndIsFavoriteTrue(Long userId);
+
+    //Tenemos que hacer una función que para recuperar los ids que pertenecen al user de una lista de ids dada
+    List<Tip> findByUser_IdAndIdIn(Long userId, List<Long> ids);
 }

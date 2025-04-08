@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import com.api.api.repository.DrmRepository;
@@ -22,6 +23,7 @@ import jakarta.transaction.Transactional;
 
 import com.api.api.DTO.DrmObjectDTO;
 import com.api.api.DTO.OnboardingAnswerDTO;
+import com.api.api.DTO.TipDetailDTO;
 import com.api.api.DTO.TipDTO.*;
 import com.api.api.exceptions.JsonMappingTipException;
 import com.api.api.exceptions.NoContentException;
@@ -179,7 +181,8 @@ public class TipService {
             this.tipRepository.save(tip);
             this.tipDetailRepository.save(tipDetail);
 
-            return new TipGeneratedDTO(tipDTO);
+            //Una vez se guardan las entidades en la BD, el campo de ID ya tiene valor sin tener que volver a llamar al repository para recuperarlo
+            return new TipGeneratedDTO(tipDTO, tip.getId());
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -187,17 +190,32 @@ public class TipService {
         }
     }
 
-    //Función para eliminar un tip de la BD
-    public TipResponseDTO deleteTip(Long id){
-        Tip tipRecuperado = this.tipRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("El tip que se está intentando eliminar no existe"));
-        this.tipRepository.deleteById(id);
-        return new TipResponseDTO(tipRecuperado);
+    //Función para eliminar tips de la BD
+    public List<TipResponseDTO> deleteTip(Long idUser,List<Long> ids){
+        //Comprobamos si el user existe
+        User user = this.userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        //Recuperamos la lista de tips que pertenecen al user de la lista de ids que se ha recibido
+        List<Tip> tips = this.tipRepository.findByUser_IdAndIdIn(idUser, ids);
+        //Comprobamos que ambas listas tengan el mismo tamaño, esto significaría que todos los tips que se han pasado pertenecen al user y se pueden eliminar
+        if (tips.size() != ids.size())  throw new AccessDeniedException("Uno o más chats no pertenecen al usuario");
+        user.getTips().removeAll(tips);
+        this.userRepository.save(user);
+        //Eliminamos los tips de la BD
+        this.tipRepository.deleteAll(tips);
+        //Devolvemos la lista de tips eliminados
+        List<TipResponseDTO> deletedTips = new ArrayList<>();
+        tips.forEach(tip -> deletedTips.add(new TipResponseDTO(tip)));
+        return deletedTips;
     }
 
     //Función para recuperar la info detallada de un tip
-    public TipDetail getDetailsTip(Long id){
+    public TipDetailDTO getDetailsTip(Long id){
         //Comprobamos si el tip que se ha seleccionado tiene detalles
-        if (this.tipRepository.existsByIdAndTipDetailIsNotNull(id)) return this.tipRepository.findById(id).get().getTipDetail();
+        if (this.tipRepository.existsByIdAndTipDetailIsNotNull(id)){
+            //En ese caso tenemos que recuperar el tip detalle asociado al tip de la id que se ha pasado mediante el repository de tipDetail
+            TipDetail tipDetail = this.tipDetailRepository.findByTipId(id);
+            return new TipDetailDTO(tipDetail);
+        }
         else throw new EntityNotFoundException("El tip que se está intentando recuperar no tiene detalles.");
     }
 
