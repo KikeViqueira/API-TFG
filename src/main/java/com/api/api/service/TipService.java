@@ -77,6 +77,7 @@ public class TipService {
         }
     }
 
+    @Transactional
     //Función para guardar un tip en la BD
     public TipGeneratedDTO createTip(Long userId){
         User user = this.userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("El usuario no existe"));
@@ -164,6 +165,7 @@ public class TipService {
             tip.setTitle(tipDTO.getTitle());
             tip.setDescription(tipDTO.getDescription());
             tip.setIcon(tipDTO.getIcon());
+            tip.setColor(tipDTO.getColor());
             //Relacionamos el tip que se ha creado con el user que esta logeado en la app
             tip.setUser(user);
 
@@ -191,6 +193,7 @@ public class TipService {
     }
 
     //Función para eliminar tips de la BD
+    @Transactional
     public List<TipResponseDTO> deleteTip(Long idUser,List<Long> ids){
         //Comprobamos si el user existe
         User user = this.userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
@@ -209,12 +212,15 @@ public class TipService {
     }
 
     //Función para recuperar la info detallada de un tip
-    public TipDetailDTO getDetailsTip(Long id){
+    public TipDetailDTO getDetailsTip(Long idUser, Long idTip){
+        this.userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("El usuario que quiere obtener los detalles del tip no existe"));
+        //Primero tenemos que comprobar si el tip existe
+        Tip tip = this.tipRepository.findById(idTip).orElseThrow(() -> new EntityNotFoundException("El tip del que se está intentando recuperar los detalles no existe"));
         //Comprobamos si el tip que se ha seleccionado tiene detalles
-        if (this.tipRepository.existsByIdAndTipDetailIsNotNull(id)){
+        if (this.tipRepository.existsByIdAndTipDetailIsNotNull(idTip)){
             //En ese caso tenemos que recuperar el tip detalle asociado al tip de la id que se ha pasado mediante el repository de tipDetail
-            TipDetail tipDetail = this.tipDetailRepository.findByTipId(id);
-            return new TipDetailDTO(tipDetail);
+            TipDetail tipDetail = this.tipDetailRepository.findByTipId(idTip);
+            return new TipDetailDTO(tipDetail, tip);
         }
         else throw new EntityNotFoundException("El tip que se está intentando recuperar no tiene detalles.");
     }
@@ -228,7 +234,6 @@ public class TipService {
      * Los métodos que se presentan a continuación tienen que ver con la gestión de los tips favoritos de un user
      */
 
-    @Transactional
     //Recuperamos los tips guardados como favoritos por un user
     public List<TipFavDTO> getFavoritesTips(Long idUser){
         List<TipFavDTO> tips = new ArrayList<>();

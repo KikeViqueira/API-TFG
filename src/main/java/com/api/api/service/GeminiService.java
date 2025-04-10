@@ -333,7 +333,7 @@ public class GeminiService {
         Nota: El campo 'icon' debe ser uno de los siguientes valores: shield, sleep, fitness, food, alert, book, music, heart.
         Nota: El campo 'color' debe ser un color en formato hexadecimal.
 
-        Solo quiero que respondas dandome este json que represemta el tip de manera completa y nada más. Además en la respuesta que egeneres quiero que devuelvas el formato pero sin el ``json , si no que devuelvas el json directamente en formato String.
+        Solo quiero que respondas dandome este json que representa el tip de manera completa y nada más. Además en la respuesta que egeneres quiero que devuelvas el formato pero sin el ``json , si no que devuelvas el json directamente en formato String. TIENES QUE SEGUIR EL FORMATO DE LA RESPUESTA DE MANERA ESTRICTA.
         """.formatted(sleepLogsLastWeek.toString(), onboardingAnswerDTO.toString(), drmObjectDTO.toString(), sleepLogsForContext.toString(), user.getBirthDate().toString(), String.valueOf(user.getAge()) , user.getName(), userTips.toString());
         
 

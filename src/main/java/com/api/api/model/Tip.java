@@ -38,6 +38,10 @@ public class Tip {
     @Column(nullable = false)
     private String icon;
 
+    @NotBlank(message = "El color no puede ser vacío")
+    @Column(nullable = false)
+    private String color; //Color del icono de el tip
+
     //Campo de la entidad que nos indica si el user tiene el tip como favorito o no
     @Column(nullable = false)
     private boolean isFavorite = false; //Por defecto, el tip no es favorito

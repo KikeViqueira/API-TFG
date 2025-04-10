@@ -3,7 +3,6 @@ package com.api.api.validation;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -22,7 +21,7 @@ public class SleepLogAnswersValidator implements ConstraintValidator<ValidSleepL
     );
 
     // Claves de tiempo a validar en formato ISO-8601.
-    private static final Set<String> TIME_KEYS = Set.of("sleepTime", "wakeTime");
+    private static final Set<String> TIME_KEYS = Set.of("sleepTime", "wakeUpTime");
 
     @Override
     public boolean isValid(Map<String, String> value, ConstraintValidatorContext context) {
@@ -71,7 +70,7 @@ public class SleepLogAnswersValidator implements ConstraintValidator<ValidSleepL
                 }
                 if ("sleepTime".equals(key)) {
                     sleepTimeStr = answer;
-                } else if ("wakeTime".equals(key)) {
+                } else if ("wakeUpTime".equals(key)) {
                     wakeTimeStr = answer;
                 }
                 continue;

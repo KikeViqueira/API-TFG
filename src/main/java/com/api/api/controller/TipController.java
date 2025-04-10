@@ -47,7 +47,7 @@ public class TipController {
     }
 
     //Endpoint para eliminar un tip o varios de la sección de tips de la app
-    @DeleteMapping("/{idUser}/tips/{id}")
+    @DeleteMapping("/{idUser}/tips")
     public ResponseEntity<List<TipResponseDTO>> deleteTip(@PathVariable("idUser") Long idUser, @RequestBody List<Long> ids){
         //llamamos a la función que se encarga de eliminar el tip de la BD
         List<TipResponseDTO> deletedTips = this.tipService.deleteTip(idUser,ids);
@@ -56,9 +56,9 @@ public class TipController {
 
     //Endpoint para recuperar la info detallada del tip en el que el user pincha en la app
     @GetMapping("/{idUser}/tips/{id}")
-    public ResponseEntity<TipDetailDTO> getDetailTip(@PathVariable("idUser") Long id){
+    public ResponseEntity<TipDetailDTO> getDetailTip(@PathVariable("idUser") Long idUser, @PathVariable("id") Long idTip){
         //llamamos a la función del service y en base a los que nos devuelva devolvemos un status u otro
-        return ResponseEntity.ok(this.tipService.getDetailsTip(id));
+        return ResponseEntity.ok(this.tipService.getDetailsTip(idUser, idTip));
     }
 
     /*

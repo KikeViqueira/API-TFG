@@ -4,8 +4,6 @@ import java.util.List;
 
 import com.api.api.model.Tip;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -19,26 +17,30 @@ public class TipDTO {
         //Hacemos un DTO para devolver solo el id y el titulo de los tips en la sección de favoritos en el perfil del user
         private Long id;
         private String title;
+        private boolean isFavorite;
 
         public TipFavDTO(Tip tip){
             this.id = tip.getId();
             this.title = tip.getTitle();
+            this.isFavorite = tip.isFavorite();
         }
     }
 
     @Getter
     @Setter
     public static class TipResponseDTO {
-        //Objeto que vamos a devolver al user cuando se haga un tip o cuando se recuperen los tips a enseñar en la app
+        //Objeto que vamos a devolver cuando se recuperen los tips a enseñar en la app
         private Long id;
         private String title;
         private String icon;
+        private String color;
         private String description;
 
         public TipResponseDTO(Tip tip){
             this.id = tip.getId();
             this.title = tip.getTitle();
             this.icon = tip.getIcon();
+            this.color = tip.getColor();
             this.description = tip.getDescription();
         }
 
@@ -48,6 +50,7 @@ public class TipDTO {
             return "TipResponseDTO{" +
                     "' title='" + title + '\'' +
                     ", icon='" + icon + '\'' +
+                    ", color='" + color + '\'' +
                     ", description='" + description + '\'' +
                     '}';
         }
