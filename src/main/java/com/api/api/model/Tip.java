@@ -1,12 +1,10 @@
 package com.api.api.model;
 
 import java.util.Objects;
-import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -44,6 +42,7 @@ public class Tip {
 
     //Campo de la entidad que nos indica si el user tiene el tip como favorito o no
     @Column(nullable = false)
+    @JsonProperty("isFavorite") //Indicamos a Spring como tiene que devolver el nombre de este atributo en el JSON
     private boolean isFavorite = false; //Por defecto, el tip no es favorito
 
     //DEFINIMOS LAS RELACIONES QUE TIENE LA ENTIDAD TIP CON EL RESTO DE ENTIDADES DE NUESTRA BD

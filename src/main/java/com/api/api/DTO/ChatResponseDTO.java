@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.api.api.model.Chat;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -78,6 +79,7 @@ public class ChatResponseDTO {
         @Getter @Setter
         public static class ChatMessagesDTO{
             private List<MessageDTO> messages;
+            @JsonProperty("isEditable")
             private boolean isEditable = false; //bandera para saber si el chat es editable o no, si es de hoy es editable, si no es de hoy no es editable
 
              //Constructor para crear el DTO si el chat no es de hoy

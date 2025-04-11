@@ -3,6 +3,7 @@ package com.api.api.DTO;
 import java.util.List;
 
 import com.api.api.model.Tip;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -17,6 +18,7 @@ public class TipDTO {
         //Hacemos un DTO para devolver solo el id y el titulo de los tips en la sección de favoritos en el perfil del user
         private Long id;
         private String title;
+        @JsonProperty("isFavorite")
         private boolean isFavorite;
 
         public TipFavDTO(Tip tip){

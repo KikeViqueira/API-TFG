@@ -330,6 +330,7 @@ public class GeminiService {
                 "Paso 2"
             ]
         }
+        Nota: El título que generes en la respuesta debe ser único de entro todos los tips que tiene el user y debe ser corto y directo de máximo 3 palabras.
         Nota: El campo 'icon' debe ser uno de los siguientes valores: shield, sleep, fitness, food, alert, book, music, heart.
         Nota: El campo 'color' debe ser un color en formato hexadecimal.
 

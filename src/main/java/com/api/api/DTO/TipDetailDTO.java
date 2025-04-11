@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.api.api.model.Tip;
 import com.api.api.model.TipDetail;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -15,6 +16,7 @@ public class TipDetailDTO {
     private List<String> benefits;
     private List<String> steps;
     //Bandera para saber si el tip es favorito o no
+    @JsonProperty("isFavorite")
     private boolean isFavorite;
     private String icon;
     private String color;
