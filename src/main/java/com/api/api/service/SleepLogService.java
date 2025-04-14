@@ -2,9 +2,6 @@ package com.api.api.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -15,11 +12,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.api.api.DTO.SleepLogAnswerDTO;
+import com.api.api.enums.DayOfWeek;
 import com.api.api.exceptions.RelationshipAlreadyExistsException;
 import com.api.api.model.SleepLog;
 import com.api.api.model.SleepLogAnswer;
 import com.api.api.model.User;
-import com.api.api.repository.SleepLogAnswerRepository;
 import com.api.api.repository.SleepLogRepository;
 import com.api.api.repository.UserRepository;
 
@@ -105,7 +102,8 @@ public class SleepLogService {
                 .collect(Collectors.toMap(
                         sleepLog -> sleepLog.getTimeStamp().toLocalDate(),//Extrae la fecha (sin hora) del campo timeStamp de cada registro.
                         sleepLog -> sleepLog.getSleepLogAnswer().getDuration(), //Extrae la duración del sueño de cada registro.
-                        //TODO: SI HAY DOS REGISTROS DEL MISMO DÍA SE CONSERVA EL PRIMERO, Y SE IGNORA EL SEGUNDO. AUNQUE ESTO NO DEBERÍA PASAR.
+                        /*
+                         *SI HAY DOS REGISTROS DEL MISMO DÍA SE CONSERVA EL PRIMERO, Y SE IGNORA EL SEGUNDO. AUNQUE ESTO NO DEBERÍA PASAR.*/
                         (existing, replacement) -> existing
                 ));
 
@@ -117,7 +115,8 @@ public class SleepLogService {
             String dayOfWeek = date.getDayOfWeek().toString();
             results.put(dayOfWeek, durations.getOrDefault(date, 0f)); //En caso de que no haya registro, se asigna 0.
         }
-        return results;
+        //Una vez que tenemos el mapa hecho usamos nuestro enumerador para devolver al front correctamente los días de la semana
+        return DayOfWeek.convertWeekDays(results);
     }
 
     /* 
