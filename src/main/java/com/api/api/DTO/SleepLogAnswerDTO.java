@@ -9,7 +9,6 @@ import lombok.Setter;
 @Getter @Setter
 public class SleepLogAnswerDTO {
 
-    private Long id;
     private String sleepTime;
     private String wakeUpTime;
     private float duration;
@@ -17,7 +16,6 @@ public class SleepLogAnswerDTO {
     private String answer2;
 
     public SleepLogAnswerDTO(SleepLogAnswer sleepLogAnswer) {
-        this.id = sleepLogAnswer.getId();
         this.sleepTime = sleepLogAnswer.getSleepTime().toString();
         this.wakeUpTime = sleepLogAnswer.getWakeUpTime().toString();
         this.duration = sleepLogAnswer.getDuration();
