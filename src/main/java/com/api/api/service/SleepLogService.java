@@ -101,7 +101,7 @@ public class SleepLogService {
         Map<LocalDate, Float> durations = sleepLogs.stream()
                 .collect(Collectors.toMap(
                         sleepLog -> sleepLog.getTimeStamp().toLocalDate(),//Extrae la fecha (sin hora) del campo timeStamp de cada registro.
-                        sleepLog -> sleepLog.getSleepLogAnswer().getDuration(), //Extrae la duración del sueño de cada registro.
+                        sleepLog -> sleepLog.getSleepLogAnswer().getDuration()/60000, //Extrae la duración del sueño de cada registro y la manda al front en minutos.
                         /*
                          *SI HAY DOS REGISTROS DEL MISMO DÍA SE CONSERVA EL PRIMERO, Y SE IGNORA EL SEGUNDO. AUNQUE ESTO NO DEBERÍA PASAR.*/
                         (existing, replacement) -> existing

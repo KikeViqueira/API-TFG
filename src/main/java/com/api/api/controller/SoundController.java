@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.api.api.DTO.SoundDTO;
 import com.api.api.DTO.SoundDTO.DeleteSoundDTO;
 import com.api.api.DTO.SoundDTO.ResponseSoundDTO;
 import com.api.api.model.Sound;
@@ -41,7 +40,6 @@ public class SoundController {
     }
 
 
-    //TODO: ENDPOINT PARA OBTENER LOS SONIDOS QUE EL USER HA SUBIDO A LA APP, SOLO PUEDEN LLAMARLO LOS DUEÑOS DEL AUDIO
     //Endpoint para obtener los sonidos de los users 
     @GetMapping("/{idUser}")
     public ResponseEntity<List<ResponseSoundDTO>> getUserSounds(@PathVariable("idUser") Long idUser ){
@@ -57,7 +55,6 @@ public class SoundController {
         return ResponseEntity.ok(createdSound);
     }
 
-    //TODO: HACER EL ENDPOINT DE ELIMINAR UN SONIDO SI EL USUARIO YA NO LO QUIERE
     @DeleteMapping("/{idUser}/{idSound}")
     public ResponseEntity<DeleteSoundDTO> deleteSoundUser(@PathVariable("idUser") Long idUser, @PathVariable("idSound") Long idSound){
         //llamamos a la función que se encarga de esta lógica
