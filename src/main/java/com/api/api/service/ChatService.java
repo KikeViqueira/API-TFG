@@ -16,6 +16,7 @@ import com.api.api.DTO.MessageDTO;
 import com.api.api.DTO.ChatResponseDTO.*;
 import com.api.api.exceptions.AIResponseGenerationException;
 import com.api.api.exceptions.NoContentException;
+import com.api.api.exceptions.TodayChatAlreadyExists;
 import com.api.api.model.Chat;
 import com.api.api.model.Message;
 import com.api.api.model.User;
@@ -77,20 +78,28 @@ public class ChatService {
             } else throw new AccessDeniedException("El usuario no tiene acceso a este chat");
         }
         else{
-            Chat newChat = createChat(user);
-            //Primero tenemos que crear un título para el chat en base al primer mensaje que se ha enviado
-            String title = this.messageService.createTitle(message);
-            //Si el título es distinto de null, añadimos la info al chat y lo guardamos y enviamos el mensaje
-            if (title != null){
-                newChat.setName(title.trim());
-                this.chatRepository.save(newChat); //Ahora si podemos guardar el chat en la BD
-                //Una vez creado el chat añadimos el mensaje, y la respuesta que obtenemos de la IA en la tabla de mensajes de la BD
-                message.setChat(newChat);
-                response = this.messageService.sendMessage(message, newChat.getId());
-                //Nos interesa devolver en el objeto tanto la info del chat que se ha creado como el mensaje que nos ha devuelto la IA
-                if (response != null) return new ChatCreatedDTO(newChat, response.trim());
-                else throw new AIResponseGenerationException("No se ha podido enviar el mensaje");
-            } else throw new AIResponseGenerationException("No se ha podido crear un título para el chat");
+            //Antes de hacer toda la lógica tenemos que comprobar que el user no haya creado un chat en el día de hoy
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
+            LocalDateTime endOfDay = startOfDay.plusDays(1).minusNanos(1);
+            boolean hasTodayChat = this.chatRepository.existsByUserIdAndDateBetween(idUser, startOfDay, endOfDay);
+
+            if(Boolean.FALSE.equals(hasTodayChat)){
+                Chat newChat = createChat(user);
+                //Primero tenemos que crear un título para el chat en base al primer mensaje que se ha enviado
+                String title = this.messageService.createTitle(message);
+                //Si el título es distinto de null, añadimos la info al chat y lo guardamos y enviamos el mensaje
+                if (title != null){
+                    newChat.setName(title.trim());
+                    this.chatRepository.save(newChat); //Ahora si podemos guardar el chat en la BD
+                    //Una vez creado el chat añadimos el mensaje, y la respuesta que obtenemos de la IA en la tabla de mensajes de la BD
+                    message.setChat(newChat);
+                    response = this.messageService.sendMessage(message, newChat.getId());
+                    //Nos interesa devolver en el objeto tanto la info del chat que se ha creado como el mensaje que nos ha devuelto la IA
+                    if (response != null) return new ChatCreatedDTO(newChat, response.trim());
+                    else throw new AIResponseGenerationException("No se ha podido enviar el mensaje");
+                } else throw new AIResponseGenerationException("No se ha podido crear un título para el chat");
+            } else throw new TodayChatAlreadyExists("El usuario ya ha creado el chat diario");
         }
     }
 
@@ -104,16 +113,16 @@ public class ChatService {
      * Esto se lo indicamos al método en base a un parámetro que le pasamos en la petición (filter)
      */
     @Transactional //Para que no de error al hacer la consulta
-    public List<ChatDetailsDTO> getChats(Long idUser, String filter, LocalDate startDate, LocalDate endDate){
+    public List<ChatResponse> getChats(Long idUser, String filter, LocalDate startDate, LocalDate endDate){
         //Comprobamos si el user existe en la BD
         User user = this.userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
         //Definimos la lista donde guardaremos los chats que se recuperen de la BD
         List<Chat> chatsOfUser = new ArrayList<>();
         //Comprobamos el valor del parámetro filter y en base a eso recuperamos los chats de la BD
-        switch (filter.toLowerCase()) {
+        switch (filter) {
             case "history":
                 //Recuperamos todos los chats que tiene el user
-                chatsOfUser = this.chatRepository.findByUserId(idUser);
+                chatsOfUser = this.chatRepository.findByUserIdOrderByDateDesc(idUser);
                 break;
 
             case "last3Months":
@@ -142,9 +151,18 @@ public class ChatService {
 
         if (chatsOfUser.isEmpty()) throw new NoContentException("El usuario no tiene chats");
         else{
-            List<ChatDetailsDTO> chatsRecuperados = new ArrayList<>();
-            for (Chat chat : user.getChats()) chatsRecuperados.add(new ChatDetailsDTO(chat));
-            return chatsRecuperados;
+            //Si el filtro es history o range, devolvemos la lista de chats en el formato que conseguimos en el DTO de ChatResponseDTO
+            if (Objects.equals(filter, "history") || Objects.equals(filter, "range")){
+                List<ChatResponse> chatResponses = new ArrayList<>();
+                for (Chat chat : chatsOfUser) chatResponses.add(new ChatDetailsDTO(chat));
+                return chatResponses;
+            }else{
+                //Estamos en el caso de que el filtro sea last3Months, por lo que tenemos que devolver la lista de chats en el formato de ChatContributionDTO
+                List<ChatResponse> chatResponses = new ArrayList<>();
+                for (Chat chat : user.getChats()) chatResponses.add(new ChatContributionDTO(chat));
+                return chatResponses;
+            }
+           
         }
     }
 
@@ -160,9 +178,9 @@ public class ChatService {
         user.getChats().removeAll(chats);
         this.userRepository.save(user);
         this.chatRepository.deleteAll(chats);
-        List<ChatDeletedDTO> chatsRecuperados = new ArrayList<>();
-        for (Chat chat : chats) chatsRecuperados.add(new ChatDeletedDTO(chat));
-        return chatsRecuperados;
+        List<ChatDeletedDTO> chatResponses = new ArrayList<>();
+        for (Chat chat : chats) chatResponses.add(new ChatDeletedDTO(chat));
+        return chatResponses;
     }
 
     //Función para recuperar la conversación de un chat

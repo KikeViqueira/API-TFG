@@ -2,19 +2,12 @@ package com.api.api.DTO;
 
 import java.util.HashMap;
 
-import com.api.api.enums.DietaEnum;
-import com.api.api.enums.FrecuenciaDiasEnum;
-import com.api.api.enums.NivelActividadEnum;
-import com.api.api.enums.TiempoSueñoEnum;
 import com.api.api.validation.ValidDrmAnswers;
 import com.api.api.validation.ValidOnboardingAnswers;
 import com.api.api.validation.ValidSleepLogAnswers;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 

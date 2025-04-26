@@ -14,6 +14,7 @@ import com.api.api.DTO.CustomErrorResponseDTO;
 import com.api.api.exceptions.AIResponseGenerationException;
 import com.api.api.exceptions.NoContentException;
 import com.api.api.exceptions.RelationshipAlreadyExistsException;
+import com.api.api.exceptions.TodayChatAlreadyExists;
 import com.github.fge.jsonpatch.JsonPatchException;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -63,6 +64,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> handleRelationshipAlreadyExistsException(RelationshipAlreadyExistsException ex, HttpServletRequest request){
         //Creamos el objeto de error
         CustomErrorResponseDTO error = new CustomErrorResponseDTO(LocalDateTime.now(), "La relación entre las dos entidades ya existe: " + ex.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    } 
+
+    @ExceptionHandler(TodayChatAlreadyExists.class)
+    public ResponseEntity<?> handleTodayChatAlreadyExists(TodayChatAlreadyExists ex, HttpServletRequest request){
+        //Creamos el objeto de error
+        CustomErrorResponseDTO error = new CustomErrorResponseDTO(LocalDateTime.now(), "Vuelve mañana: " + ex.getMessage(), request.getRequestURI());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     } 
 

@@ -21,7 +21,7 @@ public class ChatResponseDTO {
          */
 
          @Getter @Setter
-        public static class ChatDetailsDTO {
+        public static class ChatDetailsDTO implements ChatResponse{
             private Long id;
             private String name;
             @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
@@ -30,6 +30,17 @@ public class ChatResponseDTO {
             public ChatDetailsDTO(Chat chat) {
                 this.id = chat.getId();
                 this.name = chat.getName();
+                this.date = chat.getDate();
+            }
+        }
+
+        @Getter @Setter
+        public static class ChatContributionDTO implements ChatResponse{
+            @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+            private LocalDateTime date;
+            private Integer count = 1; //Activador para que el día en el que el user ha hecho un chat se vea en el gráfico del perfil
+            
+            public ChatContributionDTO(Chat chat) {
                 this.date = chat.getDate();
             }
         }

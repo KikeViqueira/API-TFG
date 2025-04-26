@@ -10,6 +10,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.api.api.DTO.ChatResponse;
 import com.api.api.DTO.ChatResponseDTO.*;
 import com.api.api.DTO.UserDTO.*;
 import com.api.api.model.User;
@@ -67,11 +68,11 @@ public class UserController {
      * Esto se lo indicamos al método en base a un parámetro que le pasamos en la petición (filter)
      */
     @GetMapping("/{idUser}/chats")
-    public ResponseEntity<List<ChatDetailsDTO>> getChats(@PathVariable("idUser") Long idUser,
+    public ResponseEntity<List<ChatResponse>> getChats(@PathVariable("idUser") Long idUser,
         @RequestParam(name="filter", required = false, defaultValue = "history") String filter,
         @RequestParam(name = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
         @RequestParam(name = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate){
-        List<ChatDetailsDTO> chats = chatService.getChats(idUser, filter, startDate, endDate); // Provide appropriate values for the additional parameters
+        List<ChatResponse> chats = chatService.getChats(idUser, filter, startDate, endDate); // Provide appropriate values for the additional parameters
         return ResponseEntity.ok(chats);
     }
 
