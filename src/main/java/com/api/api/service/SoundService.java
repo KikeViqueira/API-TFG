@@ -2,11 +2,13 @@ package com.api.api.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import com.api.api.DTO.CloudinaryUploadDTO;
 import com.api.api.DTO.SoundDTO.DeleteSoundDTO;
 import com.api.api.DTO.SoundDTO.ResponseSoundDTO;
 import com.api.api.exceptions.NoContentException;
@@ -20,9 +22,14 @@ import jakarta.persistence.EntityNotFoundException;
 @Service
 public class SoundService {
 
+    @Autowired
     private SoundRepository soundRepository;
 
+    @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private CloudinaryService cloudinaryService;
 
     public SoundService(SoundRepository soundRepository, UserRepository userRepository){
         this.soundRepository = soundRepository;
@@ -59,7 +66,10 @@ public class SoundService {
     public ResponseSoundDTO createSound(Long id, Sound sound){
         //Comprobamos si el user existe
         User user = this.userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("El usuario no existe"));
-        //Si el sonido no existe en la BD entonces lo creamos
+        //Tenemos que llamar a la función de cloudinary para subir el sonido en la nube y recuperar los atributos que guardaremos en la bd
+        CloudinaryUploadDTO cloudinaryUploadDTO = this.cloudinaryService.uploadFile(sound.getSource(), true);
+        sound.setSource(cloudinaryUploadDTO.getUrl());
+        sound.setPublicIdCloudinary(cloudinaryUploadDTO.getPublicId());
         sound.setDefault(false);
         sound.setOwner(user);
         this.soundRepository.save(sound);
@@ -77,6 +87,8 @@ public class SoundService {
         boolean exits = this.soundRepository.existsByOwnerIdAndId(idUser, idSound); 
         //la realación existe por lo que podemos eliminar el sonido de la bd y hibernate ya desvinculara el sonido del user
         if (exits){
+            //llamamos a la función de cloudinary para eliminar el sonido de la nube
+            if (Objects.nonNull(sound.getPublicIdCloudinary())) this.cloudinaryService.deleteFile(sound.getPublicIdCloudinary(), true);
             this.soundRepository.delete(sound);
             return new DeleteSoundDTO(sound);
         } else throw new EntityNotFoundException("La relación entre el usuario y el sonido no existe");

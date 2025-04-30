@@ -2,11 +2,15 @@ package com.api.api.service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.support.MultipartFilter;
 
+import com.api.api.DTO.CloudinaryUploadDTO;
 import com.api.api.DTO.UserDTO;
 import com.api.api.DTO.FormRequestDTO.ChangePasswordRequestDTO;
 import com.api.api.DTO.UserDTO.UserUpdateDTO;
@@ -30,6 +34,9 @@ public class UserService {
     private OnboardingRepository onboardingRepository;
 
     @Autowired
+    private CloudinaryService cloudinaryService;
+
+    @Autowired
     private PatchUtils patchUtils;
 
     @Autowired
@@ -42,7 +49,7 @@ public class UserService {
 
         //tenemos que comprobar que el user no exista ya en la BD
         User userRecuperado = this.userRepository.findByEmail(user.getEmail()).orElse(null);
-        if (userRecuperado == null){
+        if (Objects.isNull(userRecuperado)){
             user.setPassword(this.passwordEncoder.encode(user.getPassword())); // Encripta la contraseña
             //Cuando un user crea una cuenta tenemos que poner valores por defecto tanto en el role (inmutable) como en la imagen de perfil (modificable en el futuro)
             user.setRole("USER");
@@ -91,6 +98,10 @@ public class UserService {
         //Primero hacemos una lista de los paths que no se pueden modificar
         List<String> pathsNoModificables = List.of("/id", "/name","/age", "/role", "/email");
 
+        //Bandera para saber si el campo que se está cambiando es el de la imagen de perfil y tenemos que llamar a cloudinary y tenemos que borrar la imagen anterior si el id que hay en la BD no es null
+        boolean isProfilePicture = false;
+        String previousImageId = user.getPublicIdCloudinary();
+
         for (Map<String,Object> update : updates) {
             String path = (String) update.get("path");
             //En caso de que el path de la operación que quiere hacer el user no este permitida devolvemos Bad Request
@@ -113,11 +124,21 @@ public class UserService {
             }else if(path.equals("/profilePicture")){
                 //En caso de que el user quiera cambiar la imagen de perfil, comprobamos que la imagen que se quiere poner es válida
                 String profilePicture = (String) update.get("value");
-                if (profilePicture.equals(user.getProfilePicture())) throw new IllegalArgumentException("La imagen de perfil que se quiere poner es la misma que la que ya tiene el usuario");
+                if (Objects.equals(profilePicture, user.getProfilePicture())) throw new IllegalArgumentException("La imagen de perfil que se quiere poner es la misma que la que ya tiene el usuario");
+                isProfilePicture = true;
             }
         }
         //Una vez comprobado los atributos que va a modificar el user, llamamos a patchUtils
         User userActualizado = this.patchUtils.patch(user, updates);
+        //Recuperamos el nuevo estado del user y si la bandera de si se ha cambiado la imagen de perfil es true, entonces tenemos que subir la nueva imagen a la nube y actualizar el public_id en la BD y la url
+        if (isProfilePicture){
+            //Comprobamos si el previousImageId no es null, en caso de que no lo sea llamamos a la función de cloudinary para eliminar la imagen de la nube
+            if (Objects.nonNull(previousImageId)) this.cloudinaryService.deleteFile(previousImageId, false);
+            //Llamamos a la función de cloudinary para subir la nueva imagen y recuperar su public_id y url
+            //CloudinaryUploadDTO cloudinaryUploadDTO = this.cloudinaryService.uploadFile(userActualizado.getProfilePicture(), false);
+            //userActualizado.setProfilePicture(cloudinaryUploadDTO.getUrl());
+            //userActualizado.setPublicIdCloudinary(cloudinaryUploadDTO.getPublicId());
+        }
         //Guardamos el user actualizado en la BD
         this.userRepository.save(userActualizado);
         //Dependiendo de el valor del path que se ha enviado al método, llamamos a un constructor o a otro del DTO de updateUserDTO
@@ -126,5 +147,34 @@ public class UserService {
         else return new UserDTO.UserUpdateDTO(userActualizado);
     }
 
-    
+    //Función para eliminar la foto de perfil de un user de la BD
+    @Transactional
+    public void deleteProfilePicture(Long idUser){
+        //Recuperamos el user de la BD y vemos si existe o no
+        User user = this.userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        //Comprobamos que el user tenga una imagen de perfil diferente a la por defecto, en caso de que no la tenga lanzamos una excepción
+        if (Objects.equals(user.getProfilePicture(), "http://localhost:8080/images/placeholder.jpg")) throw new IllegalArgumentException("El usuario no tiene una imagen de perfil personalizada");
+        //Ponemos a null el public_id que hace referencia a la imagen de perfil que tenía el user para tener siempre un estado consistente en la BD
+        user.setPublicIdCloudinary(null);
+        //Llamamos a la función de cloudinary para eliminar la imagen de la nube
+        this.cloudinaryService.deleteFile(user.getPublicIdCloudinary(), false);
+        //Una vez eliminada la imagen de la nube, actualizamos el campo de la imagen del user a la por defecto
+        user.setProfilePicture("http://localhost:8080/images/placeholder.jpg");
+        this.userRepository.save(user);
+    }
+
+    //Función para actualizar la foto de perfil de un user de la BD
+    @Transactional
+    public UserUpdateDTO updateProfilePicture(Long idUser, MultipartFile file){
+        //Recuperamos el user de la BD y vemos si existe o no
+        User user = this.userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        //Comprobamos que si el user tenía una foto antes, esta se borre tanto de la BD como de cloudinary
+        if (Objects.nonNull(user.getPublicIdCloudinary())) this.cloudinaryService.deleteFile(user.getPublicIdCloudinary(), false);
+        //Llamamos a la función de cloudinary para subir la nueva imagen y recuperar su public_id y url
+        CloudinaryUploadDTO cloudinaryUploadDTO = this.cloudinaryService.uploadMultipartFile(file, false);
+        user.setProfilePicture(cloudinaryUploadDTO.getUrl());
+        user.setPublicIdCloudinary(cloudinaryUploadDTO.getPublicId());
+        this.userRepository.save(user);
+        return new UserUpdateDTO(user);
+    }
 }

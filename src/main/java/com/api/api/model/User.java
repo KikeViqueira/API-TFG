@@ -5,9 +5,7 @@ import java.time.Period;
 import java.util.List;
 import java.util.Objects;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -62,6 +60,10 @@ public class User {
 
     //Unico campo en la BD que puede ser nulo
     private String profilePicture;
+
+    //Campo que puede ser nulo  que se encargará de guardar el public_id que nos devuelve Cloudinary en el momento que el user sube una imagen de perfil, si es null se supone que de foto de perfil está el placeholder
+    @Column(nullable = true, length = 255, name = "public_id")
+    private String publicIdCloudinary;
 
 
     /*

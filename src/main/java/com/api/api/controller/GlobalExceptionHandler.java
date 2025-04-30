@@ -12,6 +12,7 @@ import org.springframework.web.server.MethodNotAllowedException;
 
 import com.api.api.DTO.CustomErrorResponseDTO;
 import com.api.api.exceptions.AIResponseGenerationException;
+import com.api.api.exceptions.CloudinaryException;
 import com.api.api.exceptions.NoContentException;
 import com.api.api.exceptions.RelationshipAlreadyExistsException;
 import com.api.api.exceptions.TodayChatAlreadyExists;
@@ -90,10 +91,25 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(error);
     }
 
+    /*
+     * En estas dos excepciones aún que se produzca un error se devuelve un 200,
+     * ya que el error se produce en la api de terceros, no en la nuestra
+     * 
+     * - AIResponseGenerationException: Error al generar la respuesta de la IA
+     * - CloudinaryException: Error de cloudinary al procesar una acción
+     */
+
     @ExceptionHandler(AIResponseGenerationException.class)
     public ResponseEntity<?> handleAIResponseGenerationException(AIResponseGenerationException ex, HttpServletRequest request){
         //Creamos el objeto de error
         CustomErrorResponseDTO error = new CustomErrorResponseDTO(LocalDateTime.now(), "Error API AI: " + ex.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.OK).body(error); //Devolvemos el siguiente código ya que el error se produce en la api de terceros, no en la nuestra
+    }
+
+    @ExceptionHandler(CloudinaryException.class)
+    public ResponseEntity<?> handleCloudinaryException(CloudinaryException ex, HttpServletRequest request){
+        //Creamos el objeto de error
+        CustomErrorResponseDTO error = new CustomErrorResponseDTO(LocalDateTime.now(), "Error API Cloudinary: " + ex.getMessage(), request.getRequestURI());
         return ResponseEntity.status(HttpStatus.OK).body(error); //Devolvemos el siguiente código ya que el error se produce en la api de terceros, no en la nuestra
     }
 

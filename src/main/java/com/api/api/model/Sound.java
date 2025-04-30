@@ -4,7 +4,6 @@ package com.api.api.model;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,8 +11,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
@@ -54,6 +51,9 @@ public class Sound {
 
     @Column(nullable = false)
     private boolean isDefault;
+
+    @Column(nullable = true, length = 255, name = "public_id")
+    private String publicIdCloudinary;
 
     /*Definimos las relaciones que tiene la entidad con user:
      * 1. Un sonido subido a la app siempre se corresponde con un solo user, y el user puede tener varios sonidos
