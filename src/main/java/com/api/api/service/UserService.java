@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.support.MultipartFilter;
 
 import com.api.api.DTO.CloudinaryUploadDTO;
 import com.api.api.DTO.UserDTO;
@@ -96,11 +95,7 @@ public class UserService {
         User user = this.userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
         //En caso de que el user exista comprobamos que en la lista de operaciones no haya ningun path de un atributo no modificable
         //Primero hacemos una lista de los paths que no se pueden modificar
-        List<String> pathsNoModificables = List.of("/id", "/name","/age", "/role", "/email");
-
-        //Bandera para saber si el campo que se está cambiando es el de la imagen de perfil y tenemos que llamar a cloudinary y tenemos que borrar la imagen anterior si el id que hay en la BD no es null
-        boolean isProfilePicture = false;
-        String previousImageId = user.getPublicIdCloudinary();
+        List<String> pathsNoModificables = List.of("/id", "/name","/age", "/role", "/email", "/profilePicture");
 
         for (Map<String,Object> update : updates) {
             String path = (String) update.get("path");
@@ -121,30 +116,14 @@ public class UserService {
                 if (this.passwordEncoder.matches(newPassword, user.getPassword())) throw new IllegalArgumentException("La nueva contraseña no puede ser igual a la anterior");
                 String encodedPassword = this.passwordEncoder.encode(newPassword);
                 update.put("value", encodedPassword); //Actualizamos el valor de la contraseña que vamos a aplicar en el patch
-            }else if(path.equals("/profilePicture")){
-                //En caso de que el user quiera cambiar la imagen de perfil, comprobamos que la imagen que se quiere poner es válida
-                String profilePicture = (String) update.get("value");
-                if (Objects.equals(profilePicture, user.getProfilePicture())) throw new IllegalArgumentException("La imagen de perfil que se quiere poner es la misma que la que ya tiene el usuario");
-                isProfilePicture = true;
             }
         }
         //Una vez comprobado los atributos que va a modificar el user, llamamos a patchUtils
         User userActualizado = this.patchUtils.patch(user, updates);
-        //Recuperamos el nuevo estado del user y si la bandera de si se ha cambiado la imagen de perfil es true, entonces tenemos que subir la nueva imagen a la nube y actualizar el public_id en la BD y la url
-        if (isProfilePicture){
-            //Comprobamos si el previousImageId no es null, en caso de que no lo sea llamamos a la función de cloudinary para eliminar la imagen de la nube
-            if (Objects.nonNull(previousImageId)) this.cloudinaryService.deleteFile(previousImageId, false);
-            //Llamamos a la función de cloudinary para subir la nueva imagen y recuperar su public_id y url
-            //CloudinaryUploadDTO cloudinaryUploadDTO = this.cloudinaryService.uploadFile(userActualizado.getProfilePicture(), false);
-            //userActualizado.setProfilePicture(cloudinaryUploadDTO.getUrl());
-            //userActualizado.setPublicIdCloudinary(cloudinaryUploadDTO.getPublicId());
-        }
         //Guardamos el user actualizado en la BD
         this.userRepository.save(userActualizado);
-        //Dependiendo de el valor del path que se ha enviado al método, llamamos a un constructor o a otro del DTO de updateUserDTO
-        String path = (String) updates.get(0).get("path");
-        if (path.equals("/password")) return new UserDTO.UserUpdateDTO(userActualizado, false);
-        else return new UserDTO.UserUpdateDTO(userActualizado);
+        //Devolvemos el DTO indicando al user que se ha cambiado la contraseña correctamente
+        return new UserUpdateDTO(userActualizado, true);
     }
 
     //Función para eliminar la foto de perfil de un user de la BD

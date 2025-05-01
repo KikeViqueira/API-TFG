@@ -3,21 +3,20 @@ package com.api.api.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.api.api.DTO.SoundDTO.DeleteSoundDTO;
 import com.api.api.DTO.SoundDTO.ResponseSoundDTO;
-import com.api.api.model.Sound;
 import com.api.api.service.SoundService;
-
-import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/sounds")
@@ -48,10 +47,10 @@ public class SoundController {
     }
 
     //Endpoint para que el user pueda crear un sonido
-    @PostMapping("/{idUser}")
-    public ResponseEntity<ResponseSoundDTO> createSound(@PathVariable("idUser") Long idUser, @RequestBody @Valid Sound sound){
+    @PostMapping(path = "/{idUser}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ResponseSoundDTO> createSound(@PathVariable("idUser") Long idUser, @RequestParam("file") MultipartFile file){
         //llamamos a la función encargada de crear el sonido
-        ResponseSoundDTO createdSound = soundService.createSound(idUser, sound);
+        ResponseSoundDTO createdSound = soundService.createSound(idUser, file);
         return ResponseEntity.ok(createdSound);
     }
 

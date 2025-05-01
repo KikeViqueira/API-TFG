@@ -8,9 +8,11 @@ import lombok.Setter;
 public class CloudinaryUploadDTO {
     private String url;
     private String publicId;
+    private String resourceName;
 
-    public CloudinaryUploadDTO(String url, String publicId){
+    public CloudinaryUploadDTO(String url, String publicId, String resourceName){
         this.url = url;
         this.publicId = publicId;
+        this.resourceName = resourceName;
     }
 }

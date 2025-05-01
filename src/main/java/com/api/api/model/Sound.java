@@ -13,8 +13,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -40,12 +38,9 @@ public class Sound {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "El nombre del sonido no puede ser vacío")
-    @Size(min = 2, message = "El nombre del sonido debe tener al menos 2 caracteres")
     @Column(nullable = false)
     private String name;
 
-    @NotBlank(message = "La URL del archivo no puede ser vacía")
     @Column(nullable = false)
     private String source;
 

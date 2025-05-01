@@ -40,7 +40,7 @@ public class UserDTO {
         }
 
         //Constructor solo para cambiar el valor de la contraseña, se devuelve la foto de perfil que tenga el user en ese momento
-        public UserUpdateDTO(User user,boolean passwordChanged) {
+        public UserUpdateDTO(User user, boolean passwordChanged) {
             this.newProfilePicture = user.getProfilePicture();
             this.passwordChanged = passwordChanged;
         }

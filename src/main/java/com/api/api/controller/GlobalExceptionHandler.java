@@ -13,6 +13,7 @@ import org.springframework.web.server.MethodNotAllowedException;
 import com.api.api.DTO.CustomErrorResponseDTO;
 import com.api.api.exceptions.AIResponseGenerationException;
 import com.api.api.exceptions.CloudinaryException;
+import com.api.api.exceptions.DuplicatedSoundName;
 import com.api.api.exceptions.NoContentException;
 import com.api.api.exceptions.RelationshipAlreadyExistsException;
 import com.api.api.exceptions.TodayChatAlreadyExists;
@@ -75,6 +76,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     } 
 
+    @ExceptionHandler(DuplicatedSoundName.class)
+    public ResponseEntity<?> handleDuplicatedSoundName(DuplicatedSoundName ex, HttpServletRequest request){
+        //Creamos el objeto de error
+        CustomErrorResponseDTO error = new CustomErrorResponseDTO(LocalDateTime.now(), "Recurso con nombre repetido", request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
     
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<?> handleAccessDeniedException(AccessDeniedException ex, HttpServletRequest request){

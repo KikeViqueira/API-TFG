@@ -7,10 +7,12 @@ import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.api.api.DTO.CloudinaryUploadDTO;
 import com.api.api.DTO.SoundDTO.DeleteSoundDTO;
 import com.api.api.DTO.SoundDTO.ResponseSoundDTO;
+import com.api.api.exceptions.DuplicatedSoundName;
 import com.api.api.exceptions.NoContentException;
 import com.api.api.model.Sound;
 import com.api.api.model.User;
@@ -63,11 +65,24 @@ public class SoundService {
     }
 
     //Función para que el user pueda crear un sonido en la app
-    public ResponseSoundDTO createSound(Long id, Sound sound){
+    public ResponseSoundDTO createSound(Long id, MultipartFile file){
         //Comprobamos si el user existe
         User user = this.userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("El usuario no existe"));
+        
+        // Extraer el nombre original del archivo
+        String originalFileName = file.getOriginalFilename();
+        String nameWithoutExtension = originalFileName != null ? 
+            originalFileName.replaceFirst("[.][^.]+$", "") : 
+            "sound_" + System.currentTimeMillis();
+        
+        // Verificar si el usuario ya tiene un sonido con el mismo nombre
+        if (this.soundRepository.existsByOwnerIdAndName(id, nameWithoutExtension)) throw new DuplicatedSoundName("Ya tienes un sonido con este nombre. Por favor, usa un nombre diferente.");
+        
         //Tenemos que llamar a la función de cloudinary para subir el sonido en la nube y recuperar los atributos que guardaremos en la bd
-        CloudinaryUploadDTO cloudinaryUploadDTO = this.cloudinaryService.uploadFile(sound.getSource(), true);
+        CloudinaryUploadDTO cloudinaryUploadDTO = this.cloudinaryService.uploadMultipartFile(file, true);
+        
+        Sound sound = new Sound();
+        sound.setName(cloudinaryUploadDTO.getResourceName());
         sound.setSource(cloudinaryUploadDTO.getUrl());
         sound.setPublicIdCloudinary(cloudinaryUploadDTO.getPublicId());
         sound.setDefault(false);

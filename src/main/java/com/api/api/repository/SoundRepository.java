@@ -18,6 +18,7 @@ public interface SoundRepository extends JpaRepository<Sound, Long> {
 
     //Función para comprobar si existe una relación entre un user y un sonido
     boolean existsByOwnerIdAndId(Long idUser, Long idSound);
-
     
+    //Función para verificar si un usuario específico ya tiene un sonido con el mismo nombre
+    boolean existsByOwnerIdAndName(Long userId, String name);
 } 

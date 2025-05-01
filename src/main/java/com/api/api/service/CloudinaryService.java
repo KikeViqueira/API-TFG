@@ -53,7 +53,7 @@ public class CloudinaryService {
             );
             String publicId = (String) res.get("public_id");
             String url = (String) res.get("secure_url");
-            return new CloudinaryUploadDTO(url, publicId);
+            return new CloudinaryUploadDTO(url, publicId, nameWithoutExtension);
         } catch (IOException e) {
             throw new RuntimeException("Error al leer el archivo para subir a Cloudinary", e);
         } catch (Exception e) {
