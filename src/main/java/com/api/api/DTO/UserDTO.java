@@ -18,12 +18,16 @@ public class UserDTO {
         private String email;
         private LocalDate birthDate;
         private String profilePicture;
+        private int age;
 
         public UserResponseDTO(User user) {
             this.id = user.getId();
             this.name = user.getName();
             this.email = user.getEmail();
-            if(user.getBirthDate()!= null) this.birthDate= user.getBirthDate();
+            if(user.getBirthDate()!= null){
+                this.birthDate= user.getBirthDate();
+                this.age = user.getAge();
+            } else this.age = -1;
             if (user.getProfilePicture()!=null) this.profilePicture = user.getProfilePicture();
         }
      }
