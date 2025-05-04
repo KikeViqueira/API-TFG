@@ -136,6 +136,19 @@ public class User {
     //@JsonIgnore
     private List<Drm> drms;
 
+    /*
+     * RELACIONES QUE INVOLUCRAN LAS BANDERAS DE LA APP CON EL CORRESPONDIENTE USER
+     */
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonManagedReference(value = "user-dailyUserFlags")
+    //@JsonIgnore
+    private List<DailyUserFlags> dailyUserFlags;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonManagedReference(value = "user-configurationUserFlags")
+    //@JsonIgnore
+    private List<ConfigurationUserFlags> configurationUserFlags;
+
 
     //DEFINIMOS EL MÉTODO EQUALS Y HASHCODE PARA QUE SE PUEDAN COMPARAR DOS OBJETOS DE LA CLASE SOUND
     @Override

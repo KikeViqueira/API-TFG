@@ -1,5 +1,6 @@
 package com.api.api.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,4 +33,7 @@ public interface TipRepository extends JpaRepository<Tip, Long>  {
 
     //Tenemos que hacer una función que para recuperar los ids que pertenecen al user de una lista de ids dada
     List<Tip> findByUser_IdAndIdIn(Long userId, List<Long> ids);
+
+    //Función para saber si el user ha hecho un tip en el día de hoy
+    boolean existsByUser_IdAndTimeStampBetween(Long userId, LocalDateTime startOfDay, LocalDateTime endOfDay);
 }

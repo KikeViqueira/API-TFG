@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.api.api.DTO.ChatResponse;
+import com.api.api.DTO.UserFlagDTO;
 import com.api.api.DTO.ChatResponseDTO.*;
 import com.api.api.DTO.UserDTO.*;
 import com.api.api.model.User;
@@ -104,5 +105,12 @@ public class UserController {
     public ResponseEntity<?> deleteProfilePicture(@PathVariable("idUser") Long idUser){
         this.userService.deleteProfilePicture(idUser);
         return ResponseEntity.noContent().build(); //Indicamos al user que la petición se ha realizado con éxito y no hay contenido para devolver (Es innecesario devolverle la url)
+    }
+
+    //Endpoint para obtener la lista de las banderas del user tanto las de configuración como las diarias
+    @GetMapping("/{idUser}/flags")
+    public ResponseEntity<Map<String, Map<String, String>>> getUserFlags(@PathVariable("idUser") Long idUser){
+        Map<String, Map<String, String>> userFlags = this.userService.getUserFlags(idUser);
+        return ResponseEntity.ok(userFlags);
     }
 }

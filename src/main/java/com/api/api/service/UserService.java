@@ -1,8 +1,10 @@
 package com.api.api.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -10,12 +12,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.api.api.DTO.CloudinaryUploadDTO;
+import com.api.api.DTO.FlagEntityDTO;
 import com.api.api.DTO.UserDTO;
+import com.api.api.DTO.UserFlagDTO;
 import com.api.api.DTO.FormRequestDTO.ChangePasswordRequestDTO;
 import com.api.api.DTO.UserDTO.UserUpdateDTO;
+import com.api.api.constants.DailyFlags;
+import com.api.api.model.ConfigurationUserFlags;
+import com.api.api.model.DailyUserFlags;
 import com.api.api.model.Onboarding;
 import com.api.api.model.User;
+import com.api.api.repository.ConfigurationUserFlagsRepository;
+import com.api.api.repository.DailyUserFlagsRepository;
+import com.api.api.repository.DrmRepository;
 import com.api.api.repository.OnboardingRepository;
+import com.api.api.repository.SleepLogRepository;
+import com.api.api.repository.TipRepository;
 import com.api.api.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.JsonPatchException;
@@ -40,6 +52,21 @@ public class UserService {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private DailyUserFlagsRepository dailyUserFlagsRepository;
+
+    @Autowired
+    private ConfigurationUserFlagsRepository configurationUserFlagsRepository;
+
+    @Autowired
+    private DrmRepository drmRepository;
+
+    @Autowired
+    private TipRepository tipRepository;
+
+    @Autowired
+    private SleepLogRepository sleepLogRepository;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -155,5 +182,49 @@ public class UserService {
         user.setPublicIdCloudinary(cloudinaryUploadDTO.getPublicId());
         this.userRepository.save(user);
         return new UserUpdateDTO(user);
+    }
+
+    //Función para recuperar la lista de banderas que tiene el user
+    @Transactional
+    public Map<String, Map<String, String>> getUserFlags(Long idUser){
+        //Comprobamos que el user exista
+        this.userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        //Recuperamos la lista de banderas del user
+        List<DailyUserFlags> dailyUserFlags = this.dailyUserFlagsRepository.findByUser_Id(idUser);
+        //Recuperamos la lista de banderas de configuración del user
+        List<ConfigurationUserFlags> configurationUserFlags = this.configurationUserFlagsRepository.findByUser_Id(idUser);
+        /*
+         * Recuperamos las banderas diarias que nos quedan que sacamos el valor de los correspondeintes repository
+         * Para esto tenemos que consultar registros en el día de hoy en diferentes entidades: DRM, Tips y SleepLogs
+        */
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
+        LocalDateTime endOfDay = startOfDay.plusDays(1).minusNanos(1);
+
+        //Pasamos las listas de banderas por el DTO correspondiente para devolver solo al user lo que le interesa
+        //Recorremos las listas y creamos un DTO por cada elemento de ella, una vez creado lo añadimos a la lista que vamos a devolver
+        List<FlagEntityDTO> dailyFlags = dailyUserFlags.stream().map(dailyUserFlag -> new FlagEntityDTO(dailyUserFlag)).toList();
+        List<FlagEntityDTO> configurationFlags = configurationUserFlags.stream().map(configurationUserFlag -> new FlagEntityDTO(configurationUserFlag)).toList();
+
+        boolean reportFlag = this.drmRepository.existsByUser_IdAndTimeStampBetween(idUser, startOfDay, endOfDay);
+        boolean tipFlag = this.tipRepository.existsByUser_IdAndTimeStampBetween(idUser, startOfDay, endOfDay);
+        boolean sleepFlag = this.sleepLogRepository.existsByUser_IdAndTimeStampBetween(idUser, startOfDay, endOfDay);
+
+        //hacemos primero el mapa de las banderas que estén en lista
+        //Recorremos cada una de las listas y creamos un mapa con el flag y valor de cada uno de los elementos de la lista que estamos recorriendo
+        Map<String, String> configMap = configurationFlags.stream().collect(Collectors.toMap(FlagEntityDTO::getFlag, FlagEntityDTO::getValue));
+
+        Map<String, String> dailyMap = dailyFlags.stream().collect(Collectors.toMap(FlagEntityDTO::getFlag, FlagEntityDTO::getValue));
+        //Añadimos al mapa de banderas diarias las banderas que hemos recuperado de los distintos repository
+        dailyMap.put(DailyFlags.DRM_REPORT_TODAY, String.valueOf(reportFlag));
+        dailyMap.put(DailyFlags.TIP_OF_THE_DAY, String.valueOf(tipFlag));
+        dailyMap.put(DailyFlags.SLEEP_LOG_TODAY, String.valueOf(sleepFlag));
+
+        Map<String, Map<String, String>> userFlags = Map.of(
+            "configurationFlags", configMap,
+            "dailyFlags", dailyMap
+        );
+
+        return userFlags;
     }
 }

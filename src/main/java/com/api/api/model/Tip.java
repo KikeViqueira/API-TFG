@@ -1,5 +1,6 @@
 package com.api.api.model;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -45,6 +46,10 @@ public class Tip {
     @JsonProperty("isFavorite") //Indicamos a Spring como tiene que devolver el nombre de este atributo en el JSON
     private boolean isFavorite = false; //Por defecto, el tip no es favorito
 
+    //Se llenara el campo gracias a la función que hemos creado en el prePersist
+    @Column(nullable = false)
+    private LocalDateTime timeStamp;
+
     //DEFINIMOS LAS RELACIONES QUE TIENE LA ENTIDAD TIP CON EL RESTO DE ENTIDADES DE NUESTRA BD
 
     /*La relacion muchos a muchos entre user y tips ya esta definida en la entidad User, por lo que para conectarla
@@ -65,6 +70,10 @@ public class Tip {
      private TipDetail tipDetail;
 
 
+     @PrePersist
+     protected void onCreate(){
+        this.timeStamp = LocalDateTime.now();
+     }
 
      //DEFINIMOS EL MÉTODO EQUALS Y HASHCODE PARA QUE SE PUEDAN COMPARAR DOS OBJETOS DE LA CLASE TIP
     @Override
