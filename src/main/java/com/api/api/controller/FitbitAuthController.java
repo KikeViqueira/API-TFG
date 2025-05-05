@@ -31,7 +31,7 @@ public class FitbitAuthController {
         try (InputStream is = getClass().getResourceAsStream("/data/fitbitAuth.json")) {
             JsonNode node = objectMapper.readTree(is);
             //llamamos a la función del servicio que se encarga de guardar la info del login en Fitbit en nuestra BD
-            FitbitTokenDTO fitbitTokenDTO = fitbitService.saveToken(node, userId);
+            FitbitTokenDTO fitbitTokenDTO = this.fitbitService.saveToken(node, userId);
             return ResponseEntity.ok(fitbitTokenDTO);
         } catch (Exception e) {
             //TODO: DEVOLVEMOS ESTE CÓDIGO POR AHORA YA QUE SI SE EJECUTA LA EXCEPCIÓN NO SE HA PODIDO ENCONTRAR EL ARCHIVO EN NUESTRA ESTRUCTURA DE DATOS

@@ -14,7 +14,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.api.api.DTO.CloudinaryUploadDTO;
 import com.api.api.DTO.FlagEntityDTO;
 import com.api.api.DTO.UserDTO;
-import com.api.api.DTO.UserFlagDTO;
 import com.api.api.DTO.FormRequestDTO.ChangePasswordRequestDTO;
 import com.api.api.DTO.UserDTO.UserUpdateDTO;
 import com.api.api.constants.DailyFlags;

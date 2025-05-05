@@ -1,5 +1,7 @@
 package com.api.api.DTO;
 
+import java.util.Map;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -41,7 +43,21 @@ public class FitBitDTO {
     // FoodDTO.java
     @Getter @Setter
     public static class FoodDTO {
-        private int calories;
+        private Map<String, Integer> calories;
+
+        public FoodDTO(Map<String, Integer> calories) {
+            this.calories = calories;
+        }
+    }
+
+    // SleepWeeklyDTO.java
+    @Getter @Setter
+    public static class SleepWeeklyDTO {
+        private Map<String, Integer> sleep;
+
+        public SleepWeeklyDTO(Map<String, Integer> sleep) {
+            this.sleep = sleep;
+        }
     }
     
 }

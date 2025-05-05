@@ -6,6 +6,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.api.api.DTO.FitBitDTO;
+import com.api.api.DTO.FitBitDTO.FoodDTO;
+import com.api.api.DTO.FitBitDTO.SleepDTO;
+import com.api.api.DTO.FitBitDTO.SleepWeeklyDTO;
 import com.api.api.service.FitbitService;
 
 @RestController
@@ -20,18 +23,23 @@ public class FitbitController {
 
     //Endpoint para recuperar la info de sueño del user
     @GetMapping("/sleep")
-    public ResponseEntity<FitBitDTO.SleepDTO> getSleepInfo(){
-        //Recuperamos el DTO con la info del sueño del user llamando al servicio
-        FitBitDTO.SleepDTO sleepDTO = fitbitService.getSleepInfo();
+    public ResponseEntity<SleepDTO> getSleepInfo(){
+        SleepDTO sleepDTO = this.fitbitService.getSleepTodayInfo();
         return ResponseEntity.ok(sleepDTO);
     }
 
     //Endpoint para recuperar la info de comida del user
     @GetMapping("/food")
-    public ResponseEntity<FitBitDTO.FoodDTO> getFoodInfo(){
-        //Recuperamos el DTO con la info del sueño del user llamando al servicio
-        FitBitDTO.FoodDTO foodDTO = fitbitService.getFoodInfo();
+    public ResponseEntity<FoodDTO> getFoodInfo(){
+        FoodDTO foodDTO = this.fitbitService.getFoodInfo();
         return ResponseEntity.ok(foodDTO);
+    }
+
+    //Endpoint para recuperar el registro semanal de sueño por parte del user
+    @GetMapping("/sleepWeekly")
+    public ResponseEntity<SleepWeeklyDTO> getSleepWeeklyInfo(){
+        SleepWeeklyDTO sleepWeeklyDTO = this.fitbitService.getSleepWeeklyInfo();
+        return ResponseEntity.ok(sleepWeeklyDTO);
     }
     
 }

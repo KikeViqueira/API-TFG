@@ -1,17 +1,22 @@
 package com.api.api.service;
 
 import java.io.InputStream;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.api.api.DTO.FitBitDTO;
 import com.api.api.DTO.FitbitTokenDTO;
 import com.api.api.DTO.FitBitDTO.FoodDTO;
 import com.api.api.DTO.FitBitDTO.LevelDetailDTO;
 import com.api.api.DTO.FitBitDTO.LevelsDTO;
 import com.api.api.DTO.FitBitDTO.SleepDTO;
+import com.api.api.DTO.FitBitDTO.SleepWeeklyDTO;
 import com.api.api.DTO.FitBitDTO.SummaryDTO;
+import com.api.api.enums.DayOfWeek;
 import com.api.api.model.FitbitToken;
 import com.api.api.model.User;
 import com.api.api.repository.FitBitRepository;
@@ -42,7 +47,7 @@ public class FitbitService {
      private UserRepository userRepository;
 
      //Función que devuelve la información relacionada con el sueño del usuario
-     public FitBitDTO.SleepDTO getSleepInfo(){
+     public SleepDTO getSleepTodayInfo(){
         /*
          * La ventaja del try-with-resources es que, al declarar el recurso dentro del paréntesis del try,
          *  éste se cierra automáticamente al finalizar el bloque, sin necesidad de hacerlo manualmente en un finally
@@ -51,7 +56,7 @@ public class FitbitService {
          */  
 
             try (InputStream is = getClass().getResourceAsStream("/data/sleep.json")) {
-            JsonNode root = objectMapper.readTree(is); //Leemos el JSON
+            JsonNode root = this.objectMapper.readTree(is); //Leemos el JSON
             //Suponemos que el JSON tiene un array que se llama Sleep y tomamos su primer valor
             JsonNode sleepNode = root.path("sleep").get(0);
             SleepDTO sleepDTO = new SleepDTO();
@@ -80,17 +85,54 @@ public class FitbitService {
      }
 
      //Función que devuelve la información relacionada con la comida del usuario, en estecaso solo nos interesan las calorías
-     public FitBitDTO.FoodDTO getFoodInfo(){
+     public FoodDTO getFoodInfo(){
         try (InputStream is = getClass().getResourceAsStream("/data/foods.json")) {
-            JsonNode root = objectMapper.readTree(is);
-            JsonNode foodNode = root.path("foods").get(0);
+            JsonNode root = this.objectMapper.readTree(is);
+            JsonNode caloriesArray = root.path("foods-log-caloriesIn");
+
+            Map<String, Integer> caloriesByDay = new HashMap<>();
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+            caloriesArray.forEach(node -> {
+                String dateStr = node.path("dateTime").asText();
+                int calories = node.path("value").asInt();
+                LocalDate date = LocalDate.parse(dateStr, formatter);
+                String spanishNameDay = DayOfWeek.getSpanishNameFromDate(date);
+                caloriesByDay.put(spanishNameDay, calories);
+            });
+
             //Creamos el DTO que le vamos a devolver al user
-            FoodDTO foodDTO = new FoodDTO();
-            //Recogemos los valores correspondientes del JSON y los guardamos en los setter del DTO
-            foodDTO.setCalories(foodNode.path("calories").asInt());
+            FoodDTO foodDTO = new FoodDTO(caloriesByDay);
             return foodDTO;
         } catch (Exception e) {
             throw new RuntimeException("Error al leer el JSON de foods: "+ e.getMessage());
+        }
+     }
+
+     // Función que va a devolver el resgistro semanal de horas de sueño del user
+     public SleepWeeklyDTO getSleepWeeklyInfo(){
+        try (InputStream is = getClass().getResourceAsStream("/data/sleepWeekly.json")) {
+            JsonNode root = this.objectMapper.readTree(is);
+            JsonNode sleepArray = root.path("sleep");
+
+            Map<String, Integer> sleepByDay = new HashMap<>();
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+            sleepArray.forEach(node -> {
+                String dateStr = node.path("dateOfSleep").asText();
+                int minutesAsleep = node.path("minutesAsleep").asInt();
+                LocalDate date = LocalDate.parse(dateStr, formatter);
+                String spanishNameDay = DayOfWeek.getSpanishNameFromDate(date);
+                sleepByDay.put(spanishNameDay, minutesAsleep);
+            });
+
+            //Creamos el DTO que le vamos a devolver al user
+            SleepWeeklyDTO sleepDTO = new SleepWeeklyDTO(sleepByDay);
+            return sleepDTO;
+        } catch (Exception e) {
+            throw new RuntimeException("Error al leer el JSON de sleepWeekly: "+ e.getMessage());
         }
      }
 
@@ -98,7 +140,7 @@ public class FitbitService {
      public FitbitTokenDTO saveToken(JsonNode node, Long idUser){
 
         //Antes de nada tenemos que comprobar si el user existe en nuestra base de datos, esto es para guardar psoteriormente el token en la BD y relacionarlo con el
-        User user = userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("User no encontrado"));
+        User user = this.userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("User no encontrado"));
 
         //Una vez que recibimos la info creamos una instancia de FitbitToken y la guardamos en la BD
         FitbitToken fitbitToken = new FitbitToken();
@@ -113,11 +155,10 @@ public class FitbitService {
         fitbitToken.setUser(user);
 
         //Guardamos el token en la BD
-        fitBitRepository.save(fitbitToken);
+        this.fitBitRepository.save(fitbitToken);
         //Devolvemos al controller la info en el formato del DTO
         return new FitbitTokenDTO(fitbitToken);
      }
-
 
      //Funcion para que recibiendo un objeto del array de summary devuelva un objeto de tipo LevelDetailDTO
      private LevelDetailDTO mapLevel(JsonNode node) {

@@ -48,12 +48,13 @@ public class CloudinaryService {
                 ObjectUtils.asMap(
                     "upload_preset", "cloudinary-TFG",
                     "resource_type", resourceType,
-                    "public_id", nameWithoutExtension
+                    //En caso de que sea un audio tenemos que guardar la extensión para que el audio pueda ser reproducido
+                    "public_id", isRaw ? originalName : nameWithoutExtension
                 )
             );
             String publicId = (String) res.get("public_id");
             String url = (String) res.get("secure_url");
-            return new CloudinaryUploadDTO(url, publicId, nameWithoutExtension);
+            return new CloudinaryUploadDTO(url, publicId, isRaw ? originalName : nameWithoutExtension);
         } catch (IOException e) {
             throw new RuntimeException("Error al leer el archivo para subir a Cloudinary", e);
         } catch (Exception e) {
