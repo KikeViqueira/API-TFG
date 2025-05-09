@@ -28,12 +28,12 @@ public class JWTUtil {
     @Value("${jwt.refreshExpiration}") //En milisegundos
     private Long refreshExpiration; //Tiempo de expiración del token de refresco
 
-    //Generamos el token con la información del user
-    public String generateToken(String email){
+    //Generamos el token con la información del user, en este caso con el id
+    public String generateToken(Long idUser){
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
         return Jwts.builder()
-                .setSubject(email)
+                .setSubject(idUser.toString())
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)),SignatureAlgorithm.HS512)//Nos aseguramos de que la clave cumpla con los requisitos de tamaño
@@ -41,21 +41,21 @@ public class JWTUtil {
     }
 
     //Definimos el nuevo método para genera el token de refresco
-    public String generateRefreshToken(String email){
+    public String generateRefreshToken(Long idUser){
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + refreshExpiration);
         return Jwts.builder()
-                .setSubject(email)
+                .setSubject(idUser.toString())
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)),SignatureAlgorithm.HS512)//Nos aseguramos de que la clave cumpla con los requisitos de tamaño
                 .compact();
     }
 
-    //Función para extraer la info del token
-    public String getUsernameFromJWT(String token){
+    //Función para extraer el id del user del token
+    public Long getIdFromJWT(String token){
         Claims claims = Jwts.parser().setSigningKey(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8))).parseClaimsJws(token).getBody();
-        return claims.getSubject();
+        return Long.parseLong(claims.getSubject());
     }
 
     //Función para comprobar si el token es válido y no ha expirado

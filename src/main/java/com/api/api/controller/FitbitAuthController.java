@@ -28,13 +28,12 @@ public class FitbitAuthController {
     //Endpoint para que el user haga el login en Fitbit desde nuestra app
     @PostMapping("/login")
     public ResponseEntity<FitbitTokenDTO> login(@RequestBody Long userId){
-        try (InputStream is = getClass().getResourceAsStream("/data/fitbitAuth.json")) {
-            JsonNode node = objectMapper.readTree(is);
+        try (InputStream is = this.getClass().getResourceAsStream("/data/fitbitAuth.json")) {
+            JsonNode node = this.objectMapper.readTree(is);
             //llamamos a la función del servicio que se encarga de guardar la info del login en Fitbit en nuestra BD
             FitbitTokenDTO fitbitTokenDTO = this.fitbitService.saveToken(node, userId);
             return ResponseEntity.ok(fitbitTokenDTO);
         } catch (Exception e) {
-            //TODO: DEVOLVEMOS ESTE CÓDIGO POR AHORA YA QUE SI SE EJECUTA LA EXCEPCIÓN NO SE HA PODIDO ENCONTRAR EL ARCHIVO EN NUESTRA ESTRUCTURA DE DATOS
             throw new RuntimeException("No se ha podido encontrar el archivo: " + e.getMessage());
         }
     }

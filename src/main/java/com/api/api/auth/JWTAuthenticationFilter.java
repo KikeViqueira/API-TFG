@@ -1,6 +1,7 @@
 package com.api.api.auth;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -52,26 +53,35 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         //Extraemos el token de la cabecera Authorization
         String header = request.getHeader("Authorization");
         String token = null;
-        String username = null;
+        Long idUser = null;
 
         //Comprobamos si la cabecera contiene el token y si empieza por "Bearer "
-        if (header != null && header.startsWith("Bearer ")){
+        if (Objects.nonNull(header) && header.startsWith("Bearer ")){
             token = header.substring(7); //Extraemos el token sin el prefijo "Bearer "
-            username = jwtUtil.getUsernameFromJWT(token); //Extraemos la info del cuerpo del token
-        }
+            if (this.jwtUtil.validateToken(token)){
 
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null){
-           var userDetails = customUserDetailsService.loadUserByUsername(username); //Cargamos los datos del usuario
-            
-            //Validamos el token
-            if (jwtUtil.validateToken(token)){
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request)); //Añadimos los detalles de la petición
+            idUser = this.jwtUtil.getIdFromJWT(token); //Extraemos la info del cuerpo del token
 
-                //Establecemos la autenticación en el contexto de Spring Security
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+            var userDetails = customUserDetailsService.loadUserById(idUser);
+
+            UsernamePasswordAuthenticationToken authToken =
+              new UsernamePasswordAuthenticationToken(
+                userDetails,
+                null,
+                userDetails.getAuthorities()
+              );
+            authToken.setDetails(new WebAuthenticationDetailsSource()
+                                   .buildDetails(request));
+
+            /*
+             *  REEMPLAZAMOS LA AUTH PREVIA SIEMPRE QUE TENEMOS UN JWT VALIDO POR SI SE ANTES
+             *  TENÍAMOS EN SU LUGAR EL DE FITBIT, Y QUE ASI FUNCIONE CORRECTAMENTE EL EVALUADOR DE PERMISOS
+             *  YA QUE PRINCIPAL AUTH NO SERÁ UN STRING Y MO DARÁ PROBLEMAS DE CASTEO
+            */
+            SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
+
         filterChain.doFilter(request, response);
     }
 }

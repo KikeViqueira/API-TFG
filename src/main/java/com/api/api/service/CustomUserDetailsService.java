@@ -24,5 +24,13 @@ public class CustomUserDetailsService implements UserDetailsService {
         //Convertimos el user de nuestra app a un objeto de Spring Security
         return new CustomUserDetails(appUser);
     }
+
+    //Método que usamos en el filtro para obtener el user en base al id que se ha extraído del token
+    public UserDetails loadUserById(Long id) throws UsernameNotFoundException {
+        User appUser = userRepository.findById(id).orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con id: " + id));
+
+        //Convertimos el user de nuestra app a un objeto de Spring Security
+        return new CustomUserDetails(appUser);
+    }
     
 }

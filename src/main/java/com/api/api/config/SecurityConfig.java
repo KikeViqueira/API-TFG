@@ -33,6 +33,11 @@ public class SecurityConfig {
         http.csrf().disable()
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS) // API REST sin estado
             .and()
+            /*
+             * si no llega un JWT válido, el contexto se queda sin Authentication y Spring responde
+             * 401 Unauthorized en lugar de crear un principal anónimo que luego tu evaluador rechazaría con 403
+             */
+            .anonymous().disable() 
             .authorizeHttpRequests(authorize -> authorize
             .requestMatchers(HttpMethod.POST, "/api/users").permitAll() // Solo POST es público (registro) para que el nuevo usuario no necesite de un token JWT
             .requestMatchers("/api/auth/**").permitAll() // Otros endpoints públicos de auth

@@ -8,11 +8,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.api.api.DTO.ChatResponse;
-import com.api.api.DTO.UserFlagDTO;
 import com.api.api.DTO.ChatResponseDTO.*;
 import com.api.api.DTO.UserDTO.*;
 import com.api.api.model.User;
@@ -62,6 +62,7 @@ public class UserController {
 
     //Endpoint para obtener la info de un user en base a su email
     @GetMapping("/{idUser}")
+    @PreAuthorize("hasPermission(#idUser, 'owner')")
     public ResponseEntity<UserResponseDTO> getUser(@PathVariable("idUser") Long idUser){
         //llamamos a la función que recupera el user de la BD y comprobamos que exista
         User user = this.userService.getUser(idUser);

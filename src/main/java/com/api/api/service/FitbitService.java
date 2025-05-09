@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -142,22 +143,34 @@ public class FitbitService {
         //Antes de nada tenemos que comprobar si el user existe en nuestra base de datos, esto es para guardar psoteriormente el token en la BD y relacionarlo con el
         User user = this.userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("User no encontrado"));
 
-        //Una vez que recibimos la info creamos una instancia de FitbitToken y la guardamos en la BD
-        FitbitToken fitbitToken = new FitbitToken();
-        fitbitToken.setAccessToken(node.path("access_token").asText());
-        fitbitToken.setExpiresIn(node.path("expires_in").asLong());
-        fitbitToken.setRefreshToken(node.path("refresh_token").asText());
-        fitbitToken.setUserIdFitbit(node.path("user_id").asText());
-        fitbitToken.setTokenType(node.path("token_type").asText());
-        fitbitToken.setScope(node.path("scope").asText());
+        /*
+         * Comprobamos si el user ya tiene un token guardado en la BD, esto lo hacemos ya que al ser un mock de la
+         * funcionalidad que podría ser la real solo tenemos un mock de token por lo que en el caso de que el user ya tenga la instancia
+         * guardada en la BD no queremos que se hagan llamadas de guardado, no sigue las políticas de diseño pero es un mock de la funcionalidad
+         * asi que sería una mejora a hacer en el futuro.
+        */
+        Optional<FitbitToken> fitbitToken = this.fitBitRepository.findByUser_Id(idUser);
+        //Si el user no tiene un token guardado, lo devolvemos al controller
+        if(fitbitToken.isPresent()){
+            return new FitbitTokenDTO(fitbitToken.get());
+        }else{
+            //Una vez que recibimos la info creamos una instancia de FitbitToken y la guardamos en la BD
+            FitbitToken fitbitTokenSave = new FitbitToken();
+            fitbitTokenSave.setAccessToken(node.path("access_token").asText());
+            fitbitTokenSave.setExpiresIn(node.path("expires_in").asLong());
+            fitbitTokenSave.setRefreshToken(node.path("refresh_token").asText());
+            fitbitTokenSave.setUserIdFitbit(node.path("user_id").asText());
+            fitbitTokenSave.setTokenType(node.path("token_type").asText());
+            fitbitTokenSave.setScope(node.path("scope").asText());
 
-        //Asignamos el user a el objeto ya que es el lado dueño de la relación (maneja la FK)
-        fitbitToken.setUser(user);
+            //Asignamos el user a el objeto ya que es el lado dueño de la relación (maneja la FK)
+            fitbitTokenSave.setUser(user);
 
-        //Guardamos el token en la BD
-        this.fitBitRepository.save(fitbitToken);
-        //Devolvemos al controller la info en el formato del DTO
-        return new FitbitTokenDTO(fitbitToken);
+            //Guardamos el token en la BD
+            this.fitBitRepository.save(fitbitTokenSave);
+            //Devolvemos al controller la info en el formato del DTO
+            return new FitbitTokenDTO(fitbitTokenSave);
+        }
      }
 
      //Funcion para que recibiendo un objeto del array de summary devuelva un objeto de tipo LevelDetailDTO
