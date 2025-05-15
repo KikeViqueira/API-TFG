@@ -8,8 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.api.api.DTO.OnboardingAnswerDTO;
+import com.api.api.constants.ConfigFlags;
 import com.api.api.exceptions.NoContentException;
 import com.api.api.exceptions.RelationshipAlreadyExistsException;
+import com.api.api.model.ConfigurationUserFlags;
 import com.api.api.model.Onboarding;
 import com.api.api.model.OnboardingAnswer;
 import com.api.api.model.User;
@@ -55,7 +57,14 @@ public class OnboardingService {
              * */
             user.setBirthDate(LocalDate.parse(answers.get("question3")));
             List<OnboardingAnswer> onboardingAnswersList = onboardingAnswerService.saveOnboardingAnswers(answers, onboarding);
-            //Una vez recuperamos el array de respuestas con el obejto ya bien creado lo parseamos al tipo correspondiente para devolver solo la info que interesa
+
+            //Tenemos que guardar la bandera de configuración de que el user ha realizado el Onboarding en la correspondiente tabla
+            ConfigurationUserFlags hasCompletedOnboarding = new ConfigurationUserFlags();
+            hasCompletedOnboarding.setUser(user);
+            hasCompletedOnboarding.setFlagKey(ConfigFlags.HAS_COMPLETED_ONBOARDING);
+            hasCompletedOnboarding.setFlagValue("true");
+
+            //Una vez recuperamos el array de respuestas con el objeto ya bien creado lo parseamos al tipo correspondiente para devolver solo la info que interesa
             return new OnboardingAnswerDTO(onboardingAnswersList);
         }else throw new RelationshipAlreadyExistsException("El usuario ya ha realizado el Onboarding");
     }

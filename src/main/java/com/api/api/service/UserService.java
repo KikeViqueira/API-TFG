@@ -15,8 +15,10 @@ import com.api.api.DTO.CloudinaryUploadDTO;
 import com.api.api.DTO.FlagEntityDTO;
 import com.api.api.DTO.UserDTO;
 import com.api.api.DTO.FormRequestDTO.ChangePasswordRequestDTO;
+import com.api.api.DTO.UserDTO.UserResponseDTO;
 import com.api.api.DTO.UserDTO.UserUpdateDTO;
-import com.api.api.constants.DailyFlags;
+import com.api.api.constants.ConfigFlags;
+import com.api.api.constants.DerivedFlags;
 import com.api.api.model.ConfigurationUserFlags;
 import com.api.api.model.DailyUserFlags;
 import com.api.api.model.Onboarding;
@@ -69,6 +71,15 @@ public class UserService {
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
+    //Función aux para centralizar la creación de banderas de configuración para el user
+    private void createConfigurationFlag(User user, String flagKey, String flagValue) {
+        ConfigurationUserFlags configurationUserFlags = new ConfigurationUserFlags();
+        configurationUserFlags.setUser(user);
+        configurationUserFlags.setFlagKey(flagKey);
+        configurationUserFlags.setFlagValue(flagValue);
+        this.configurationUserFlagsRepository.save(configurationUserFlags);
+    }
+
     @Transactional
     public UserDTO.UserResponseDTO registerUser(User user) {
 
@@ -86,6 +97,11 @@ public class UserService {
             onboarding.setUser(user);
             this.onboardingRepository.save(onboarding);
 
+            //Creamos las banderas de configuración del user para gestionar su cuenta
+            this.createConfigurationFlag(user, ConfigFlags.NOTIFICATIONS, Objects.toString(true));
+            this.createConfigurationFlag(user, ConfigFlags.HAS_COMPLETED_ONBOARDING, Objects.toString(false));
+            this.createConfigurationFlag(user, ConfigFlags.TIMER_DURATION, null);
+
             //Parseamos la info que se le devolverá al controller mediante su DTO correspondiente
             UserDTO.UserResponseDTO userResponseDTO = new UserDTO.UserResponseDTO(user);
             return userResponseDTO;
@@ -99,6 +115,14 @@ public class UserService {
     public User getUser(Long id){
         User userRecuperado = this.userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
         return userRecuperado;
+    }
+
+    //Función para eliminar un user de la BD
+    @Transactional
+    public UserResponseDTO deleteUser(Long id){
+        User user = this.userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        this.userRepository.delete(user);
+        return new UserResponseDTO(user);
     }
 
     /*
@@ -149,7 +173,7 @@ public class UserService {
         //Guardamos el user actualizado en la BD
         this.userRepository.save(userActualizado);
         //Devolvemos el DTO indicando al user que se ha cambiado la contraseña correctamente
-        return new UserUpdateDTO(userActualizado, true);
+        return new UserUpdateDTO(true);
     }
 
     //Función para eliminar la foto de perfil de un user de la BD
@@ -180,7 +204,7 @@ public class UserService {
         user.setProfilePicture(cloudinaryUploadDTO.getUrl());
         user.setPublicIdCloudinary(cloudinaryUploadDTO.getPublicId());
         this.userRepository.save(user);
-        return new UserUpdateDTO(user);
+        return new UserUpdateDTO(user.getProfilePicture());
     }
 
     //Función para recuperar la lista de banderas que tiene el user
@@ -188,17 +212,19 @@ public class UserService {
     public Map<String, Map<String, String>> getUserFlags(Long idUser){
         //Comprobamos que el user exista
         this.userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
-        //Recuperamos la lista de banderas del user
-        List<DailyUserFlags> dailyUserFlags = this.dailyUserFlagsRepository.findByUser_Id(idUser);
+        //Recuperamos la lista de banderas del user, para las diarias tenemos que buscar en el día de hoy
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
+        LocalDateTime endOfDay = startOfDay.plusDays(1).minusNanos(1);
+
+        List<DailyUserFlags> dailyUserFlags = this.dailyUserFlagsRepository.findByUser_IdAndTimeStampBetween(idUser, startOfDay, endOfDay);
         //Recuperamos la lista de banderas de configuración del user
         List<ConfigurationUserFlags> configurationUserFlags = this.configurationUserFlagsRepository.findByUser_Id(idUser);
         /*
          * Recuperamos las banderas diarias que nos quedan que sacamos el valor de los correspondeintes repository
          * Para esto tenemos que consultar registros en el día de hoy en diferentes entidades: DRM, Tips y SleepLogs
         */
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
-        LocalDateTime endOfDay = startOfDay.plusDays(1).minusNanos(1);
 
         //Pasamos las listas de banderas por el DTO correspondiente para devolver solo al user lo que le interesa
         //Recorremos las listas y creamos un DTO por cada elemento de ella, una vez creado lo añadimos a la lista que vamos a devolver
@@ -215,9 +241,9 @@ public class UserService {
 
         Map<String, String> dailyMap = dailyFlags.stream().collect(Collectors.toMap(FlagEntityDTO::getFlag, FlagEntityDTO::getValue));
         //Añadimos al mapa de banderas diarias las banderas que hemos recuperado de los distintos repository
-        dailyMap.put(DailyFlags.DRM_REPORT_TODAY, String.valueOf(reportFlag));
-        dailyMap.put(DailyFlags.TIP_OF_THE_DAY, String.valueOf(tipFlag));
-        dailyMap.put(DailyFlags.SLEEP_LOG_TODAY, String.valueOf(sleepFlag));
+        dailyMap.put(DerivedFlags.DRM_REPORT_TODAY, String.valueOf(reportFlag));
+        dailyMap.put(DerivedFlags.TIP_OF_THE_DAY, String.valueOf(tipFlag));
+        dailyMap.put(DerivedFlags.SLEEP_LOG_TODAY, String.valueOf(sleepFlag));
 
         Map<String, Map<String, String>> userFlags = Map.of(
             "configurationFlags", configMap,

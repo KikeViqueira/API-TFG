@@ -11,4 +11,6 @@ public interface ConfigurationUserFlagsRepository extends JpaRepository<Configur
     //Encontrar las banderas correspondientes al user recibiendo por parámetros el id del user
     List<ConfigurationUserFlags> findByUser_Id(Long idUser);
 
+    //Función para recuperar la entidad que corresponde con la bandera de configuración
+    ConfigurationUserFlags findByUser_IdAndFlagKey(Long idUser, String flagKey);
 }

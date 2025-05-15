@@ -3,6 +3,8 @@ package com.api.api.DTO;
 import java.time.LocalDate;
 
 import com.api.api.model.User;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import lombok.*;
 
 public class UserDTO {
@@ -32,20 +34,19 @@ public class UserDTO {
         }
      }
 
-     //Definimos el DTO que solo tendra los atributos que se podrán actualizar
-     @Getter @Setter
+     //Definimos el DTO que solo tendra los atributos que se podrán actualizar, dependiendo de lo que se cambie en el DTO se devolvera el atributo correspondiente solo ya que el otro al ser null no se introducira en la respuesta
+     @Getter @Setter @JsonInclude(JsonInclude.Include.NON_NULL)
      public static class UserUpdateDTO{
         private String newProfilePicture;
-        private boolean passwordChanged = false; //Valor por defecto para este campo
+        private boolean passwordChanged;
 
         //Constructor para cambiar solo el valor de la foto de perfil
-        public UserUpdateDTO(User user) {
-            this.newProfilePicture = user.getProfilePicture();
+        public UserUpdateDTO(String profilePicture) {
+            this.newProfilePicture = profilePicture;
         }
 
-        //Constructor solo para cambiar el valor de la contraseña, se devuelve la foto de perfil que tenga el user en ese momento
-        public UserUpdateDTO(User user, boolean passwordChanged) {
-            this.newProfilePicture = user.getProfilePicture();
+        //Constructor solo para cambiar el valor de la contraseña
+        public UserUpdateDTO(boolean passwordChanged) {
             this.passwordChanged = passwordChanged;
         }
      }

@@ -53,6 +53,13 @@ public class UserController {
         return ResponseEntity.ok(userUpdateDTO);
     }
 
+    //Endpoint por si el user quiere eliminar su cuenta
+    @DeleteMapping("/{idUser}")
+    public ResponseEntity<UserResponseDTO> deleteUser(@PathVariable("idUser") Long idUser){
+        UserResponseDTO userResponseDTO = this.userService.deleteUser(idUser);
+        return ResponseEntity.ok(userResponseDTO);
+    }
+
     //Nuevo endpoint para actualizar la foto de perfil del usuario, necisatamos indicar el tipo de datos que se van a recibir mediante el consumes
     @PutMapping(path = "/{idUser}/profile-picture", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<UserUpdateDTO> updateProfilePicture(@PathVariable("idUser") Long idUser, @RequestParam("file") MultipartFile file) {

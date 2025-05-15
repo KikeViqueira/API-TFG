@@ -27,14 +27,14 @@ public class ConfigurationUserFlags {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 55)
+    @Column(nullable = false, length = 55, unique = true) //El flagKey tiene que ser único
     private String flagKey;
 
-    @Column(nullable = false, length = 55)
+    @Column(nullable = true, length = 55)
     private String flagValue;
 
     @Column(nullable = false)
-    private LocalDateTime timestamp;
+    private LocalDateTime timeStamp;
 
     //TENEMOS QUE DEFINIR LA RELACIÓN DE LA ENTIDAD CON LA ENTIDAD DE USER
     @ManyToOne
@@ -43,8 +43,8 @@ public class ConfigurationUserFlags {
     private User user;
 
     @PrePersist
-    public void onCreate(){
-        this.timestamp = LocalDateTime.now();
+    protected void onCreate(){
+        this.timeStamp = LocalDateTime.now();
     }
 
 }
