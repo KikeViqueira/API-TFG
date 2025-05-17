@@ -1,6 +1,8 @@
 package com.api.api.service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -89,7 +91,7 @@ public class UserService {
             user.setPassword(this.passwordEncoder.encode(user.getPassword())); // Encripta la contraseña
             //Cuando un user crea una cuenta tenemos que poner valores por defecto tanto en el role (inmutable) como en la imagen de perfil (modificable en el futuro)
             user.setRole("USER");
-            user.setProfilePicture("http://localhost:8080/images/placeholder.jpg");
+            user.setProfilePicture("http://localhost:8080/images/placeholder.png");
             this.userRepository.save(user); //Guardamos el user en la BD
 
             //Tenemos que crear también el objeto Onboarding para el user y lo guardamos en la BD
@@ -182,13 +184,13 @@ public class UserService {
         //Recuperamos el user de la BD y vemos si existe o no
         User user = this.userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
         //Comprobamos que el user tenga una imagen de perfil diferente a la por defecto, en caso de que no la tenga lanzamos una excepción
-        if (Objects.equals(user.getProfilePicture(), "http://localhost:8080/images/placeholder.jpg")) throw new IllegalArgumentException("El usuario no tiene una imagen de perfil personalizada");
+        if (Objects.equals(user.getProfilePicture(), "http://localhost:8080/images/placeholder.png")) throw new IllegalArgumentException("El usuario no tiene una imagen de perfil personalizada");
         //Ponemos a null el public_id que hace referencia a la imagen de perfil que tenía el user para tener siempre un estado consistente en la BD
         user.setPublicIdCloudinary(null);
         //Llamamos a la función de cloudinary para eliminar la imagen de la nube
         this.cloudinaryService.deleteFile(user.getPublicIdCloudinary(), false);
         //Una vez eliminada la imagen de la nube, actualizamos el campo de la imagen del user a la por defecto
-        user.setProfilePicture("http://localhost:8080/images/placeholder.jpg");
+        user.setProfilePicture("http://localhost:8080/images/placeholder.png");
         this.userRepository.save(user);
     }
 
@@ -220,7 +222,7 @@ public class UserService {
 
         List<DailyUserFlags> dailyUserFlags = this.dailyUserFlagsRepository.findByUser_IdAndTimeStampBetween(idUser, startOfDay, endOfDay);
         //Recuperamos la lista de banderas de configuración del user
-        List<ConfigurationUserFlags> configurationUserFlags = this.configurationUserFlagsRepository.findByUser_Id(idUser);
+        List<ConfigurationUserFlags> configurationUserFlags = this.configurationUserFlagsRepository.findAllByUser_Id(idUser);
         /*
          * Recuperamos las banderas diarias que nos quedan que sacamos el valor de los correspondeintes repository
          * Para esto tenemos que consultar registros en el día de hoy en diferentes entidades: DRM, Tips y SleepLogs
@@ -228,27 +230,37 @@ public class UserService {
 
         //Pasamos las listas de banderas por el DTO correspondiente para devolver solo al user lo que le interesa
         //Recorremos las listas y creamos un DTO por cada elemento de ella, una vez creado lo añadimos a la lista que vamos a devolver
-        List<FlagEntityDTO> dailyFlags = dailyUserFlags.stream().map(dailyUserFlag -> new FlagEntityDTO(dailyUserFlag)).toList();
-        List<FlagEntityDTO> configurationFlags = configurationUserFlags.stream().map(configurationUserFlag -> new FlagEntityDTO(configurationUserFlag)).toList();
+        List<FlagEntityDTO> dailyFlags = new ArrayList<>();
+        List<FlagEntityDTO> configurationFlags = new ArrayList<>();
+
+        Map<String, Map<String, String>> userFlags = new HashMap<>();
+
+        //Comprobamos que las listas que se han recuperado de los repository no sean nulas y en caso de no serlas las pasamos a un mapa correspondiente para guardar en el mapa que se va a devolver a la BD
+        if (Objects.nonNull(dailyUserFlags) && !dailyUserFlags.isEmpty()){
+            dailyFlags = dailyUserFlags.stream().map(dailyUserFlag -> new FlagEntityDTO(dailyUserFlag)).toList();
+            Map<String, String> dailyMap = new HashMap<>();
+            for (FlagEntityDTO flag : dailyFlags) dailyMap.put(flag.getFlag(), flag.getValue());
+            userFlags.put("dailyFlags", dailyMap);
+        }
+        if (Objects.nonNull(configurationUserFlags) && !configurationUserFlags.isEmpty()){
+            configurationFlags = configurationUserFlags.stream().map(configurationUserFlag -> new FlagEntityDTO(configurationUserFlag)).toList();
+            Map<String, String> configMap = new HashMap<>();
+            for (FlagEntityDTO flag : configurationFlags) configMap.put(flag.getFlag(), flag.getValue());
+            userFlags.put("configurationFlags", configMap);
+        } 
 
         boolean reportFlag = this.drmRepository.existsByUser_IdAndTimeStampBetween(idUser, startOfDay, endOfDay);
         boolean tipFlag = this.tipRepository.existsByUser_IdAndTimeStampBetween(idUser, startOfDay, endOfDay);
         boolean sleepFlag = this.sleepLogRepository.existsByUser_IdAndTimeStampBetween(idUser, startOfDay, endOfDay);
 
-        //hacemos primero el mapa de las banderas que estén en lista
-        //Recorremos cada una de las listas y creamos un mapa con el flag y valor de cada uno de los elementos de la lista que estamos recorriendo
-        Map<String, String> configMap = configurationFlags.stream().collect(Collectors.toMap(FlagEntityDTO::getFlag, FlagEntityDTO::getValue));
-
-        Map<String, String> dailyMap = dailyFlags.stream().collect(Collectors.toMap(FlagEntityDTO::getFlag, FlagEntityDTO::getValue));
-        //Añadimos al mapa de banderas diarias las banderas que hemos recuperado de los distintos repository
-        dailyMap.put(DerivedFlags.DRM_REPORT_TODAY, String.valueOf(reportFlag));
-        dailyMap.put(DerivedFlags.TIP_OF_THE_DAY, String.valueOf(tipFlag));
-        dailyMap.put(DerivedFlags.SLEEP_LOG_TODAY, String.valueOf(sleepFlag));
-
-        Map<String, Map<String, String>> userFlags = Map.of(
-            "configurationFlags", configMap,
-            "dailyFlags", dailyMap
+       //Guaramos las banderas diarias en el mapa que se va a devolver al user
+       Map<String, String> dailyDerivedMap = Map.of(
+            DerivedFlags.DRM_REPORT_TODAY, Objects.toString(reportFlag),
+            DerivedFlags.TIP_OF_THE_DAY, Objects.toString(tipFlag),
+            DerivedFlags.SLEEP_LOG_TODAY, Objects.toString(sleepFlag)
         );
+
+        userFlags.put("dailyDerivedFlags", dailyDerivedMap);
 
         return userFlags;
     }

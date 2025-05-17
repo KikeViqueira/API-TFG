@@ -5,9 +5,11 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import com.api.api.model.DailyUserFlags;
 
+@Repository
 public interface DailyUserFlagsRepository extends JpaRepository<DailyUserFlags, Long> {
 
     //Encontrar las banderas correspondientes al user recibiendo por parámetros el id del user y el día de hoy

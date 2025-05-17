@@ -21,4 +21,9 @@ public class FlagEntityDTO {
         this.flag = configurationUserFlags.getFlagKey();
         this.value = configurationUserFlags.getFlagValue();
     }
+
+    public FlagEntityDTO(String flagKey, String flagValue) {
+        this.flag = flagKey;
+        this.value = flagValue;
+    }
 }
