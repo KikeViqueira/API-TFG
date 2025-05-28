@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -91,7 +90,7 @@ public class UserService {
             user.setPassword(this.passwordEncoder.encode(user.getPassword())); // Encripta la contraseña
             //Cuando un user crea una cuenta tenemos que poner valores por defecto tanto en el role (inmutable) como en la imagen de perfil (modificable en el futuro)
             user.setRole("USER");
-            user.setProfilePicture("http://localhost:8080/images/placeholder.png");
+            user.setProfilePicture("https://res.cloudinary.com/dtg2mkilx/image/upload/placeholder_jrnkvd.png");
             this.userRepository.save(user); //Guardamos el user en la BD
 
             //Tenemos que crear también el objeto Onboarding para el user y lo guardamos en la BD
@@ -184,13 +183,13 @@ public class UserService {
         //Recuperamos el user de la BD y vemos si existe o no
         User user = this.userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
         //Comprobamos que el user tenga una imagen de perfil diferente a la por defecto, en caso de que no la tenga lanzamos una excepción
-        if (Objects.equals(user.getProfilePicture(), "http://localhost:8080/images/placeholder.png")) throw new IllegalArgumentException("El usuario no tiene una imagen de perfil personalizada");
+        if (Objects.equals(user.getProfilePicture(), "https://res.cloudinary.com/dtg2mkilx/image/upload/placeholder_jrnkvd.png")) throw new IllegalArgumentException("El usuario no tiene una imagen de perfil personalizada");
         //Ponemos a null el public_id que hace referencia a la imagen de perfil que tenía el user para tener siempre un estado consistente en la BD
         user.setPublicIdCloudinary(null);
         //Llamamos a la función de cloudinary para eliminar la imagen de la nube
         this.cloudinaryService.deleteFile(user.getPublicIdCloudinary(), false);
         //Una vez eliminada la imagen de la nube, actualizamos el campo de la imagen del user a la por defecto
-        user.setProfilePicture("http://localhost:8080/images/placeholder.png");
+        user.setProfilePicture("https://res.cloudinary.com/dtg2mkilx/image/upload/placeholder_jrnkvd.png");
         this.userRepository.save(user);
     }
 

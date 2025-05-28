@@ -17,4 +17,7 @@ public interface DailyUserFlagsRepository extends JpaRepository<DailyUserFlags, 
 
     //Función para recuperar la entidad que corresponde con la bandera diaria en caso de que exista o mandar null es caso contrario en el día de hoy
     Optional<DailyUserFlags> findByUser_IdAndFlagKeyAndTimeStampBetween(Long idUser, String flagKey, LocalDateTime startOfDay, LocalDateTime endOfDay);
+
+    //Función que nos devuelve un booleano indicando si la bandera existe o no
+    boolean existsByUser_IdAndFlagKeyAndTimeStampBetween(Long idUser, String flagKey, LocalDateTime startOfDay, LocalDateTime endOfDay);
 }

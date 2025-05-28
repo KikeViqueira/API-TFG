@@ -71,7 +71,7 @@ public class GeminiService {
         String apiUrl = "/models/gemini-1.5-flash:generateContent?key=" + apiKey; // Cambiar el modelo a 1.5 Flash
 
         //PROMPT PARA INDICARLE EL FORMATO DE LA RESPUESTA A LOS MENSAJES DEL USER
-        String prompt = "Haz un titulo de un chat para el mensaje que te he enviado de maximo tres palabras, solo quiero que me devuelvas estrictamente esto, nada más.";
+        String prompt = "Haz un titulo de un chat para el mensaje que te he enviado de maximo tres palabras, solo quiero que me devuelvas estrictamente esto, nada más. Además nunca puedes meter formato html o markdown en la respuesta.";
 
         String fullPrompt = message + "\n\n" + prompt;
 
@@ -196,7 +196,7 @@ public class GeminiService {
         edad (Si vale -1 significa que la fech de nacimiento es null): %s
         userName: %s
 
-        Realiza con toda esta información lo que se te ha pedido en los objetivos, que el informe sea de aproximadamente 15 líneas o un poco mas si es necesario ya que se va a desplegar este texto en un dispositivo móvil.
+        Realiza con toda esta información lo que se te ha pedido en los objetivos, que el informe sea de aproximadamente 15 líneas o un poco mas si es necesario ya que se va a desplegar este texto en un dispositivo móvil, además nunca puedes meter formato html o markdown en la respuesta.
         """.formatted(sleepLogsLastWeek.toString(), onboardingAnswerDTO.toString(), drmRequestDTO.toString(), sleepLogsForContext.toString(), user.getBirthDate().toString(), String.valueOf(user.getAge()) , user.getName());
         
 
@@ -331,10 +331,11 @@ public class GeminiService {
             ]
         }
         Nota: El título que generes en la respuesta debe ser único de entro todos los tips que tiene el user y debe ser corto y directo de máximo 3 palabras.
-        Nota: El campo 'icon' debe ser uno de los siguientes valores: shield, sleep, fitness, food, alert, book, music, heart.
+        Nota: El campo 'icon' debe ser uno de los siguientes valores: shield, sleep, fitness, food, alert, book, music, heart. Eligiendo el que más se ajuste al tip que estés generando.
         Nota: El campo 'color' debe ser un color en formato hexadecimal.
+        Nota: Los tips deben de ser relacionado a una de las categorías de los iconos asi que puedes ir alternando según creas y según la cantidad los que haya de cada categoría, si es que el user tiene tips.
 
-        Solo quiero que respondas dandome este json que representa el tip de manera completa y nada más. Además en la respuesta que egeneres quiero que devuelvas el formato pero sin el ``json , si no que devuelvas el json directamente en formato String. TIENES QUE SEGUIR EL FORMATO DE LA RESPUESTA DE MANERA ESTRICTA.
+        Solo quiero que respondas dandome este json que representa el tip de manera completa y nada más. Además en la respuesta que egeneres quiero que devuelvas el formato pero sin el ``json , si no que devuelvas el json directamente en formato String. TIENES QUE SEGUIR EL FORMATO DE LA RESPUESTA DE MANERA ESTRICTA y no puedes usar nunca ni formato html o markdown en la respuesta.
         """.formatted(sleepLogsLastWeek.toString(), onboardingAnswerDTO.toString(), drmObjectDTO.toString(), sleepLogsForContext.toString(), user.getBirthDate().toString(), String.valueOf(user.getAge()) , user.getName(), userTips.toString());
         
 

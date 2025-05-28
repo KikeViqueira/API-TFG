@@ -13,8 +13,8 @@ import com.api.api.model.Tip;
 //El segundo parámetro de JpaRepository es el tipo de la clave primaria de la tabla
 public interface TipRepository extends JpaRepository<Tip, Long>  {
 
-    //Función para recuperar los tips de un determinado user en base a su id
-    List<Tip> findByUser_Id(Long userId);
+    //Función para recuperar los tips de un determinado user en base a su id en orden descendente por fecha
+    List<Tip> findByUser_IdOrderByTimeStampDesc(Long userId);
 
     //Función para determinar si existe una relación entre un tip y un user
     boolean existsByUser_IdAndId(Long userId, Long id);

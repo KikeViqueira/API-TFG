@@ -13,13 +13,20 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "configuration_user_flags")
+@Table(name = "configuration_user_flags", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"flagKey", "userId"})
+})
+/*
+ * De esta manera nos aseguramos que el valor de flagKey sea único para cada user
+ * lo cual no implica que el flagKey sea único globalmente en los registros de toda la tabla
+ */
 @Getter @Setter @AllArgsConstructor @NoArgsConstructor
 public class ConfigurationUserFlags {
 
@@ -27,7 +34,7 @@ public class ConfigurationUserFlags {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 55, unique = true) //El flagKey tiene que ser único
+    @Column(nullable = false, length = 55, unique = true) //El flagKey tiene que ser único para cada user
     private String flagKey;
 
     @Column(nullable = true, length = 55)

@@ -67,7 +67,7 @@ public class TipService {
     public List<TipResponseDTO> getTips(Long idUser){
         this.userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("El usuario no existe"));
         //Recuperamos los tips del user
-        List<Tip> tips = this.tipRepository.findByUser_Id(idUser);
+        List<Tip> tips = this.tipRepository.findByUser_IdOrderByTimeStampDesc(idUser);
         if (tips.isEmpty()) throw new EntityNotFoundException("No hay tips en la BD que se correspondan con el user");
         else{
             //Hacemos la conversión
@@ -112,7 +112,7 @@ public class TipService {
                  * , ya que puede ser que el user tenga haya hecho el resto de cuestionarios pero que nunca haya generado un tip
                 */
                 List<TipResponseDTO> existingTips = new ArrayList<>();
-                List<Tip> existingTipsList = this.tipRepository.findByUser_Id(userId);
+                List<Tip> existingTipsList = this.tipRepository.findByUser_IdOrderByTimeStampDesc(userId);
                 if (!existingTipsList.isEmpty()){
                     for (Tip tip : existingTipsList) existingTips.add(new TipResponseDTO(tip));
                 }

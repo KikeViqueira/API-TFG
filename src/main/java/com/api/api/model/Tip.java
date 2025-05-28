@@ -13,7 +13,9 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 
 @Entity
-@Table(name = "tips")
+@Table(name = "tips", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"title", "user_id"})
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -26,7 +28,7 @@ public class Tip {
 
     @NotBlank(message = "El título no puede ser vacío")
     @Size(min = 2, message = "El título debe tener al menos 2 caracteres")
-    @Column(nullable = false, unique = true) //Cualquier tip tiene que tener un nombre único
+    @Column(nullable = false, unique = true) //Cualquier tip tiene que tener un nombre único dentro de los tips que tiene el user
     private String title;
 
     @NotBlank(message = "La descripción no puede ser vacía")

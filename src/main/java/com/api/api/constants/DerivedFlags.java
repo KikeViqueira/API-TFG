@@ -9,6 +9,7 @@ public class DerivedFlags {
 
     //Hacemos el constructor privado para que no se pueda instanciar
     private DerivedFlags() {
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
     }
 
 }
