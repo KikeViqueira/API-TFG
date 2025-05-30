@@ -110,8 +110,8 @@ public class ChatService {
                      * Una vez que se ha creado el chat de hoy, lo guardamos en la BD y procedemos a crear las variables diarias
                      * de CHAT_ID_TODAY y HAS_CHAT_TODAY relacionadas con el user
                      */
-                    this.createChatFlags(user, DailyFlags.CHAT_ID_TODAY, String.valueOf(newChat.getId()));
-                    this.createChatFlags(user, DailyFlags.HAS_CHAT_TODAY, "true");
+                    this.createChatFlags(user, DailyFlags.CHAT_ID_TODAY, String.valueOf(newChat.getId()), endOfDay);
+                    this.createChatFlags(user, DailyFlags.HAS_CHAT_TODAY, "true", endOfDay);
                     //Una vez creado el chat añadimos el mensaje, y la respuesta que obtenemos de la IA en la tabla de mensajes de la BD
                     message.setChat(newChat);
                     response = this.messageService.sendMessage(message, newChat.getId());
@@ -124,11 +124,12 @@ public class ChatService {
     }
 
     //Función aux privada para crear las instancias de las banderas del user relacionadas con el chat e insertarlas en la BD
-    private void createChatFlags(User user, String flagKey, String flagValue) {
+    private void createChatFlags(User user, String flagKey, String flagValue, LocalDateTime expiryTime) {
         DailyUserFlags flag = new DailyUserFlags();
         flag.setFlagKey(flagKey);
         flag.setFlagValue(flagValue);
         flag.setUser(user);
+        flag.setExpiryTime(expiryTime);
         this.dailyUserFlagsRepository.save(flag);
     }
 

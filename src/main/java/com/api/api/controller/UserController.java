@@ -46,6 +46,7 @@ public class UserController {
     }
 
     //Endpoint para la actualización de la información de un user
+    @PreAuthorize("hasPermission(#idUser, 'owner')")
     @PatchMapping("/{idUser}")
     public ResponseEntity<UserUpdateDTO> updateUser(@PathVariable("idUser") Long idUser, @RequestBody List<Map<String, Object>> updates) throws JsonPatchException {
         //llamamos a la función que se encarga de actualizar la info del user
@@ -54,6 +55,7 @@ public class UserController {
     }
 
     //Endpoint por si el user quiere eliminar su cuenta
+    @PreAuthorize("hasPermission(#idUser, 'owner')")
     @DeleteMapping("/{idUser}")
     public ResponseEntity<UserResponseDTO> deleteUser(@PathVariable("idUser") Long idUser){
         UserResponseDTO userResponseDTO = this.userService.deleteUser(idUser);
@@ -61,6 +63,7 @@ public class UserController {
     }
 
     //Nuevo endpoint para actualizar la foto de perfil del usuario, necisatamos indicar el tipo de datos que se van a recibir mediante el consumes
+    @PreAuthorize("hasPermission(#idUser, 'owner')")
     @PutMapping(path = "/{idUser}/profile-picture", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<UserUpdateDTO> updateProfilePicture(@PathVariable("idUser") Long idUser, @RequestParam("file") MultipartFile file) {
         UserUpdateDTO userUpdateDTO = this.userService.updateProfilePicture(idUser, file);
@@ -68,8 +71,8 @@ public class UserController {
     }
 
     //Endpoint para obtener la info de un user en base a su email
-    @GetMapping("/{idUser}")
     @PreAuthorize("hasPermission(#idUser, 'owner')")
+    @GetMapping("/{idUser}")
     public ResponseEntity<UserResponseDTO> getUser(@PathVariable("idUser") Long idUser){
         //llamamos a la función que recupera el user de la BD y comprobamos que exista
         User user = this.userService.getUser(idUser);
@@ -84,6 +87,7 @@ public class UserController {
      * 
      * Esto se lo indicamos al método en base a un parámetro que le pasamos en la petición (filter)
      */
+    @PreAuthorize("hasPermission(#idUser, 'owner')")
     @GetMapping("/{idUser}/chats")
     public ResponseEntity<List<ChatResponse>> getChats(@PathVariable("idUser") Long idUser,
         @RequestParam(name="filter", required = false, defaultValue = "history") String filter,
@@ -94,6 +98,7 @@ public class UserController {
     }
 
     //Endpoint para eliminar uno o varios chats de un user
+    @PreAuthorize("hasPermission(#idUser, 'owner')")
     @DeleteMapping("/{idUser}/chats")
     //Recibimos en el cuerpo de la solicitud la lista de los ids de los chats que se quieren eliminar
     public ResponseEntity<List<ChatDeletedDTO>> deleteChats(@PathVariable("idUser") Long idUser, @RequestBody List<Long> idChats){
@@ -102,6 +107,7 @@ public class UserController {
     }
 
     //Endpoint para cargar la conversación de un chat
+    @PreAuthorize("hasPermission(#idUser, 'owner')")
     @GetMapping("/{idUser}/chats/{idChat}")
     public ResponseEntity<ChatMessagesDTO> getChat(@PathVariable("idUser") Long idUser, @PathVariable("idChat") Long idChat){
         ChatMessagesDTO conversation = this.chatService.getChat(idUser, idChat);
@@ -109,6 +115,7 @@ public class UserController {
     }
 
     //Endpoint para eliminar la foto de perfil del user
+    @PreAuthorize("hasPermission(#idUser, 'owner')")
     @DeleteMapping("/{idUser}/profile-picture")
     public ResponseEntity<?> deleteProfilePicture(@PathVariable("idUser") Long idUser){
         this.userService.deleteProfilePicture(idUser);
@@ -116,9 +123,10 @@ public class UserController {
     }
 
     //Endpoint para obtener la lista de las banderas del user tanto las de configuración como las diarias
+    @PreAuthorize("hasPermission(#idUser, 'owner')")
     @GetMapping("/{idUser}/flags")
-    public ResponseEntity<Map<String, Map<String, String>>> getUserFlags(@PathVariable("idUser") Long idUser){
-        Map<String, Map<String, String>> userFlags = this.userService.getUserFlags(idUser);
+    public ResponseEntity<Map<String, Map<String, Object>>> getUserFlags(@PathVariable("idUser") Long idUser){
+        Map<String, Map<String, Object>> userFlags = this.userService.getUserFlags(idUser);
         return ResponseEntity.ok(userFlags);
     }
 }

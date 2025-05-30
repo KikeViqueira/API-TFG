@@ -2,7 +2,7 @@ package com.api.api.service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -210,7 +210,7 @@ public class UserService {
 
     //Función para recuperar la lista de banderas que tiene el user
     @Transactional
-    public Map<String, Map<String, String>> getUserFlags(Long idUser){
+    public Map<String, Map<String, Object>> getUserFlags(Long idUser){
         //Comprobamos que el user exista
         this.userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
         //Recuperamos la lista de banderas del user, para las diarias tenemos que buscar en el día de hoy
@@ -232,18 +232,22 @@ public class UserService {
         List<FlagEntityDTO> dailyFlags = new ArrayList<>();
         List<FlagEntityDTO> configurationFlags = new ArrayList<>();
 
-        Map<String, Map<String, String>> userFlags = new HashMap<>();
+        Map<String, Map<String, Object>> userFlags = new LinkedHashMap<>();
 
         //Comprobamos que las listas que se han recuperado de los repository no sean nulas y en caso de no serlas las pasamos a un mapa correspondiente para guardar en el mapa que se va a devolver a la BD
         if (Objects.nonNull(dailyUserFlags) && !dailyUserFlags.isEmpty()){
             dailyFlags = dailyUserFlags.stream().map(dailyUserFlag -> new FlagEntityDTO(dailyUserFlag)).toList();
-            Map<String, String> dailyMap = new HashMap<>();
-            for (FlagEntityDTO flag : dailyFlags) dailyMap.put(flag.getFlag(), flag.getValue());
+            Map<String, Object> dailyMap = new LinkedHashMap<>();
+            for (FlagEntityDTO flag : dailyFlags){
+                //En caso de que la bandera contenga un valor distinto de null en el expiryTime, añadimos dicho atributo también al mapa
+                dailyMap.put(flag.getFlag(), flag.getValue());
+                if (Objects.nonNull(flag.getExpiryTime())) dailyMap.put("expiry_"+flag.getFlag(), flag.getExpiryTime().toString());
+            } 
             userFlags.put("dailyFlags", dailyMap);
         }
         if (Objects.nonNull(configurationUserFlags) && !configurationUserFlags.isEmpty()){
             configurationFlags = configurationUserFlags.stream().map(configurationUserFlag -> new FlagEntityDTO(configurationUserFlag)).toList();
-            Map<String, String> configMap = new HashMap<>();
+            Map<String, Object> configMap = new LinkedHashMap<>();
             for (FlagEntityDTO flag : configurationFlags) configMap.put(flag.getFlag(), flag.getValue());
             userFlags.put("configurationFlags", configMap);
         } 
@@ -252,12 +256,14 @@ public class UserService {
         boolean tipFlag = this.tipRepository.existsByUser_IdAndTimeStampBetween(idUser, startOfDay, endOfDay);
         boolean sleepFlag = this.sleepLogRepository.existsByUser_IdAndTimeStampBetween(idUser, startOfDay, endOfDay);
 
-       //Guaramos las banderas diarias en el mapa que se va a devolver al user
-       Map<String, String> dailyDerivedMap = Map.of(
-            DerivedFlags.DRM_REPORT_TODAY, Objects.toString(reportFlag),
-            DerivedFlags.TIP_OF_THE_DAY, Objects.toString(tipFlag),
-            DerivedFlags.SLEEP_LOG_TODAY, Objects.toString(sleepFlag)
-        );
+       //Guardamos las banderas diarias en el mapa que se va a devolver al user, además tenemos que mandarle la fecha de expiración que es el final del día en el que e user ha guradado la entidad en la BD
+       Map<String, Object> dailyDerivedMap = new LinkedHashMap<>();
+       dailyDerivedMap.put(DerivedFlags.DRM_REPORT_TODAY, Objects.toString(reportFlag));
+       dailyDerivedMap.put("expiry_drm_report", endOfDay);
+       dailyDerivedMap.put(DerivedFlags.TIP_OF_THE_DAY, Objects.toString(tipFlag));
+       dailyDerivedMap.put("expiry_tip_of_the_day", endOfDay);
+       dailyDerivedMap.put(DerivedFlags.SLEEP_LOG_TODAY, Objects.toString(sleepFlag));
+       dailyDerivedMap.put("expiry_sleep_log", endOfDay);
 
         userFlags.put("dailyDerivedFlags", dailyDerivedMap);
 
