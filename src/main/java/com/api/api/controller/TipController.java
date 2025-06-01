@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.api.api.DTO.TipDetailDTO;
@@ -13,6 +14,7 @@ import com.api.api.service.TipService;
 
 
 @RestController
+@PreAuthorize("hasPermission(#idUser, 'owner')")
 @RequestMapping("/api/users")
 public class TipController {
 
@@ -72,18 +74,18 @@ public class TipController {
     }
 
     //Endpoint para eliminar un tip de los favoritos de un user
-    @DeleteMapping("/{idUser}/favorites-tips/{idUserTip}")
-    public ResponseEntity<TipFavDTO> deleteFavoriteTip(@PathVariable("idUser") Long id, @PathVariable("idUserTip") Long idTip){
+    @DeleteMapping("/{idUser}/favorites-tips/{idTip}")
+    public ResponseEntity<TipFavDTO> deleteFavoriteTip(@PathVariable("idUser") Long idUser, @PathVariable("idTip") Long idTip){
         //llamamos a la función del service que se encarga de esta lógica
-        TipFavDTO tipDTO = this.tipService.deleteFavoriteTip(id, idTip);
+        TipFavDTO tipDTO = this.tipService.deleteFavoriteTip(idUser, idTip);
         return ResponseEntity.ok(tipDTO);
     }
 
     //Endpoint para añadir un tip a los favoritos de un user
-    @PostMapping("/{id}/favorites-tips/{idTip}")
-    public ResponseEntity<TipFavDTO> addFavoriteTip(@PathVariable("id") Long id, @PathVariable("idTip") Long idTip){
+    @PostMapping("/{idUser}/favorites-tips/{idTip}")
+    public ResponseEntity<TipFavDTO> addFavoriteTip(@PathVariable("idUser") Long idUser, @PathVariable("idTip") Long idTip){
         //Llamamos a la función del service que se encarga de esta lógica
-        TipFavDTO tipDTO = this.tipService.addFavoriteTip(id, idTip);
+        TipFavDTO tipDTO = this.tipService.addFavoriteTip(idUser, idTip);
         return ResponseEntity.status(HttpStatus.CREATED).body(tipDTO); //Guardado correctamente en la lista de favoritos del user
     }
 }

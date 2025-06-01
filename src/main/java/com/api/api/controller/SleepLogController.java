@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.security.access.prepost.PreAuthorize;
 import com.api.api.DTO.FormRequestDTO;
 import com.api.api.DTO.SleepLogAnswerDTO;
 import com.api.api.service.SleepLogService;
@@ -19,6 +19,7 @@ import com.api.api.service.SleepLogService;
 import jakarta.validation.Valid;
 
 @RestController
+@PreAuthorize("hasPermission(#idUser, 'owner')")
 @RequestMapping("/api/users")
 public class SleepLogController {
 
@@ -30,11 +31,11 @@ public class SleepLogController {
     }
 
     //Endpoint para la creación de un nuevo registro de sueño
-    @PostMapping("/{userId}/sleep-logs")
+    @PostMapping("/{idUser}/sleep-logs")
     //Recibimos el id del user y las respuestas de su cuestionario matutino
-    public ResponseEntity<SleepLogAnswerDTO> createSleepLog(@PathVariable("userId") Long userId, @RequestBody @Valid FormRequestDTO.SleepLogRequestDTO sleepLogRequestDTO) {
+    public ResponseEntity<SleepLogAnswerDTO> createSleepLog(@PathVariable("idUser") Long idUser, @RequestBody @Valid FormRequestDTO.SleepLogRequestDTO sleepLogRequestDTO) {
         //Creamos el registro matutino del user una vez lo ha completado y enviado
-        SleepLogAnswerDTO sleepLogAnswerDTO = sleepLogService.createSleepLog(userId, sleepLogRequestDTO.getData());
+        SleepLogAnswerDTO sleepLogAnswerDTO = sleepLogService.createSleepLog(idUser, sleepLogRequestDTO.getData());
         return ResponseEntity.ok(sleepLogAnswerDTO);
     }
 
@@ -48,14 +49,14 @@ public class SleepLogController {
      * 
      */
 
-    @GetMapping("/{userId}/sleep-logs")
-    public ResponseEntity<?> getSleepLogsDuration (@RequestParam(value = "duration", defaultValue = "1") String duration,@PathVariable("userId") Long userId) {
+    @GetMapping("/{idUser}/sleep-logs")
+    public ResponseEntity<?> getSleepLogsDuration (@RequestParam(value = "duration", defaultValue = "1") String duration,@PathVariable("idUser") Long idUser) {
         if ("7".equalsIgnoreCase(duration)){
-            Map<String, Float> sleepLogsDuration = sleepLogService.getSleepLogsDuration(userId);
+            Map<String, Float> sleepLogsDuration = sleepLogService.getSleepLogsDuration(idUser);
             return ResponseEntity.ok(sleepLogsDuration);
 
         }else if ("1".equalsIgnoreCase(duration)){
-            SleepLogAnswerDTO sleepLogAnswerDTO = sleepLogService.getSleepLog(userId);
+            SleepLogAnswerDTO sleepLogAnswerDTO = sleepLogService.getSleepLog(idUser);
             return ResponseEntity.ok(sleepLogAnswerDTO);
         }else{
             //En caso de que el valor recibido no sea 7 ni 1 devolvemos un error informativo

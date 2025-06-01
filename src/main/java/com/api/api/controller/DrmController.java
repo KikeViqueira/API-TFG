@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +21,7 @@ import com.api.api.service.DrmService;
 import jakarta.validation.Valid;
 
 @RestController
+@PreAuthorize("hasPermission(#idUser, 'owner')")
 @RequestMapping("/api/users")
 public class DrmController {
 
@@ -31,10 +33,10 @@ public class DrmController {
     }
 
     //Endpoint que se encargará de guadar la respuesta del usuario al cuestionario en la BD y generar el informe con la ayuda de la IA
-    @PostMapping("/{userId}/drm")
-    public ResponseEntity<SaveAnswersDrmAndGenerateReportDTO> generateReportAndSaveAnswers(@PathVariable("userId") Long userId, @Valid @RequestBody DRMRequestDTO drmRequestDTO){
+    @PostMapping("/{idUser}/drm")
+    public ResponseEntity<SaveAnswersDrmAndGenerateReportDTO> generateReportAndSaveAnswers(@PathVariable("idUser") Long idUser, @Valid @RequestBody DRMRequestDTO drmRequestDTO){
         //llamamosa la función del service que se encargará de guardar la respuesta del usuario al cuestionario en la BD y llamar a la IA para generar el informe
-        SaveAnswersDrmAndGenerateReportDTO response = drmService.generateReportAndSaveAnswers(userId, drmRequestDTO);
+        SaveAnswersDrmAndGenerateReportDTO response = drmService.generateReportAndSaveAnswers(idUser, drmRequestDTO);
         return ResponseEntity.ok(response);
     }
 
@@ -46,8 +48,8 @@ public class DrmController {
      * /drm?period=historical por ejemplo o =daily y dependiendo de lo que se reciba ejecutamos una función u otra
      */
 
-    @GetMapping("/{userId}/drm")
-    public ResponseEntity<?> getDrm(@RequestParam(value = "period", defaultValue = "daily") String period, @PathVariable("userId") Long userId){
+    @GetMapping("/{idUser}/drm")
+    public ResponseEntity<?> getDrm(@RequestParam(value = "period", defaultValue = "daily") String period, @PathVariable("idUser") Long idUser){
        //Dependiendo del parámetro que hemos recibido hacemos una funcionalidad u otra
        if ("historical".equalsIgnoreCase(period)){
             /*
@@ -55,11 +57,11 @@ public class DrmController {
              * 
              * Devolvemos el report, hora en la que se hizo y la id para reenderizarlo en el frontEnd de manera correcta
              * */
-            List<DrmObjectDTO> drms = drmService.getHistoricalDrm(userId);
+            List<DrmObjectDTO> drms = drmService.getHistoricalDrm(idUser);
             return ResponseEntity.ok(drms);
        }
        else if("daily".equalsIgnoreCase(period)){
-            DrmObjectDTO drmObjectDTO = drmService.getTodayDrm(userId);
+            DrmObjectDTO drmObjectDTO = drmService.getTodayDrm(idUser);
             return ResponseEntity.ok(drmObjectDTO);
        }
        else{
