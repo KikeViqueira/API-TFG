@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -63,17 +66,19 @@ public class TipService {
     /*
      * Estos primeros métodos son para la gestión de los tips en la app en base a la acción del user
      */
-    //Función para obtener todos los tips de la BD relacionados con un user
-    public List<TipResponseDTO> getTips(Long idUser){
+    //Función para obtener todos los tips de la BD relacionados con un user, usamos paginación para una mayor eficiencia en las consultas
+    public Page<TipResponseDTO> getTips(Long idUser, Pageable pageable){
         this.userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("El usuario no existe"));
-        //Recuperamos los tips del user
-        List<Tip> tips = this.tipRepository.findByUser_IdOrderByTimeStampDesc(idUser);
-        if (tips.isEmpty()) throw new EntityNotFoundException("No hay tips en la BD que se correspondan con el user");
+        //Recuperamos los tips del user con paginación
+        Page<Tip> tipsPage = this.tipRepository.findByUser_Id(idUser, pageable);
+        if (tipsPage.isEmpty()) throw new EntityNotFoundException("No hay tips en la BD que se correspondan con el user");
         else{
-            //Hacemos la conversión
+            //Hacemos la conversión de Page<Tip> a Page<TipResponseDTO>
             List<TipResponseDTO> tipsResponse = new ArrayList<>();
-            for (Tip tip : tips) tipsResponse.add(new TipResponseDTO(tip));
-            return tipsResponse;
+            for (Tip tip : tipsPage.getContent()) {
+                tipsResponse.add(new TipResponseDTO(tip));
+            }
+            return new PageImpl<>(tipsResponse, pageable, tipsPage.getTotalElements());
         }
     }
 
@@ -276,52 +281,4 @@ public class TipService {
             return new TipFavDTO(tip);
         }else throw new IllegalArgumentException("El tip ya está en la lista de favoritos del user");
     }
-
-    /*
-    ASI ESTABAN LAS FUNCIONES DE FAVORITOS CUANDO TENIAMOS LA RELACIÓN MUCHOS A MUCHOS ENTRE LOS TIPS Y LOS USERS
-    @Transactional
-    Recuperamos los tips guardados como favoritos por un user
-    public List<TipDTO.TipFavDTO> getFavoritesTips(Long idUser){
-        List<TipDTO.TipFavDTO> tips = new ArrayList<>();
-        Comprobamos si el user existe
-        User user = userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
-        if (!user.getFavoriteTips().isEmpty()){
-            Pasamos cada uno de los tips a su DTO correspondiente, ya que en la sección de favoritos solo queremos mostrar el título
-            for (Tip tip: user.getFavoriteTips()) tips.add(new TipDTO.TipFavDTO(tip));
-            return tips;
-        } else throw new NoContentException("EL usuario no tiene tips favoritos");
-    }
-
-    @Transactional
-    Función para eliminar un tip de la lista de favoritos del user
-    public TipDTO.TipFavDTO deleteFavoriteTip(long userId, long idTip){
-        Comprobamos si el user existe y el tip tambien
-        User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
-        Tip tip = tipRepository.findById(idTip).orElseThrow(() -> new EntityNotFoundException("Tip no encontrado"));
-        if (user.getFavoriteTips().contains(tip)){
-            Eliminamos el tip en caso de que el user lo tenga en favs
-            user.getFavoriteTips().remove(tip);
-            userRepository.save(user);
-            TipDTO.TipFavDTO tipFavDTO = new TipDTO.TipFavDTO(tip);
-            return tipFavDTO;
-        }else throw new EntityNotFoundException("No se ha encontrado el tip con id: "+idTip+" en la lista de favoritos del user");
-    }
-
-    @Transactional
-    Función para añadir un tip a la lista de favoritos del user
-    public TipDTO.TipFavDTO addFavoriteTip(Long idUser, Long idTip){
-        Comprobamos que el user existe y el tip existen en la BD
-        User user = userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
-        Tip tip = tipRepository.findById(idTip).orElseThrow(() -> new EntityNotFoundException("Tip no encontrado"));
-        Tenemos que comprobar si el tip no esta ya en la lista de favoritos
-        if (!user.getFavoriteTips().contains(tip)){
-            user.getFavoriteTips().add(tip);
-            userRepository.save(user);
-            No hace falta guardar nada en la entidad tip ya que la encargada de la relación es la de User, asique Hibernate ya se ocupa solo de mantener la relación
-            return new TipDTO.TipFavDTO(tip);
-        }else throw new IllegalArgumentException("El tip ya está en la lista de favoritos del user");
-    }
-
-     */
-
 }

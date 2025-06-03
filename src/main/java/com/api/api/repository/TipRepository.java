@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,6 +14,9 @@ import com.api.api.model.Tip;
 @Repository
 //El segundo parámetro de JpaRepository es el tipo de la clave primaria de la tabla
 public interface TipRepository extends JpaRepository<Tip, Long>  {
+
+    //Función para recuperar un determinado número de tips del user con paginación
+    Page<Tip> findByUser_Id(Long userId, Pageable pageable);
 
     //Función para recuperar los tips de un determinado user en base a su id en orden descendente por fecha
     List<Tip> findByUser_IdOrderByTimeStampDesc(Long userId);

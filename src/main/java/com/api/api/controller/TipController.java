@@ -2,6 +2,10 @@ package com.api.api.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,11 +36,43 @@ public class TipController {
      * Endpoints relacionados con las pestaña de tips de la app y del user y su correspondiente gestión 
      */
 
-    //Endpoint para recuperar los tips que el user ha generado y guardado en la BD
+    /**
+     * Endpoint para recuperar los tips que el user ha generado y guardado en la BD con paginación
+     * 
+     * @param idUser ID del usuario
+     * @param page Número de página (empieza en 0). Por defecto: 0
+     * @param size Número de elementos por página. Por defecto: 10
+     * @param sortBy Campo por el que ordenar (timeStamp, title, etc.). Por defecto: timeStamp
+     * @param sortDirection Dirección del ordenamiento (asc/desc). Por defecto: desc
+     * @return Page<TipResponseDTO> con la información paginada
+     * 
+     * Ejemplo de uso:
+     * GET /api/users/1/tips?page=0&size=5&sort=timeStamp&direction=desc
+     * GET /api/users/1/tips (usa valores por defecto)
+     */
     @GetMapping("/{idUser}/tips")
-    public ResponseEntity<List<TipResponseDTO>> getTips(@PathVariable("idUser") Long idUser){
+    public ResponseEntity<Page<TipResponseDTO>> getTips(
+            @PathVariable("idUser") Long idUser,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "7") int size,
+            @RequestParam(value = "sort", defaultValue = "timeStamp") String sortBy,
+            @RequestParam(value = "direction", defaultValue = "desc") String sortDirection) {
+        
+        // Validar que page y size sean valores válidos
+        if (page < 0) page = 0;
+        if (size <= 0) size = 7;
+        if (size > 10) size = 10; // Limitar el tamaño máximo de página
+        
+        // Crear el objeto Sort basado en los parámetros
+        Sort.Direction direction = sortDirection.equalsIgnoreCase("desc") ? 
+            Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort sort = Sort.by(direction, sortBy);
+        
+        // Crear el Pageable con la ordenación
+        Pageable pageable = PageRequest.of(page, size, sort);
+        
         //llamamos a la función que se encarga de recuperar los tips de la BD
-        List<TipResponseDTO> tips = this.tipService.getTips(idUser);
+        Page<TipResponseDTO> tips = this.tipService.getTips(idUser, pageable);
         return ResponseEntity.ok(tips);
     }
     

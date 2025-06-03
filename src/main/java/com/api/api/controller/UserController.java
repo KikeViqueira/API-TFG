@@ -4,6 +4,10 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
@@ -81,20 +85,52 @@ public class UserController {
 
      /*
      * Funciones que se usan para la gestión de los chats de un user:
-     * 1. Recupera el historial de los chats de un user (valor de filter = history)
-     * 2. Recupera os chats que ha tenido el user en los últimos tres meses (filter = last3Months)
-     * 3. Recupera los chats que hay een un rango de fechas que puede especificar el user (filter = range)
+     * 1. Recupera el historial de los chats de un user (valor de filter = history) - CON PAGINACIÓN
+     * 2. Recupera os chats que ha tenido el user en los últimos tres meses (filter = last3Months) - SIN PAGINACIÓN
+     * 3. Recupera los chats que hay een un rango de fechas que puede especificar el user (filter = range) - CON PAGINACIÓN
      * 
      * Esto se lo indicamos al método en base a un parámetro que le pasamos en la petición (filter)
+     * 
+     * Para los filtros "history" y "range" se añade paginación con los parámetros:
+     * - page: número de página (empieza en 0, por defecto 0)
+     * - size: elementos por página (por defecto 10, máximo 20)
+     * - sort: campo de ordenación (por defecto "date")
+     * - direction: dirección del ordenamiento (asc/desc, por defecto "desc")
      */
     @PreAuthorize("hasPermission(#idUser, 'owner')")
     @GetMapping("/{idUser}/chats")
-    public ResponseEntity<List<ChatResponse>> getChats(@PathVariable("idUser") Long idUser,
+    public ResponseEntity<?> getChats(@PathVariable("idUser") Long idUser,
         @RequestParam(name="filter", required = false, defaultValue = "history") String filter,
         @RequestParam(name = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-        @RequestParam(name = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate){
-        List<ChatResponse> chats = this.chatService.getChats(idUser, filter, startDate, endDate); // Provide appropriate values for the additional parameters
-        return ResponseEntity.ok(chats);
+        @RequestParam(name = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+        @RequestParam(name = "page", required = false, defaultValue = "0") int page,
+        @RequestParam(name = "size", required = false, defaultValue = "7") int size,
+        @RequestParam(name = "sort", required = false, defaultValue = "date") String sortBy,
+        @RequestParam(name = "direction", required = false, defaultValue = "desc") String sortDirection) 
+        {
+        
+        // Para last3Months no usamos paginación
+        if ("last3Months".equals(filter)) {
+            List<ChatResponse> chats = this.chatService.getChatsLast3Months(idUser);
+            return ResponseEntity.ok(chats);
+        }
+        
+        // Para history y range usamos paginación
+        // Validar que page y size sean valores válidos
+        if (page < 0) page = 0;
+        if (size <= 0) size = 7;
+        if (size > 10) size = 10; // Limitar el tamaño máximo de página
+
+        //Creamos el objeto Sort basado en los parámetros
+        Sort.Direction direction = sortDirection.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort sort = Sort.by(direction, sortBy);
+
+        //Creamos el objeto Pageable con la ordenación
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        //Llamamos a la función que se encarga de recuperar los chats con paginación
+        Page<ChatResponse> result = this.chatService.getChatsWithPagination(idUser, filter, startDate, endDate, pageable);
+        return ResponseEntity.ok(result);
     }
 
     //Endpoint para eliminar uno o varios chats de un user

@@ -19,6 +19,9 @@ import com.api.api.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.MethodNotAllowedException;
@@ -142,24 +145,16 @@ public class ChatService {
      * Esto se lo indicamos a la función en base a un parámetro que le pasamos en la petición (filter)
      */
     @Transactional //Para que no de error al hacer la consulta
-    public List<ChatResponse> getChats(Long idUser, String filter, LocalDate startDate, LocalDate endDate) {
+    public Page<ChatResponse> getChatsWithPagination(Long idUser, String filter, LocalDate startDate, LocalDate endDate, Pageable pageable) {
         //Comprobamos si el user existe en la BD
         User user = this.userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException(ErrorMessages.USER_NOT_FOUND));
         //Definimos la lista donde guardaremos los chats que se recuperen de la BD
-        List<Chat> chatsOfUser;
+        Page<Chat> chatsOfUser;
         //Comprobamos el valor del parámetro filter y en base a eso recuperamos los chats de la BD
         switch (filter) {
             case "history":
                 //Recuperamos todos los chats que tiene el user
-                chatsOfUser = this.chatRepository.findByUserIdOrderByDateDesc(idUser);
-                break;
-
-            case "last3Months":
-                //Recuperamos los chats que tiene el user en los últimos tres meses
-                LocalDateTime now = LocalDateTime.now();
-                LocalDateTime startDateLast3Months = now.minusMonths(3).withHour(0).withMinute(0).withSecond(0).withNano(0);
-                LocalDateTime endDateLast3Months = now.withHour(23).withMinute(59).withSecond(59).withNano(999999999);
-                chatsOfUser = this.chatRepository.findByUser_IdAndDateBetween(idUser, startDateLast3Months, endDateLast3Months);
+                chatsOfUser = this.chatRepository.findByUserId(idUser, pageable);
                 break;
 
             case "range":
@@ -172,7 +167,7 @@ public class ChatService {
                 //Si no podríamos estar no estar recuperando chats que si que están en el rango que se ha especificado
                 LocalDateTime startDateRange = startDate.atStartOfDay();
                 LocalDateTime endDateRange = endDate.atTime(23, 59, 59, 999999999);
-                chatsOfUser = this.chatRepository.findByUser_IdAndDateBetween(idUser, startDateRange, endDateRange);
+                chatsOfUser = this.chatRepository.findByUser_IdAndDateBetween(idUser, startDateRange, endDateRange, pageable);
                 break;
 
             default:
@@ -182,16 +177,28 @@ public class ChatService {
 
         if (chatsOfUser.isEmpty()) throw new NoContentException("El usuario no tiene chats");
         else {
+            //Devolvemos la página con los datos transformados al DTO correspondiente
             List<ChatResponse> chatResponses = new ArrayList<>();
-            //Si el filtro es history o range, devolvemos la lista de chats en el formato que conseguimos en el DTO de ChatResponseDTO
-            if (Objects.equals(filter, "history") || Objects.equals(filter, "range")) {
-                for (Chat chat : chatsOfUser) chatResponses.add(new ChatDetailsDTO(chat));
-            } else {
-                //Estamos en el caso de que el filtro sea last3Months, por lo que tenemos que devolver la lista de chats en el formato de ChatContributionDTO
-                for (Chat chat : user.getChats()) chatResponses.add(new ChatContributionDTO(chat));
-            }
-            return chatResponses;
+            //Devolvemos la lista de chats en el formato que conseguimos en el DTO de ChatResponseDTO
+            for (Chat chat : chatsOfUser.getContent()) chatResponses.add(new ChatDetailsDTO(chat));
+            return new PageImpl<>(chatResponses, pageable, chatsOfUser.getTotalElements());
         }
+    }
+
+    @Transactional
+    //Función para recuperar los chats que se han hecho en los últimos 3 meses sin paginación
+    public List<ChatResponse> getChatsLast3Months(Long idUser) {
+        //Comprobamos si el user existe
+        this.userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException(ErrorMessages.USER_NOT_FOUND));
+        //Recuperamos los chats que tiene el user en los últimos tres meses
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startDateLast3Months = now.minusMonths(3).withHour(0).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime endDateLast3Months = now.withHour(23).withMinute(59).withSecond(59).withNano(999999999);
+        List<Chat> chatsOfUser = this.chatRepository.findByUser_IdAndDateBetweenOrderByDateDesc(idUser, startDateLast3Months, endDateLast3Months);
+        //Pasamos los chats a su correspondiente DTO
+        List<ChatResponse> chatResponses = new ArrayList<>();
+        for (Chat chat : chatsOfUser) chatResponses.add(new ChatContributionDTO(chat));
+        return chatResponses;
     }
 
     //Función para eliminar uno o varios chats de un user
