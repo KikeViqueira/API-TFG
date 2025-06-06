@@ -14,7 +14,7 @@ import lombok.*;
 
 @Entity
 @Table(name = "tips", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"title", "user_id"})
+    @UniqueConstraint(columnNames = {"title", "user_id"}) //Indicamos que esta combinación debe ser única para cada user	
 })
 @Getter
 @Setter
@@ -28,7 +28,7 @@ public class Tip {
 
     @NotBlank(message = "El título no puede ser vacío")
     @Size(min = 2, message = "El título debe tener al menos 2 caracteres")
-    @Column(nullable = false, unique = true) //Cualquier tip tiene que tener un nombre único dentro de los tips que tiene el user
+    @Column(nullable = false) //Cualquier tip tiene que tener un nombre único dentro de los tips que tiene el user
     private String title;
 
     @NotBlank(message = "La descripción no puede ser vacía")

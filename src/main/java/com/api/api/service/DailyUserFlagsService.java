@@ -25,6 +25,12 @@ public class DailyUserFlagsService {
     @Autowired
     private UserRepository userRepository;
 
+    /**
+     * NOTA:
+     * Como la bandera que se gestiona unicamente por parte directa del user es la de cuando se ha ido a dormir,
+     * las funciones que tenemos definidas usan como rango de tiempo para buscar en la BD las últimas 24 horas ya que es el tiempo que tiene de vida útil
+     */
+
     //Función para insertar una bandera diaria, la cual el user mete de manera directa desde el Front, como la hora en la que se va a dormir
     // Otras banderas diarias como chatId o hasChatToday se crean por defecto cuando el user habla o crea el chat de hoy
     @Transactional
@@ -41,9 +47,8 @@ public class DailyUserFlagsService {
          */
 
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
-        LocalDateTime endOfDay = startOfDay.plusDays(1).minusNanos(1);
-        DailyUserFlags dailyFlagRecovered = this.dailyUserFlagsRepository.findByUser_IdAndFlagKeyAndTimeStampBetween(idUser, flagKey, startOfDay, endOfDay).orElse(null);
+        LocalDateTime maximumTime = now.minusHours(24); //24 horas atrás
+        DailyUserFlags dailyFlagRecovered = this.dailyUserFlagsRepository.findByUser_IdAndFlagKeyAndTimeStampBetween(idUser, flagKey, maximumTime, now).orElse(null);
         if (Objects.isNull(dailyFlagRecovered)){
             /*
              * En caso de que sea null tenemos que crearla y guardarla en la BD
@@ -71,9 +76,8 @@ public class DailyUserFlagsService {
         if (!DailyFlags.isDeletableDailyFlag(flagkey)) throw new IllegalArgumentException("La bandera diaria no es eliminable");
         //Tenemos que comprobar si el user tiene la bandera actualmente en la base de datos
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
-        LocalDateTime endOfDay = startOfDay.plusDays(1).minusNanos(1);
-        DailyUserFlags dailyFlagToDelete = this.dailyUserFlagsRepository.findByUser_IdAndFlagKeyAndTimeStampBetween(idUser, flagkey, startOfDay, endOfDay).orElseThrow(() -> new EntityNotFoundException("La bandera diaria que se intenta eliminar no existe"));
+        LocalDateTime maximumTime = now.minusHours(24); //24 horas atrás
+        DailyUserFlags dailyFlagToDelete = this.dailyUserFlagsRepository.findByUser_IdAndFlagKeyAndTimeStampBetween(idUser, flagkey, maximumTime, now).orElseThrow(() -> new EntityNotFoundException("La bandera diaria que se intenta eliminar no existe"));
         //Eliminamos la bandera de la BD
         this.dailyUserFlagsRepository.delete(dailyFlagToDelete);
         return new FlagEntityDTO(dailyFlagToDelete);

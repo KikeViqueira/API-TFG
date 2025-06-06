@@ -34,7 +34,7 @@ public class ConfigurationUserFlags {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 55, unique = true) //El flagKey tiene que ser único para cada user
+    @Column(nullable = false, length = 55) //El flagKey es único para cada user (controlado por la constraint de tabla)
     private String flagKey;
 
     @Column(nullable = true, length = 55)

@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -19,6 +20,7 @@ import com.api.api.DTO.FormRequestDTO.ChangePasswordRequestDTO;
 import com.api.api.DTO.UserDTO.UserResponseDTO;
 import com.api.api.DTO.UserDTO.UserUpdateDTO;
 import com.api.api.constants.ConfigFlags;
+import com.api.api.constants.DailyFlags;
 import com.api.api.constants.DerivedFlags;
 import com.api.api.model.ConfigurationUserFlags;
 import com.api.api.model.DailyUserFlags;
@@ -219,7 +221,15 @@ public class UserService {
         LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
         LocalDateTime endOfDay = startOfDay.plusDays(1).minusNanos(1);
 
+        //Función para recuperar las banderas diarias del user que hace referencia a la entidad DailyUserFlags, excepto la hora en la que se ha ido a dormir que puede no estar en el día de hoy pero tiene una vida útil de 24 horas
         List<DailyUserFlags> dailyUserFlags = this.dailyUserFlagsRepository.findByUser_IdAndTimeStampBetween(idUser, startOfDay, endOfDay);
+
+        //Si dentro de nuestro mapa no tenemos la bandera de sleepStart pq no está dentro de este día tenemos que comprobar si está en un plazo de 24 horas hacia atras
+        if (dailyUserFlags.stream().noneMatch(flag -> flag.getFlagKey().equals(DailyFlags.SLEEP_START))){
+            Optional<DailyUserFlags> sleepStartFlag = this.dailyUserFlagsRepository.findByUser_IdAndFlagKeyAndTimeStampBetween(idUser, DailyFlags.SLEEP_START, now.minusHours(24), now);
+            if (sleepStartFlag.isPresent()) dailyUserFlags.add(sleepStartFlag.get());
+        }
+        
         //Recuperamos la lista de banderas de configuración del user
         List<ConfigurationUserFlags> configurationUserFlags = this.configurationUserFlagsRepository.findAllByUser_Id(idUser);
         /*
@@ -258,11 +268,11 @@ public class UserService {
 
        //Guardamos las banderas diarias en el mapa que se va a devolver al user, además tenemos que mandarle la fecha de expiración que es el final del día en el que e user ha guradado la entidad en la BD
        Map<String, Object> dailyDerivedMap = new LinkedHashMap<>();
-       dailyDerivedMap.put(DerivedFlags.DRM_REPORT_TODAY, Objects.toString(reportFlag));
+       dailyDerivedMap.put(DerivedFlags.DRM_REPORT_TODAY, reportFlag);
        dailyDerivedMap.put("expiry_drm_report", endOfDay);
-       dailyDerivedMap.put(DerivedFlags.TIP_OF_THE_DAY, Objects.toString(tipFlag));
+       dailyDerivedMap.put(DerivedFlags.TIP_OF_THE_DAY, tipFlag);
        dailyDerivedMap.put("expiry_tip_of_the_day", endOfDay);
-       dailyDerivedMap.put(DerivedFlags.SLEEP_LOG_TODAY, Objects.toString(sleepFlag));
+       dailyDerivedMap.put(DerivedFlags.SLEEP_LOG_TODAY, sleepFlag);
        dailyDerivedMap.put("expiry_sleep_log", endOfDay);
 
         userFlags.put("dailyDerivedFlags", dailyDerivedMap);
