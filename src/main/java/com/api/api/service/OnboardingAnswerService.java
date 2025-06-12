@@ -18,7 +18,7 @@ public class OnboardingAnswerService {
     @Autowired
     private OnboardingAnswerRepository onboardingAnswerRepository;
 
-    //@Transactional //TODO: NO HARIA FALTA USARLO SI SE LLAMA DESDE UNA FUNCION QUE YA ESTA ANOTADA CON @Transactional
+    //@Transactional NO HARIA FALTA USARLO SI SE LLAMA DESDE UNA FUNCION QUE YA ESTA ANOTADA CON @Transactional
     //Función que se encarga de guardar el mapa de respuestas en la BD (OnboardingAnswer)
     public List<OnboardingAnswer> saveOnboardingAnswers(HashMap<String, String> onboardingAnswers, Onboarding onboarding){
         List<OnboardingAnswer> onboardingAnswerList = new ArrayList<>();

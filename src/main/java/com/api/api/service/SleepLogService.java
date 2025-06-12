@@ -40,9 +40,6 @@ public class SleepLogService {
     public SleepLogAnswerDTO createSleepLog(Long userId, HashMap<String, String> answers) {
         //Primero comprobamos que el user exista y lo tenemos que guardar para poder vincularlo con el sleepLog que vamos a crear
         User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("El usuario no existe"));
-        //Sabemos que si hemos lleagdo a este punto las respuestas son correctas, por lo que podemos crear el nuevo registro de sueño
-        SleepLog sleepLog = new SleepLog();
-        sleepLog.setUser(user);
        
         //llamamos a la función que se encarga de guardar las respuestas en la tabla de SleepLogAnswers pero antes tenemos que calcular el inicio y fin del día
         LocalDateTime now = LocalDateTime.now();
@@ -51,6 +48,10 @@ public class SleepLogService {
 
         boolean alreadyExists = sleepLogRepository.existsByUser_IdAndTimeStampBetween(userId, startOfDay, endOfDay);
         if (!alreadyExists){
+            SleepLog sleepLog = new SleepLog();
+            sleepLog.setUser(user);
+            //Tenemos que asignarle como timeStamp al SleepLog la hora en la que el user se ha levantado para tener los cuestionarios relacionados con su día de una manera correcta
+            sleepLog.setTimeStamp(LocalDateTime.parse(answers.get("wakeUpTime")));
             /*
             * Guardamos la entidad en la BD para generarle un id y asi poder pasarle el objeto a la función que se encarga de guardar las respuestas en SleepLogAnswerService
             * 
@@ -59,6 +60,7 @@ public class SleepLogService {
             *
             * Tenemos que guardar el registro en este punto del código ya que si intentamos hacer antes el save la bandera siempre nos devolverá true
             */
+            
             sleepLogRepository.save(sleepLog);
             //En caso de que no exista el registro delegamos la lógica en la función del servicio SleepLogAnswerService, donde le pasamos el objeto SleepLog y las respuestas
             SleepLogAnswerDTO sleepLogAnswerDTO = sleepLogAnswerService.saveAnswers(sleepLog, answers);

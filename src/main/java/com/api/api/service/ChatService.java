@@ -147,7 +147,7 @@ public class ChatService {
     @Transactional //Para que no de error al hacer la consulta
     public Page<ChatResponse> getChatsWithPagination(Long idUser, String filter, LocalDate startDate, LocalDate endDate, Pageable pageable) {
         //Comprobamos si el user existe en la BD
-        User user = this.userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException(ErrorMessages.USER_NOT_FOUND));
+        this.userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException(ErrorMessages.USER_NOT_FOUND));
         //Definimos la lista donde guardaremos los chats que se recuperen de la BD
         Page<Chat> chatsOfUser;
         //Comprobamos el valor del parámetro filter y en base a eso recuperamos los chats de la BD

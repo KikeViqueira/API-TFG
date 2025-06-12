@@ -13,7 +13,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -32,6 +31,7 @@ public class SleepLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    //TimeStamp es la hora en la que el user se ha levantado para tener los cuestionarios relacionados con su día de una manera correcta
     private LocalDateTime timeStamp;
 
     /*
@@ -51,11 +51,5 @@ public class SleepLog {
     @JsonManagedReference(value = "sleepLogAnswer")
     //@JsonIgnore
     private SleepLogAnswer sleepLogAnswer;
-
-    //Creamos la función para rellenar el campo de fecha automáticamente cuando la entidad vaya a ser guardada en la BD
-    @PrePersist
-    protected void onCreate(){
-        this.timeStamp = LocalDateTime.now(); //Conseguimos la hora y fecha en la zona horaria en la que está el user
-    }
     
 }
