@@ -17,6 +17,7 @@ import com.api.api.exceptions.DuplicatedSoundName;
 import com.api.api.exceptions.NoContentException;
 import com.api.api.exceptions.RelationshipAlreadyExistsException;
 import com.api.api.exceptions.TodayChatAlreadyExists;
+import com.api.api.exceptions.UserAlreadyExistsException;
 import com.github.fge.jsonpatch.JsonPatchException;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -61,6 +62,13 @@ public class GlobalExceptionHandler {
         CustomErrorResponseDTO error = new CustomErrorResponseDTO(LocalDateTime.now(), "No hay contenido: " + ex.getMessage(), request.getRequestURI());
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(error);
     } 
+
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<?> handleUserAlreadyExistsException(UserAlreadyExistsException ex, HttpServletRequest request){
+        //Creamos el objeto de error
+        CustomErrorResponseDTO error = new CustomErrorResponseDTO(LocalDateTime.now(), "El usuario ya existe: " + ex.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
 
     @ExceptionHandler(RelationshipAlreadyExistsException.class)
     public ResponseEntity<?> handleRelationshipAlreadyExistsException(RelationshipAlreadyExistsException ex, HttpServletRequest request){

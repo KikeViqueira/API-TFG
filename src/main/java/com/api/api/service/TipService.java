@@ -205,7 +205,7 @@ public class TipService {
         //Recuperamos la lista de tips que pertenecen al user de la lista de ids que se ha recibido
         List<Tip> tips = this.tipRepository.findByUser_IdAndIdIn(idUser, ids);
         //Comprobamos que ambas listas tengan el mismo tamaño, esto significaría que todos los tips que se han pasado pertenecen al user y se pueden eliminar
-        if (tips.size() != ids.size())  throw new AccessDeniedException("Uno o más chats no pertenecen al usuario");
+        if (tips.size() != ids.size())  throw new AccessDeniedException("Uno o más tips no pertenecen al usuario");
         user.getTips().removeAll(tips);
         this.userRepository.save(user);
         //Eliminamos los tips de la BD

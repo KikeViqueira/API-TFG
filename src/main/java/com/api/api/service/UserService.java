@@ -22,6 +22,7 @@ import com.api.api.DTO.UserDTO.UserUpdateDTO;
 import com.api.api.constants.ConfigFlags;
 import com.api.api.constants.DailyFlags;
 import com.api.api.constants.DerivedFlags;
+import com.api.api.exceptions.UserAlreadyExistsException;
 import com.api.api.model.ConfigurationUserFlags;
 import com.api.api.model.DailyUserFlags;
 import com.api.api.model.Onboarding;
@@ -109,7 +110,7 @@ public class UserService {
             UserDTO.UserResponseDTO userResponseDTO = new UserDTO.UserResponseDTO(user);
             return userResponseDTO;
         }else{
-            throw new IllegalArgumentException("El usuario ya existe");
+            throw new UserAlreadyExistsException("El correo electrónico ya está en uso");
         }
     }
 
