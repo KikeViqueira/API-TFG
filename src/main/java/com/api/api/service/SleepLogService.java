@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.api.api.DTO.SleepLogAnswerDTO;
+import com.api.api.constants.DailyFlags;
 import com.api.api.enums.DayOfWeek;
 import com.api.api.exceptions.RelationshipAlreadyExistsException;
 import com.api.api.model.SleepLog;
@@ -35,18 +36,23 @@ public class SleepLogService {
     @Autowired
     private SleepLogAnswerService sleepLogAnswerService;
 
+    @Autowired
+    private DailyUserFlagsService dailyUserFlagsService;
+
     @Transactional
     //Función para crear un nuevo registro de sueño y añadir a este las respuestas del cuestionario matutino
     public SleepLogAnswerDTO createSleepLog(Long userId, HashMap<String, String> answers) {
         //Primero comprobamos que el user exista y lo tenemos que guardar para poder vincularlo con el sleepLog que vamos a crear
         User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("El usuario no existe"));
-       
-        //llamamos a la función que se encarga de guardar las respuestas en la tabla de SleepLogAnswers pero antes tenemos que calcular el inicio y fin del día
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
+
+        //tenemos que comprobar que no haya un registro de sueño del user en el día al que se corresponde la hora de levantamiento ya que hace referencia al día que el user quiere marcar que ha dormido
+        LocalDateTime wakeUpTime = LocalDateTime.parse(answers.get("wakeUpTime"));
+
+        //Calculamos el inicio y fin del día correspondiente a la hora en la que el user se ha levantado
+        LocalDateTime startOfDay = wakeUpTime.toLocalDate().atStartOfDay();
         LocalDateTime endOfDay = startOfDay.plusDays(1).minusNanos(1);
 
-        boolean alreadyExists = sleepLogRepository.existsByUser_IdAndTimeStampBetween(userId, startOfDay, endOfDay);
+        boolean alreadyExists = this.sleepLogRepository.existsByUser_IdAndTimeStampBetween(userId, startOfDay, endOfDay);
         if (!alreadyExists){
             SleepLog sleepLog = new SleepLog();
             sleepLog.setUser(user);
@@ -61,9 +67,13 @@ public class SleepLogService {
             * Tenemos que guardar el registro en este punto del código ya que si intentamos hacer antes el save la bandera siempre nos devolverá true
             */
             
-            sleepLogRepository.save(sleepLog);
+            this.sleepLogRepository.save(sleepLog);
             //En caso de que no exista el registro delegamos la lógica en la función del servicio SleepLogAnswerService, donde le pasamos el objeto SleepLog y las respuestas
             SleepLogAnswerDTO sleepLogAnswerDTO = sleepLogAnswerService.saveAnswers(sleepLog, answers);
+
+            //Una vez tenemos el objeto guardado lo que tenemos que hacer es eliminar la bandera de irse a dormir del user de ese día
+            this.dailyUserFlagsService.deleteFlag(userId, DailyFlags.SLEEP_START);
+
             return sleepLogAnswerDTO;
         }else throw new RelationshipAlreadyExistsException("El usuario ya ha hecho el registro de sueño hoy");
     }
@@ -72,13 +82,13 @@ public class SleepLogService {
     //Función para recuperar las respuestas al cuestionario matutino de un user de ese mismo día
     public SleepLogAnswerDTO getSleepLog(Long userId){
         //Comprobamos que el user exista y comprobamos que el SleepLog exista
-        userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("El usuario no existe"));
+        this.userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("El usuario no existe"));
         //Comprobamos que exista el registro correspondiente al user y que se haya hecho en el día actual
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
         LocalDateTime endOfDay = startOfDay.plusDays(1).minusNanos(1);
         //Recuperamos el registro de sueño del user
-        SleepLog sleepLog = sleepLogRepository.findByUser_IdAndTimeStampBetween(userId, startOfDay, endOfDay).orElseThrow(() -> new EntityNotFoundException("El usuario no ha hecho el registro de sueño hoy"));
+        SleepLog sleepLog = this.sleepLogRepository.findByUser_IdAndTimeStampBetween(userId, startOfDay, endOfDay).orElseThrow(() -> new EntityNotFoundException("El usuario no ha hecho el registro de sueño hoy"));
         //Una vez tenemos el registro del user podemos devolver su correspondiente respuesta
         return new SleepLogAnswerDTO(sleepLog.getSleepLogAnswer());
     }
@@ -87,7 +97,7 @@ public class SleepLogService {
     //Función para recuperar la duración del sueño de un user durante los últimos 7 días
     public Map<String, Float> getSleepLogsDuration(Long userId) {
         //Comprobamos que el user exista
-        userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("El usuario no existe"));
+        this.userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("El usuario no existe"));
 
         // Obtenemos la fecha de hoy (según la zona del sistema, ya que LocalDate.now() lo hace por defecto)
         LocalDate today = LocalDate.now();
@@ -97,7 +107,7 @@ public class SleepLogService {
         LocalDateTime endOfPeriod = today.plusDays(1).atStartOfDay().minusNanos(1);
 
         //Recuperamos todos los registros de sueño del user dentro de la semana
-        List<SleepLog> sleepLogs = sleepLogRepository.findByUser_IdAndTimeStampBetweenOrderByTimeStampAsc(userId, startOfPeriod, endOfPeriod);
+        List<SleepLog> sleepLogs = this.sleepLogRepository.findByUser_IdAndTimeStampBetweenOrderByTimeStampAsc(userId, startOfPeriod, endOfPeriod);
 
         // Creamos un mapa temporal con la fecha y la duración
         Map<LocalDate, Float> durations = sleepLogs.stream()
@@ -127,7 +137,7 @@ public class SleepLogService {
      * */
     public Map<Long, SleepLogAnswer> getSleepLogsForContext(Long userId) {
         //Comprobamos que el user exista
-        userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("El usuario no existe"));
+        this.userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("El usuario no existe"));
 
         // Obtenemos la fecha de hoy (según la zona del sistema, ya que LocalDate.now() lo hace por defecto)
         LocalDate today = LocalDate.now();
@@ -137,7 +147,7 @@ public class SleepLogService {
         LocalDateTime endOfPeriod = today.plusDays(1).atStartOfDay().minusNanos(1);
 
         //Recuperamos todos los registros de sueño del user dentro de la semana
-        List<SleepLog> sleepLogs = sleepLogRepository.findByUser_IdAndTimeStampBetweenOrderByTimeStampAsc(userId, startOfPeriod, endOfPeriod);
+        List<SleepLog> sleepLogs = this.sleepLogRepository.findByUser_IdAndTimeStampBetweenOrderByTimeStampAsc(userId, startOfPeriod, endOfPeriod);
 
         //Creamos un mapa donde guardamos la info de cada uno de los registros
         Map<Long, SleepLogAnswer> results = new LinkedHashMap<>();

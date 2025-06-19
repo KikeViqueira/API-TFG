@@ -26,11 +26,13 @@ import com.api.api.exceptions.UserAlreadyExistsException;
 import com.api.api.model.ConfigurationUserFlags;
 import com.api.api.model.DailyUserFlags;
 import com.api.api.model.Onboarding;
+import com.api.api.model.Sound;
 import com.api.api.model.User;
 import com.api.api.repository.ConfigurationUserFlagsRepository;
 import com.api.api.repository.DailyUserFlagsRepository;
 import com.api.api.repository.DrmRepository;
 import com.api.api.repository.OnboardingRepository;
+import com.api.api.repository.SoundRepository;
 import com.api.api.repository.SleepLogRepository;
 import com.api.api.repository.TipRepository;
 import com.api.api.repository.UserRepository;
@@ -72,6 +74,9 @@ public class UserService {
 
     @Autowired
     private SleepLogRepository sleepLogRepository;
+
+    @Autowired
+    private SoundRepository soundRepository;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -125,6 +130,17 @@ public class UserService {
     @Transactional
     public UserResponseDTO deleteUser(Long id){
         User user = this.userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        //Tenemos que eliminr todos los sonidos y la foto de perfil que tenga el user en cloudinary
+        if (Objects.nonNull(user.getPublicIdCloudinary())) this.cloudinaryService.deleteFile(user.getPublicIdCloudinary(), false);
+        //Recuperamos las entidades sonidos que están relacionadas con el user
+        List<Sound> sounds = this.soundRepository.findByOwnerId(id);
+        //Si no es vacía por sonido tenemos que llamar a la función de eliminar archivos de cloudinary
+        if (!sounds.isEmpty()){
+            sounds.forEach(sound -> {
+                if (Objects.nonNull(sound.getPublicIdCloudinary())) this.cloudinaryService.deleteFile(sound.getPublicIdCloudinary(), true);
+            });
+        }
+        //Ahora eliminamos toda la info relacionada con el user de la BD
         this.userRepository.delete(user);
         return new UserResponseDTO(user);
     }

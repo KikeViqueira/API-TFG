@@ -15,6 +15,7 @@ import com.api.api.model.ConfigurationUserFlags;
 import com.api.api.model.Onboarding;
 import com.api.api.model.OnboardingAnswer;
 import com.api.api.model.User;
+import com.api.api.repository.ConfigurationUserFlagsRepository;
 import com.api.api.repository.OnboardingAnswerRepository;
 import com.api.api.repository.OnboardingRepository;
 import com.api.api.repository.UserRepository;
@@ -37,6 +38,9 @@ public class OnboardingService {
     @Autowired
     private OnboardingAnswerRepository onboardingAnswerRepository;
 
+    @Autowired
+    private ConfigurationUserFlagsRepository configurationUserFlagsRepository;
+
 
     @Transactional
     //Función que se encarga de guardar la respuesta a el Onboarding por parte del usuario en la BD
@@ -58,11 +62,10 @@ public class OnboardingService {
             user.setBirthDate(LocalDate.parse(answers.get("question3")));
             List<OnboardingAnswer> onboardingAnswersList = onboardingAnswerService.saveOnboardingAnswers(answers, onboarding);
 
-            //Tenemos que guardar la bandera de configuración de que el user ha realizado el Onboarding en la correspondiente tabla
-            ConfigurationUserFlags hasCompletedOnboarding = new ConfigurationUserFlags();
-            hasCompletedOnboarding.setUser(user);
-            hasCompletedOnboarding.setFlagKey(ConfigFlags.HAS_COMPLETED_ONBOARDING);
+            //Una vez hemos guardado las respuestas, lo que tenemos que hacer es cambiar el valor de la bandera de configuración del Onboarding cambiándola a true ya que esta se crea asociada al user cuando se registra en la app.
+            ConfigurationUserFlags hasCompletedOnboarding = this.configurationUserFlagsRepository.findByUser_IdAndFlagKey(userId, ConfigFlags.HAS_COMPLETED_ONBOARDING);
             hasCompletedOnboarding.setFlagValue("true");
+            this.configurationUserFlagsRepository.save(hasCompletedOnboarding);
 
             //Una vez recuperamos el array de respuestas con el objeto ya bien creado lo parseamos al tipo correspondiente para devolver solo la info que interesa
             return new OnboardingAnswerDTO(onboardingAnswersList);
