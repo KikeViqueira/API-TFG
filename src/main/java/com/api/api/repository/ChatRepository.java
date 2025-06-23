@@ -2,6 +2,7 @@ package com.api.api.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -38,5 +39,6 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
     //Función para saber si el user ha hecho un chat en el día de hoy
     boolean existsByUserIdAndDateBetween(Long userId, LocalDateTime startOfDay, LocalDateTime endOfDay);
 
-    
+    //Función para obtener el chat de hoy de un usuario (si existe)
+    Optional<Chat> findByUserIdAndDateBetween(Long userId, LocalDateTime startOfDay, LocalDateTime endOfDay);
 }

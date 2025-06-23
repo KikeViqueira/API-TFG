@@ -198,18 +198,21 @@ public class UserService {
 
     //Función para eliminar la foto de perfil de un user de la BD
     @Transactional
-    public void deleteProfilePicture(Long idUser){
+    public String deleteProfilePicture(Long idUser){
         //Recuperamos el user de la BD y vemos si existe o no
         User user = this.userRepository.findById(idUser).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
         //Comprobamos que el user tenga una imagen de perfil diferente a la por defecto, en caso de que no la tenga lanzamos una excepción
         if (Objects.equals(user.getProfilePicture(), "https://res.cloudinary.com/dtg2mkilx/image/upload/placeholder_jrnkvd.png")) throw new IllegalArgumentException("El usuario no tiene una imagen de perfil personalizada");
-        //Ponemos a null el public_id que hace referencia a la imagen de perfil que tenía el user para tener siempre un estado consistente en la BD
-        user.setPublicIdCloudinary(null);
         //Llamamos a la función de cloudinary para eliminar la imagen de la nube
         this.cloudinaryService.deleteFile(user.getPublicIdCloudinary(), false);
         //Una vez eliminada la imagen de la nube, actualizamos el campo de la imagen del user a la por defecto
         user.setProfilePicture("https://res.cloudinary.com/dtg2mkilx/image/upload/placeholder_jrnkvd.png");
+        //Ponemos a null el public_id que hace referencia a la imagen de perfil que tenía el user para tener siempre un estado consistente en la BD
+        user.setPublicIdCloudinary(null);
+        //Guardamos el user actualizado en la BD
         this.userRepository.save(user);
+        //Devolvemos la url del placeholder para que en el front se ponga de manera correcta
+        return user.getProfilePicture();
     }
 
     //Función para actualizar la foto de perfil de un user de la BD

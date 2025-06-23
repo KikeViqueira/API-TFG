@@ -31,6 +31,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class ChatService {
@@ -210,6 +211,20 @@ public class ChatService {
         List<Chat> chats = this.chatRepository.findByUserIdAndIdIn(idUser, idChats);
         if (chats.size() != idChats.size()) throw new AccessDeniedException("Uno o más chats no pertenecen al usuario");
         //Si no se ha disparado la excepción podemos eliminar los chats tanto de la entidad del user como de la BD
+        //Pero antes tenemos que mirar si se esta eliminando el posible chat de hoy
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
+        LocalDateTime endOfDay = startOfDay.plusDays(1).minusNanos(1);
+        Optional<Chat> chatOfToday = this.chatRepository.findByUserIdAndDateBetween(idUser, startOfDay, endOfDay);
+        if (chatOfToday.isPresent()) {
+            //Si existe chat de hoy tenemos que mirar si el id de el chat está dentro de los que se quieren eliminar
+            if (idChats.contains(chatOfToday.get().getId())){
+                //En este caso tenemos que eliminar la bandera del chat de hoy para no tener problemas en la consistencia del Front, aun así tenemos que comprobar que la entidad existe
+                Optional<DailyUserFlags> flagOfToday = this.dailyUserFlagsRepository.findByUser_IdAndFlagKeyAndTimeStampBetween(idUser, DailyFlags.CHAT_ID_TODAY, startOfDay, endOfDay);
+                if (flagOfToday.isPresent()) this.dailyUserFlagsRepository.delete(flagOfToday.get());
+                else throw new EntityNotFoundException("La bandera que guarda el id del chat de hoy no existe");
+            }
+        }
         user.getChats().removeAll(chats);
         this.userRepository.save(user);
         this.chatRepository.deleteAll(chats);

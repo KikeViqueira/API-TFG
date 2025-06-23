@@ -153,9 +153,9 @@ public class UserController {
     //Endpoint para eliminar la foto de perfil del user
     @PreAuthorize("hasPermission(#idUser, 'owner')")
     @DeleteMapping("/{idUser}/profile-picture")
-    public ResponseEntity<?> deleteProfilePicture(@PathVariable("idUser") Long idUser){
-        this.userService.deleteProfilePicture(idUser);
-        return ResponseEntity.noContent().build(); //Indicamos al user que la petición se ha realizado con éxito y no hay contenido para devolver (Es innecesario devolverle la url)
+    public ResponseEntity<String> deleteProfilePicture(@PathVariable("idUser") Long idUser){
+        String profilePicture = this.userService.deleteProfilePicture(idUser);
+        return ResponseEntity.ok(profilePicture);
     }
 
     //Endpoint para obtener la lista de las banderas del user tanto las de configuración como las diarias
