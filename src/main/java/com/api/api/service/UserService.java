@@ -1,6 +1,7 @@
 package com.api.api.service;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -269,9 +270,9 @@ public class UserService {
             dailyFlags = dailyUserFlags.stream().map(dailyUserFlag -> new FlagEntityDTO(dailyUserFlag)).toList();
             Map<String, Object> dailyMap = new LinkedHashMap<>();
             for (FlagEntityDTO flag : dailyFlags){
-                //En caso de que la bandera contenga un valor distinto de null en el expiryTime, añadimos dicho atributo también al mapa
+                //En caso de que la bandera contenga un valor distinto de null en el expiryTime, añadimos dicho atributo también al mapa pero sin tener en cuenta los nanosegundos
                 dailyMap.put(flag.getFlag(), flag.getValue());
-                if (Objects.nonNull(flag.getExpiryTime())) dailyMap.put("expiry_"+flag.getFlag(), flag.getExpiryTime().toString());
+                if (Objects.nonNull(flag.getExpiryTime())) dailyMap.put("expiry_"+flag.getFlag(), flag.getExpiryTime().truncatedTo(ChronoUnit.SECONDS));
             } 
             userFlags.put("dailyFlags", dailyMap);
         }
@@ -288,12 +289,14 @@ public class UserService {
 
        //Guardamos las banderas diarias en el mapa que se va a devolver al user, además tenemos que mandarle la fecha de expiración que es el final del día en el que e user ha guradado la entidad en la BD
        Map<String, Object> dailyDerivedMap = new LinkedHashMap<>();
+       // Truncar endOfDay para eliminar nanosegundos en las fechas de expiración
+       LocalDateTime endOfDayTruncated = endOfDay.truncatedTo(ChronoUnit.SECONDS);
        dailyDerivedMap.put(DerivedFlags.DRM_REPORT_TODAY, reportFlag);
-       dailyDerivedMap.put("expiry_drm_report", endOfDay);
+       dailyDerivedMap.put("expiry_drm_report", endOfDayTruncated);
        dailyDerivedMap.put(DerivedFlags.TIP_OF_THE_DAY, tipFlag);
-       dailyDerivedMap.put("expiry_tip_of_the_day", endOfDay);
+       dailyDerivedMap.put("expiry_tip_of_the_day", endOfDayTruncated);
        dailyDerivedMap.put(DerivedFlags.SLEEP_LOG_TODAY, sleepFlag);
-       dailyDerivedMap.put("expiry_sleep_log", endOfDay);
+       dailyDerivedMap.put("expiry_sleep_log", endOfDayTruncated);
 
         userFlags.put("dailyDerivedFlags", dailyDerivedMap);
 
