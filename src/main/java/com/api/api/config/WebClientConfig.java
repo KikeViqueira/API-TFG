@@ -10,7 +10,7 @@ public class WebClientConfig {
     //Creamos el bean del WebClient
     @Bean
     public WebClient webClient(){
-        return WebClient.builder().baseUrl("https://generativelanguage.googleapis.com/v1").build();
+        return WebClient.builder().baseUrl("https://generativelanguage.googleapis.com/v1beta").build();
     }
     
 }

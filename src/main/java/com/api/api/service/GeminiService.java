@@ -34,14 +34,19 @@ public class GeminiService {
 
     //Creamos la función para mandar un mensaje a la api de gemini como prompt
     public String sendMessage(String message){ 
-        String apiUrl = "/models/gemini-1.5-flash:generateContent?key=" + apiKey; // Cambiar el modelo a 1.5 Flash
+        String apiUrl = "/models/gemini-2.0-flash:generateContent?key=" + apiKey; // Cambiar el modelo a 2.0 Flash
 
         System.out.println("\n\nMensaje que estamos mandado a la IA: "+ message + "\n\n");
-
 
         //PROMPT PARA INDICARLE EL FORMATO DE LA RESPUESTA A LOS MENSAJES DEL USER
         String prompt = """
             Eres un especialista en sueño y bienestar que trabaja en la aplicación ZzzTime. Tu función principal es ayudar con la interpretación de sueños y todo lo relacionado con la mejora del descanso.
+            
+            RESTRICCIONES IMPORTANTES:
+            - ESTÁ ESTRICTAMENTE PROHIBIDO generar, crear, editar o procesar imágenes
+            - NO puedes generar contenido visual de ningún tipo
+            - Si el usuario solicita imágenes, explícale que solo puedes ayudar con texto
+            - Enfócate únicamente en respuestas de texto relacionadas con sueño y bienestar
             
             ÁMBITO DE ESPECIALIZACIÓN:
             - Interpretación de sueños y su significado
@@ -51,24 +56,24 @@ public class GeminiService {
             - Bienestar general relacionado con el sueño
             
             ENFOQUE CONVERSACIONAL:
-            - Si el usuario habla de temas que NO son directamente sobre sueño (sobrepeso, trabajo, relaciones, etc.), intenta relacionarlo con el sueño de manera natural cuando sea posible
-            - Ejemplo: "El sobrepeso puede afectar la calidad del sueño porque..." 
+            - Si el usuario habla de temas que NO son directamente sobre sueño, intenta relacionarlo con el sueño de manera natural cuando sea posible
+            - Ejemplo: "El sobrepeso puede afectar la calidad del sueño porque..."
             - Si no se puede relacionar naturalmente, responde de forma amable: "Mi especialidad está en el ámbito del sueño y los sueños. ¿Has notado cómo esto podría estar afectando tu descanso?"
             
             ESTILO DE COMUNICACIÓN:
-            - Conversacional y natural, como si fueras un amigo especialista
-            - Respuestas de 2-3 párrafos máximo (no más largas)
-            - Lenguaje cercano pero profesional
-            - Evita sonar como una IA robótica
-            - Haz preguntas de seguimiento ocasionales para mantener el diálogo
+            - Natural y profesional, como un especialista cercano pero competente
+            - ADAPTA la longitud según lo que necesite la respuesta: 1, 2 o máximo 3 párrafos BREVES
+            - Si la pregunta es simple, responde de forma concisa en 1 párrafo
+            - Si requiere más detalle, usa 2-3 párrafos pero MÁS CORTOS que antes
+            - Sé directo y al grano, evita repetir información ya mencionada
+            - Lenguaje fluido y profesional, pero sin sonar robotico
             - NUNCA uses formato markdown, negritas, cursivas o símbolos especiales
-            - Escribe como si fuera una conversación natural entre dos personas
+            - Responde de manera contextual y coherente con la conversación
             
-            Mantén siempre un tono empático y profesional, pero conversacional.
+            Sé empático, profesional y natural. Adapta tu respuesta a lo que el usuario realmente necesita.
             """;
 
         String fullPrompt = message + "\n\n" + prompt;
-
 
         //Construímos el cuerpo de la petición
         /*
@@ -82,7 +87,7 @@ public class GeminiService {
             ))
         ); //Creamos un mapa con la estructura que espera la API
 
-        //llamamos a la api de gemini
+        //Llamada a la API de Gemini
         return webClient.post().uri(apiUrl)
         .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE) //Especificamos el tipo de contenido, en este caso JSON
         .bodyValue(requestBody)
@@ -94,7 +99,7 @@ public class GeminiService {
 
     //FUNCION PARA CREAR UN TÍTULO EN BASE AL CONTENIDO DEL MENSAJE
     public String createTitle(String message){ 
-        String apiUrl = "/models/gemini-1.5-flash:generateContent?key=" + apiKey; // Cambiar el modelo a 1.5 Flash
+        String apiUrl = "/models/gemini-2.0-flash:generateContent?key=" + apiKey; // Cambiar el modelo a 2.0 Flash
 
         //PROMPT PARA INDICARLE EL FORMATO DE LA RESPUESTA A LOS MENSAJES DEL USER
         String prompt = """
@@ -133,7 +138,7 @@ public class GeminiService {
 
     //Función para generar un informe sobre la roma de decisiones en base a la info del user
     public String generateReport(Map<String, Float> sleepLogsLastWeek,Map<Long, SleepLogAnswer> sleepLogsForContext, OnboardingAnswerDTO onboardingAnswerDTO, DRMRequestDTO drmRequestDTO, User user){
-        String apiUrl = "/models/gemini-1.5-flash:generateContent?key=" + apiKey; // Cambiar el modelo a 1.5 Flash
+        String apiUrl = "/models/gemini-2.0-flash:generateContent?key=" + apiKey; // Cambiar el modelo a 2.0 Flash
 
         //PROMPT PARA INDICARLE EL FORMATO DEL INFORME DE LA TOMA DE DECISIONES Y QUE ES LO QUE TIENE QUE TENER EN CUENTA PARA HACERLO
         String prompt = """
@@ -218,7 +223,7 @@ public class GeminiService {
 
      //Función para generar un tip que mejores los hábitos en general del user
      public String generateTip(Map<String, Float> sleepLogsLastWeek,Map<Long, SleepLogAnswer> sleepLogsForContext, OnboardingAnswerDTO onboardingAnswerDTO, DrmObjectDTO drmObjectDTO, User user, List<TipResponseDTO> userTips){
-        String apiUrl = "/models/gemini-1.5-flash:generateContent?key=" + apiKey; // Cambiar el modelo a 1.5 Flash
+        String apiUrl = "/models/gemini-2.0-flash:generateContent?key=" + apiKey; // Cambiar el modelo a 2.0 Flash
 
         //PROMPT PARA INDICARLE EL FORMATO DEL INFORME DE LA TOMA DE DECISIONES Y QUE ES LO QUE TIENE QUE TENER EN CUENTA PARA HACERLO
         String prompt = """
