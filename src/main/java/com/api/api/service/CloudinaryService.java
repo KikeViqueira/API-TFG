@@ -34,12 +34,12 @@ public class CloudinaryService {
     //Función para subir una imagen o sonido a Cloudinary y obtener su public_url como su public_id
     public CloudinaryUploadDTO uploadMultipartFile(MultipartFile file, boolean isRaw) {
         try {
-            String originalName = file.getOriginalFilename(); // => "profilePicture-tom_willemse.jpg"
+            String originalName = file.getOriginalFilename(); // => "profilePicture-user.jpg"
             String nameWithoutExtension = originalName.replaceFirst("[.][^.]+$", "");
             /*
-             * "profilePicture-tom_willemse", cloudinary espera que el public_id no tenga extension
+             * "profilePicture-user", cloudinary espera que el public_id no tenga extension
              * 
-             * Pero eso significa que Cloudinary generará una URL como https://res.cloudinary.com/your_cloud_name/image/upload/v1672522216/profilePicture-tom_willemse.jpg.jpg
+             * Pero eso significa que Cloudinary generará una URL como https://res.cloudinary.com/your_cloud_name/image/upload/vXXXXXXXXX/profilePicture-user.jpg.jpg
              * 
             */
             String resourceType = isRaw ? "raw" : "image";

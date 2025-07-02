@@ -1,0 +1,36 @@
+# ZzzTime Backend - Ejemplo de Configuración de Desarrollo
+# Copia este archivo como application-dev.properties
+
+# Configuración de base de datos PostgreSQL
+spring.datasource.url=jdbc:postgresql://localhost:5432/tu_base_datos
+spring.datasource.username=tu_usuario_bd
+spring.datasource.password=tu_contraseña_bd
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# Mostrar consultas SQL en desarrollo
+spring.jpa.show-sql=true
+
+# Configuración JWT
+# Genera una clave aleatoria de al menos 64 caracteres hexadecimales
+jwt.secret=tu_jwt_secret_muy_largo_y_aleatorio_de_al_menos_64_caracteres
+jwt.expiration=3600000
+jwt.refreshExpiration=604800000
+
+# API Key de Google Gemini
+# Obtén tu clave en: https://ai.google.dev/gemini-api
+gemini.api.key=tu_clave_api_de_google_gemini
+
+# Configuración de Cloudinary (gestión de multimedia)
+# Obtén tus credenciales en: https://cloudinary.com/console
+cloudinary.cloud.name=tu_cloud_name
+cloudinary.api.key=tu_api_key
+cloudinary.api.secret=tu_api_secret
+
+# Instrucciones:
+# 1. Copia: cp application-dev.properties.example application-dev.properties
+# 2. Configura tu base de datos PostgreSQL local
+# 3. Genera una clave JWT segura
+# 4. Obtén tu API Key de Google Gemini
+# 5. Crea una cuenta en Cloudinary y obtén tus credenciales
+# 6. NUNCA subas application-dev.properties a Git
+# 7. Para acceso al entorno de producción, contacta al administrador del proyecto

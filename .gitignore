@@ -31,3 +31,15 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Archivos de configuración sensibles ###
+# Archivos con datos sensibles - NO SUBIR A GIT
+application-dev.properties
+application-local.properties
+application-prod.properties
+*.env
+.env*
+
+# Archivos de base de datos locales
+*.db
+*.sqlite
