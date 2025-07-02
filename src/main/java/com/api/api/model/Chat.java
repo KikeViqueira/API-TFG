@@ -1,9 +1,13 @@
 package com.api.api.model;
 
 
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
+
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -36,22 +40,25 @@ public class Chat {
 
     //Se llenara el campo gracias a la función que hemos creado en el prePersist
     @Column(nullable = false)
-    private ZonedDateTime date;
+    private LocalDateTime date;
 
     /*DEFINIMOS LAS RELACIONES DE LA CLASE*/
 
     @ManyToOne
     @JoinColumn(name = "idUser", nullable = false)
+    @JsonBackReference(value = "user-chats")
     private User user; //Usuario que ha creado el chat en la app
 
     //Relación uno a muchos ya que un chat puede tener muchos mensajes
     @OneToMany(mappedBy = "chat", cascade = CascadeType.ALL) //Si eliminamos el chat tenemos que eliminar todos los mensajes pertenecientes a el
+    @JsonManagedReference(value = "chat-messages")
+    @JsonIgnore
     private List<Message> messages; //Lista de mensajes que pertenecen al chat
 
 
     //Funcion para que se llene el campo date automáticamente
     @PrePersist
     protected void onCreate(){
-        this.date = ZonedDateTime.now(ZoneId.systemDefault()); //Conseguimos la hora y fecha en la zona horaria en la que está el user
+        this.date = LocalDateTime.now();
     }
 }

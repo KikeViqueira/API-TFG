@@ -1,0 +1,10 @@
+{
+  "Onboarding": {
+    "question1": "¿Cuántas horas sueles dormir?",
+    "question2": "¿Cuántos días haces actividad física a la semana?",
+    "question4": "¿Qué tipo de alimentación llevas?",
+    "question5": "¿Cuál es tu nivel de estrés diario?"
+  },
+  "SleepLog": {},
+  "DRM": {}
+}

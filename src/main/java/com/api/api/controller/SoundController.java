@@ -3,20 +3,21 @@ package com.api.api.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
-import com.api.api.DTO.SoundDTO;
-import com.api.api.model.Sound;
+import com.api.api.DTO.SoundDTO.DeleteSoundDTO;
+import com.api.api.DTO.SoundDTO.ResponseSoundDTO;
 import com.api.api.service.SoundService;
-
-import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/sounds")
@@ -32,38 +33,34 @@ public class SoundController {
 
     //Endpoint para obtener todos los sonidos estáticos
     @GetMapping
-    public ResponseEntity<List<SoundDTO>> getAllStaticsSounds(){
+    public ResponseEntity<List<ResponseSoundDTO>> getAllStaticsSounds(){
         //llamamos a la función del servicio que se encarga de devolvernos la lista de ellos
-        List<SoundDTO> staticSounds = soundService.getAllStaticSounds();
-        if (staticSounds.isEmpty()) return ResponseEntity.noContent().build();
+        List<ResponseSoundDTO> staticSounds = this.soundService.getAllStaticSounds();
         return ResponseEntity.ok(staticSounds);
     }
 
-
-    //TODO: ENDPOINT PARA OBTENER LOS SONIDOS QUE EL USER HA SUBIDO A LA APP, SOLO PUEDEN LLAMARLO LOS DUEÑOS DEL AUDIO
     //Endpoint para obtener los sonidos de los users 
+    @PreAuthorize("hasPermission(#idUser, 'owner')")
     @GetMapping("/{idUser}")
-    public ResponseEntity<List<SoundDTO>> getUserSounds(@PathVariable("idUser") Long idUser ){
-        List<SoundDTO> userSounds = soundService.getUserSounds(idUser);
-        if(userSounds.isEmpty()) return ResponseEntity.noContent().build();
+    public ResponseEntity<List<ResponseSoundDTO>> getUserSounds(@PathVariable("idUser") Long idUser ){
+        List<ResponseSoundDTO> userSounds = this.soundService.getUserSounds(idUser);
         return ResponseEntity.ok(userSounds);
     }
 
     //Endpoint para que el user pueda crear un sonido
-    @PostMapping("/{idUser}")
-    public ResponseEntity<SoundDTO> createSound(@PathVariable("idUser") Long idUser, @RequestBody @Valid Sound sound){
+    @PreAuthorize("hasPermission(#idUser, 'owner')")
+    @PostMapping(path = "/{idUser}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ResponseSoundDTO> createSound(@PathVariable("idUser") Long idUser, @RequestParam("file") MultipartFile file){
         //llamamos a la función encargada de crear el sonido
-        SoundDTO createdSound = soundService.createSound(idUser, sound);
-        if(createdSound == null) return ResponseEntity.noContent().build();
+        ResponseSoundDTO createdSound = this.soundService.createSound(idUser, file);
         return ResponseEntity.ok(createdSound);
     }
 
-    //TODO: HACER EL ENDPOINT DE ELIMINAR UN SONIDO SI EL USUARIO YA NO LO QUIERE
+    @PreAuthorize("hasPermission(#idUser, 'owner')")
     @DeleteMapping("/{idUser}/{idSound}")
-    public ResponseEntity<SoundDTO> deleteSoundUser(@PathVariable("idUser") Long idUser, @PathVariable("idSound") Long idSound){
+    public ResponseEntity<DeleteSoundDTO> deleteSoundUser(@PathVariable("idUser") Long idUser, @PathVariable("idSound") Long idSound){
         //llamamos a la función que se encarga de esta lógica
-        SoundDTO soundDTO = soundService.deleteSoundUser(idUser, idSound);
-        if (soundDTO == null) return ResponseEntity.notFound().build(); //No se ha encontrado el sonido o el user
+        DeleteSoundDTO soundDTO = this.soundService.deleteSoundUser(idUser, idSound);
         return ResponseEntity.ok(soundDTO);
     }
 }

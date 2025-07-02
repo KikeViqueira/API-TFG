@@ -1,0 +1,46 @@
+{
+  "sleep": [
+    {
+      "dateOfSleep": "2025-04-01",
+      "minutesAsleep": 420,
+      "timeInBed": 450,
+      "efficiency": 93
+    },
+    {
+      "dateOfSleep": "2025-04-02",
+      "minutesAsleep": 400,
+      "timeInBed": 440,
+      "efficiency": 91
+    },
+    {
+      "dateOfSleep": "2025-04-03",
+      "minutesAsleep": 380,
+      "timeInBed": 420,
+      "efficiency": 90
+    },
+    {
+      "dateOfSleep": "2025-04-04",
+      "minutesAsleep": 460,
+      "timeInBed": 480,
+      "efficiency": 96
+    },
+    {
+      "dateOfSleep": "2025-04-05",
+      "minutesAsleep": 390,
+      "timeInBed": 420,
+      "efficiency": 93
+    },
+    {
+      "dateOfSleep": "2025-04-06",
+      "minutesAsleep": 410,
+      "timeInBed": 430,
+      "efficiency": 95
+    },
+    {
+      "dateOfSleep": "2025-04-07",
+      "minutesAsleep": 440,
+      "timeInBed": 460,
+      "efficiency": 94
+    }
+  ]
+}

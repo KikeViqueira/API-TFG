@@ -1,148 +1,168 @@
 package com.api.api.controller;
 
-
-import java.util.HashMap;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.catalina.connector.Response;
-import org.hibernate.annotations.Parameter;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import org.springframework.web.multipart.MultipartFile;
 
-import com.api.api.DTO.SoundDTO;
-import com.api.api.DTO.TipDTO;
-import com.api.api.DTO.UserDTO;
-import com.api.api.model.Sound;
-import com.api.api.model.Tip;
+import com.api.api.DTO.ChatResponse;
+import com.api.api.DTO.ChatResponseDTO.*;
+import com.api.api.DTO.UserDTO.*;
 import com.api.api.model.User;
-import com.api.api.service.PatchUtils;
+import com.api.api.service.ChatService;
 import com.api.api.service.UserService;
 import com.github.fge.jsonpatch.JsonPatchException;
 
 import jakarta.validation.Valid;
-import lombok.val;
 
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
 
+    @Autowired //Inyección de dependencias
     private UserService userService;
-    private PatchUtils patchUtils;
 
-    //Definimos el constructor de la clase
-    @Autowired //Inyección de dependencias en el constructor de la clase
-    public UserController(UserService userService, PatchUtils patchUtils) {
-        this.userService = userService;
-        this.patchUtils = patchUtils;
-    }
+    @Autowired
+    private ChatService chatService;
 
     //Endpoint para crear el usuario en el registro y guardarlo en la BD
     @PostMapping
     public ResponseEntity<?> registerUser(@RequestBody @Valid User user) { //Valid para que se apliquen las restricciones de la clase User
-        try {
-            //llamamos a la función que se encarga de registrar el user en la BD
-            UserDTO.UserResponseDTO userResponseDTO = userService.registerUser(user);
-            //Creamos el mapa para enseñar la info que se ha creado en el endpoint si se ha ejecutado con éxito
-            Map<String, Object> mapResponse = Map.of(
-                "message", "User created successfully",
-                "Resource", userResponseDTO
-            );
+        //llamamos a la función que se encarga de registrar el user en la BD
+        UserResponseDTO userResponseDTO = this.userService.registerUser(user);
+        //Creamos el mapa para enseñar la info que se ha creado en el endpoint si se ha ejecutado con éxito
+        Map<String, Object> mapResponse = Map.of(
+            "message", "User created successfully",
+            "Resource", userResponseDTO
+        );
         return ResponseEntity.status(201).body(mapResponse);
-        } catch (IllegalArgumentException e) {
-
-            return ResponseEntity.status(409).body("El usuario ya existe");
-        }        
     }
 
     //Endpoint para la actualización de la información de un user
-    @PatchMapping("/{email}") //TODO: NO SE SI TENEMOS QUE MIRAR SI LA DATA QUE SE VA ACTUALIZAR TIENE VALORES DISTINTOS A LOS QUE LE PASA EL USER, PQ SI NO LA LLAMADA NO TENDRIA MUCHO SENTIDO?
-    //TODO: NO SE SI ES BUENA IDEA DEJAR CAMBIAR EL CORREO ELECTRONICO DE UN USUARIO
-    //Spring ya convierte el String de la URL a un Long en este caso
-    public ResponseEntity<?> updateUser(@PathVariable("email") String email, @RequestBody List<Map<String, Object>> updates){
-        try {
-            //Recuperamos el user de la BD y vemos si existe o no
-            User user = userService.getUser(email);
-            if (user == null){
-                return ResponseEntity.status(404).body("El usuario no existe");
-            }
+    @PreAuthorize("hasPermission(#idUser, 'owner')")
+    @PatchMapping("/{idUser}")
+    public ResponseEntity<UserUpdateDTO> updateUser(@PathVariable("idUser") Long idUser, @RequestBody List<Map<String, Object>> updates) throws JsonPatchException {
+        //llamamos a la función que se encarga de actualizar la info del user
+        UserUpdateDTO userUpdateDTO = this.userService.updateUser(idUser, updates);
+        return ResponseEntity.ok(userUpdateDTO);
+    }
 
-            //En caso de que el user exista comprobamos que en la lista de operaciones no haya ningun path de un atributo no modificable
-            //Primero hacemos una lista de los paths que no se pueden modificar
-            List<String> pathsNoModificables = List.of("/id", "/name","/age", "/role");
+    //Endpoint por si el user quiere eliminar su cuenta
+    @PreAuthorize("hasPermission(#idUser, 'owner')")
+    @DeleteMapping("/{idUser}")
+    public ResponseEntity<UserResponseDTO> deleteUser(@PathVariable("idUser") Long idUser){
+        UserResponseDTO userResponseDTO = this.userService.deleteUser(idUser);
+        return ResponseEntity.ok(userResponseDTO);
+    }
 
-            for (Map<String,Object> update : updates) {
-                String path = (String) update.get("path");
-                //En caso de que el path de la operación que quiere hacer el user no este permitida devolvemos Bad Request
-                if (pathsNoModificables.contains(path)){
-                    HashMap<String, String> errorResponse = new HashMap<>();
-                    errorResponse.put("Error", "No se puede modificar el campo "+ path);
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-                }
-                //Hacemos caso especial para el caso de que el user cambie la contraseña de la cuenta, la recibimos en texto plano y tenemos que encriptarla
-                else if(path.equals("/password")){
-                    String rawPassword = (String) update.get("value");
-                    BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-                    String encodedPassword = passwordEncoder.encode(rawPassword);
-                    update.put("value", encodedPassword); //Actualizamos el valor de la contraseña que vamos a aplicar en el patch
-                }
-            }
-            //Una vez comprobado los atributos que va a modificar el user, llamamos a patchUtils
-            User userActualizado = patchUtils.patch(user, updates);
-            //Guardamos el user actualizado en la BD, el que nos devuelve el service lo transformamos al DTO correspondiente para mostrar solo la info necesaria
-            UserDTO.UserUpdateDTO updateUserDTO = new UserDTO.UserUpdateDTO(userService.updateUser(userActualizado));
-            //Devolvemos ok y la info actualizada
-            return ResponseEntity.ok(updateUserDTO);
-        } catch (JsonPatchException e) {
-            HashMap<String, String> errorResponse = new HashMap<>();
-            errorResponse.put("error", "Error al aplicar el patch "+ e.getMessage());
-            return ResponseEntity.status(400).body(errorResponse);
-        }
+    //Nuevo endpoint para actualizar la foto de perfil del usuario, necisatamos indicar el tipo de datos que se van a recibir mediante el consumes
+    @PreAuthorize("hasPermission(#idUser, 'owner')")
+    @PutMapping(path = "/{idUser}/profile-picture", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<UserUpdateDTO> updateProfilePicture(@PathVariable("idUser") Long idUser, @RequestParam("file") MultipartFile file) {
+        UserUpdateDTO userUpdateDTO = this.userService.updateProfilePicture(idUser, file);
+        return ResponseEntity.ok(userUpdateDTO);
     }
 
     //Endpoint para obtener la info de un user en base a su email
-    @GetMapping("/{email}")
-    public ResponseEntity<?> getUser(@PathVariable("email") String email){
+    @PreAuthorize("hasPermission(#idUser, 'owner')")
+    @GetMapping("/{idUser}")
+    public ResponseEntity<UserResponseDTO> getUser(@PathVariable("idUser") Long idUser){
         //llamamos a la función que recupera el user de la BD y comprobamos que exista
-        User user = userService.getUser(email);
-
-        if (user==null) return ResponseEntity.status(404).body("User not found");
-        //En caso de que si que exista y hayamos recuperado su info, la pasamos al DTO correspondiente para no mostrar toda la info de la entidad en la respuesta
-        UserDTO.UserResponseDTO userDTO = new UserDTO.UserResponseDTO(user);
-        return ResponseEntity.ok(userDTO);
+        User user = this.userService.getUser(idUser);
+        return ResponseEntity.ok(new UserResponseDTO(user));
     }
 
-    //TODO: REPASARLOS
-    //Endpoint para recuperar los tips favoritos de un user
-    @GetMapping("/{email}/favorites")
-    public ResponseEntity<List<TipDTO.TipFavDTO>> getFavoritesTips(@PathVariable("email") String email){
-        List<TipDTO.TipFavDTO> favoriteTips = userService.getFavoritesTips(email);
-        if (favoriteTips.isEmpty()) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(favoriteTips);
+     /*
+     * Funciones que se usan para la gestión de los chats de un user:
+     * 1. Recupera el historial de los chats de un user (valor de filter = history) - CON PAGINACIÓN
+     * 2. Recupera os chats que ha tenido el user en los últimos tres meses (filter = last3Months) - SIN PAGINACIÓN
+     * 3. Recupera los chats que hay een un rango de fechas que puede especificar el user (filter = range) - CON PAGINACIÓN
+     * 
+     * Esto se lo indicamos al método en base a un parámetro que le pasamos en la petición (filter)
+     * 
+     * Para los filtros "history" y "range" se añade paginación con los parámetros:
+     * - page: número de página (empieza en 0, por defecto 0)
+     * - size: elementos por página (por defecto 10, máximo 20)
+     * - sort: campo de ordenación (por defecto "date")
+     * - direction: dirección del ordenamiento (asc/desc, por defecto "desc")
+     */
+    @PreAuthorize("hasPermission(#idUser, 'owner')")
+    @GetMapping("/{idUser}/chats")
+    public ResponseEntity<?> getChats(@PathVariable("idUser") Long idUser,
+        @RequestParam(name="filter", required = false, defaultValue = "history") String filter,
+        @RequestParam(name = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+        @RequestParam(name = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+        @RequestParam(name = "page", required = false, defaultValue = "0") int page,
+        @RequestParam(name = "size", required = false, defaultValue = "7") int size,
+        @RequestParam(name = "sort", required = false, defaultValue = "date") String sortBy,
+        @RequestParam(name = "direction", required = false, defaultValue = "desc") String sortDirection) 
+        {
+        
+        // Para last3Months no usamos paginación
+        if ("last3Months".equals(filter)) {
+            List<ChatResponse> chats = this.chatService.getChatsLast3Months(idUser);
+            return ResponseEntity.ok(chats);
+        }
+        
+        // Para history y range usamos paginación
+        // Validar que page y size sean valores válidos
+        if (page < 0) page = 0;
+        if (size <= 0) size = 7;
+        if (size > 10) size = 10; // Limitar el tamaño máximo de página
+
+        //Creamos el objeto Sort basado en los parámetros
+        Sort.Direction direction = sortDirection.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort sort = Sort.by(direction, sortBy);
+
+        //Creamos el objeto Pageable con la ordenación
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        //Llamamos a la función que se encarga de recuperar los chats con paginación
+        Page<ChatResponse> result = this.chatService.getChatsWithPagination(idUser, filter, startDate, endDate, pageable);
+        return ResponseEntity.ok(result);
     }
 
-    //Endpoint para eliminar un tip de los favoritos de un user
-    @DeleteMapping("/{id}/favorites/{idTip}")
-    public ResponseEntity<TipDTO.TipFavDTO> deleteFavoriteTip(@PathVariable("id") Long id, @PathVariable("idTip") Long idTip){
-        //llamamos a la función del service que se encarga de esta lógica
-        TipDTO.TipFavDTO tipDTO = userService.deleteFavoriteTip(id, idTip);
-        if (tipDTO == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(tipDTO);
+    //Endpoint para eliminar uno o varios chats de un user
+    @PreAuthorize("hasPermission(#idUser, 'owner')")
+    @DeleteMapping("/{idUser}/chats")
+    //Recibimos en el cuerpo de la solicitud la lista de los ids de los chats que se quieren eliminar
+    public ResponseEntity<List<ChatDeletedDTO>> deleteChats(@PathVariable("idUser") Long idUser, @RequestBody List<Long> idChats){
+        List<ChatDeletedDTO> chats = this.chatService.deleteChats(idUser, idChats);
+        return ResponseEntity.ok(chats);
     }
 
-    //Endpoint para añadir un tip a los favoritos de un user
-    @PostMapping("/{id}/favorites/{idTip}")
-    public ResponseEntity<TipDTO.TipFavDTO> addFavoriteTip(@PathVariable("id") Long id, @PathVariable("idTip") Long idTip){
-        //Llamamos a la función del service que se encarga de esta lógica
-        TipDTO.TipFavDTO tipDTO = userService.addFavoriteTip(id, idTip);
-        if (tipDTO == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.status(HttpStatus.CREATED).body(tipDTO); //Guardado correctamente en la lista de favoritos del user
+    //Endpoint para cargar la conversación de un chat
+    @PreAuthorize("hasPermission(#idUser, 'owner')")
+    @GetMapping("/{idUser}/chats/{idChat}")
+    public ResponseEntity<ChatMessagesDTO> getChat(@PathVariable("idUser") Long idUser, @PathVariable("idChat") Long idChat){
+        ChatMessagesDTO conversation = this.chatService.getChat(idUser, idChat);
+        return ResponseEntity.ok(conversation);
     }
 
+    //Endpoint para eliminar la foto de perfil del user
+    @PreAuthorize("hasPermission(#idUser, 'owner')")
+    @DeleteMapping("/{idUser}/profile-picture")
+    public ResponseEntity<String> deleteProfilePicture(@PathVariable("idUser") Long idUser){
+        String profilePicture = this.userService.deleteProfilePicture(idUser);
+        return ResponseEntity.ok(profilePicture);
+    }
 
+    //Endpoint para obtener la lista de las banderas del user tanto las de configuración como las diarias
+    @PreAuthorize("hasPermission(#idUser, 'owner')")
+    @GetMapping("/{idUser}/flags")
+    public ResponseEntity<Map<String, Map<String, Object>>> getUserFlags(@PathVariable("idUser") Long idUser){
+        Map<String, Map<String, Object>> userFlags = this.userService.getUserFlags(idUser);
+        return ResponseEntity.ok(userFlags);
+    }
 }

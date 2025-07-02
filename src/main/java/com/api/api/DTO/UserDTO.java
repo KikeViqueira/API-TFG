@@ -1,6 +1,10 @@
 package com.api.api.DTO;
 
+import java.time.LocalDate;
+
 import com.api.api.model.User;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import lombok.*;
 
 public class UserDTO {
@@ -11,29 +15,39 @@ public class UserDTO {
      @Getter @Setter
      public static class UserResponseDTO{
         //Atributos que vamos a devolver
+        private Long id;
         private String name;
         private String email;
+        private LocalDate birthDate;
         private String profilePicture;
+        private int age;
 
         public UserResponseDTO(User user) {
+            this.id = user.getId();
             this.name = user.getName();
             this.email = user.getEmail();
+            if(user.getBirthDate()!= null){
+                this.birthDate= user.getBirthDate();
+                this.age = user.getAge();
+            } else this.age = -1;
             if (user.getProfilePicture()!=null) this.profilePicture = user.getProfilePicture();
         }
      }
 
-     //Definimos el DTO que solo tendra los atributos que se podrán actualizar
-     @Getter @Setter
+     //Definimos el DTO que solo tendra los atributos que se podrán actualizar, dependiendo de lo que se cambie en el DTO se devolvera el atributo correspondiente solo ya que el otro al ser null no se introducira en la respuesta
+     @Getter @Setter @JsonInclude(JsonInclude.Include.NON_NULL)
      public static class UserUpdateDTO{
-        private String email;
-        private String profilePicture;
-        private String password; //TODO: no se si es bueno devolver la contraseña en el DTO aunque sea un campo que se actualiza
+        private String newProfilePicture;
+        private boolean passwordChanged;
 
+        //Constructor para cambiar solo el valor de la foto de perfil
+        public UserUpdateDTO(String profilePicture) {
+            this.newProfilePicture = profilePicture;
+        }
 
-        public UserUpdateDTO(User user) {
-            this.email = user.getEmail();
-            this.profilePicture = user.getProfilePicture();
-            this.password = user.getPassword();
+        //Constructor solo para cambiar el valor de la contraseña
+        public UserUpdateDTO(boolean passwordChanged) {
+            this.passwordChanged = passwordChanged;
         }
      }
 
