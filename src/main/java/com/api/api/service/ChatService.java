@@ -81,8 +81,8 @@ public class ChatService {
                     message.setChat(chat); //Añadimos el chat al mensaje
                     //Si existe la relación añadimos el mensaje al chat llamando a MessageService
                     response = this.messageService.sendMessage(message, chat.getId());
-                    //Solo nos interesa devolver un ChatResponseDTO con el mensaje que la IA ha generado, usamos .trim() para quitar los espacios en blanco al principio y al final
-                    if (response != null) return new IAResponseDTO(response.trim());
+                    //Solo nos interesa devolver un ChatResponseDTO con el mensaje que la IA ha generado
+                    if (response != null) return new IAResponseDTO(response);
                     else throw new AIResponseGenerationException("No se ha podido enviar el mensaje");
 
                 } else
@@ -108,7 +108,7 @@ public class ChatService {
                 String title = this.messageService.createTitle(message);
                 //Si el título es distinto de null, añadimos la info al chat y lo guardamos y enviamos el mensaje
                 if (Objects.nonNull(title)) {
-                    newChat.setName(title.trim());
+                    newChat.setName(title);
                     this.chatRepository.save(newChat); //Ahora si podemos guardar el chat en la BD
                     /*
                      * Una vez que se ha creado el chat de hoy, lo guardamos en la BD y procedemos a crear las variables diarias
@@ -120,7 +120,7 @@ public class ChatService {
                     message.setChat(newChat);
                     response = this.messageService.sendMessage(message, newChat.getId());
                     //Nos interesa devolver en el objeto tanto la info del chat que se ha creado como el mensaje que nos ha devuelto la IA
-                    if (response != null) return new ChatCreatedDTO(newChat, response.trim());
+                    if (response != null) return new ChatCreatedDTO(newChat, response);
                     else throw new AIResponseGenerationException("No se ha podido enviar el mensaje");
                 } else throw new AIResponseGenerationException("No se ha podido crear un título para el chat");
             } else throw new TodayChatAlreadyExists("El usuario ya ha creado el chat diario");

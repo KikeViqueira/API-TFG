@@ -64,8 +64,8 @@ public class MessageService {
          */
         try {
             GeminiResponse geminiResponse = this.objectMapper.readValue(response, GeminiResponse.class);
-            //Guardamos en un String la parte de la respuesta de la IA que nos interesa
-            responseText = geminiResponse.getCandidates().get(0).getContent().getParts().get(0).getText();
+            //Guardamos en un String la parte de la respuesta de la IA que nos interesa, usamos .trim() para quitar los espacios en blanco al principio y al final
+            responseText = geminiResponse.getCandidates().get(0).getContent().getParts().get(0).getText().trim();
             responseMessage.setContent(responseText);
             responseMessage.setChat(message.getChat()); //El mensaje estara relacionado con el mismo chat en el que el user ha mandado el mensaje
             this.messageRepository.save(responseMessage); //Guardamos la respuesta en la bd
@@ -84,7 +84,7 @@ public class MessageService {
         try {
             GeminiResponse geminiResponse = this.objectMapper.readValue(response, GeminiResponse.class);
             //Guardamos en un String la parte de la respuesta de la IA que nos interesa
-            responseText = geminiResponse.getCandidates().get(0).getContent().getParts().get(0).getText();
+            responseText = geminiResponse.getCandidates().get(0).getContent().getParts().get(0).getText().trim();
         } catch (JsonProcessingException e) {
             System.out.println("Error al pasar la respuesta de la API de la IA al objeto correspondiente: " + e.getMessage());
         }

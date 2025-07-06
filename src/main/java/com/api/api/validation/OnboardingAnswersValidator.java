@@ -34,7 +34,7 @@ public class OnboardingAnswersValidator implements ConstraintValidator<ValidOnbo
     private static final Map<String, Set<String>> ALLOWED_VALUES = Map.of(
     "question1", Set.of("Menos de 5 horas", "Entre 5 y 6 horas", "Entre 6 y 7 horas", "Entre 7 y 8 horas", "Más de 8 horas"),
     "question2", Set.of("Ninguno", "Entre 1 y 2 días", "Entre 3 y 4 días", "Entre 5 y 6 días", "Todos los días"),
-    "question4", Set.of("Omnívora", "Vegetariana", "Vegana", "Flexitariana", "Otro"),
+    "question4", Set.of("Omnívora", "Vegetariana", "Vegana", "Carnívora", "Otro"),
     "question5", Set.of("Muy bajo", "Bajo", "Moderado", "Alto", "Muy alto")
 );
 

@@ -101,7 +101,7 @@ public class DrmService {
                 try {
                     GeminiResponse geminiResponse = objectMapper.readValue(response, GeminiResponse.class);
                     //Guardamos en un String la parte de la respuesta de la IA que nos interesa
-                    report = geminiResponse.getCandidates().get(0).getContent().getParts().get(0).getText();
+                    report = geminiResponse.getCandidates().get(0).getContent().getParts().get(0).getText().trim();
                 } catch (JsonProcessingException e) {
                     System.out.println("Error al pasar la respuesta de la API de la IA al objeto correspondiente: "+ e.getMessage());
                 }
