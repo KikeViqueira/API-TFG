@@ -140,9 +140,9 @@ public class GeminiService {
     public String generateReport(Map<String, Float> sleepLogsLastWeek,Map<Long, SleepLogAnswer> sleepLogsForContext, OnboardingAnswerDTO onboardingAnswerDTO, DRMRequestDTO drmRequestDTO, User user){
         String apiUrl = "/models/gemini-2.0-flash:generateContent?key=" + apiKey; // Cambiar el modelo a 2.0 Flash
 
-        //PROMPT PARA INDICARLE EL FORMATO DEL INFORME DE LA TOMA DE DECISIONES Y QUE ES LO QUE TIENE QUE TENER EN CUENTA PARA HACERLO
+        //PROMPT PARA GENERAR UN INFORME DRM PROFESIONAL ENFOCADO EN CORRELACIONES Y ANÁLISIS REAL
         String prompt = """
-        Eres un especialista en psicología del sueño y bienestar. Genera un informe profesional que analice sistemáticamente cómo los patrones de sueño del usuario han influido en su experiencia diaria, capacidad de toma de decisiones y bienestar general.
+        Eres un especialista en psicología del sueño aplicando la metodología Day Reconstruction Method (DRM). Tu función es analizar las correlaciones específicas entre los patrones de sueño del usuario y su funcionamiento cognitivo-emocional, identificando conexiones causales y patrones de comportamiento.
 
         Tu análisis debe reconstruir la experiencia vivida del usuario, correlacionando episodios de sueño con su funcionamiento cognitivo y emocional durante los últimos días.
 
@@ -166,30 +166,23 @@ public class GeminiService {
         
         5. Contexto adicional de registros de sueño: %s (análisis detallado de patrones específicos)
 
-        ESTRUCTURA DEL INFORME:
-        1. ANÁLISIS DE PATRONES DE SUEÑO
-           - Reconstruye la experiencia de sueño de la última semana
-           - Identifica tendencias y variaciones significativas
 
-        2. IMPACTO EN FUNCIONAMIENTO COGNITIVO
-           - Analiza la relación entre calidad de sueño y concentración
-           - Evalúa efectos en capacidad de toma de decisiones
+        ENFOQUE METODOLÓGICO DRM:
+        Analiza cómo la variabilidad en el sueño durante la semana se correlaciona directamente con las puntuaciones DRM reportadas. Identifica patrones específicos donde déficits o excesos de sueño impactaron measurablemente en capacidades cognitivas y regulación emocional.
 
-        3. EFECTOS EN BIENESTAR EMOCIONAL
-           - Correlaciona patrones de sueño con estado de ánimo
-           - Examina influencia en niveles de energía y productividad
+        ANÁLISIS REQUERIDO:
+        Establece correlaciones directas entre horas de sueño específicas y las puntuaciones DRM. Por ejemplo, si durmió 5 horas el martes y reporta concentración de 4/10, conecta causalmente esa privación con el deterioro cognitivo. Si durmió 8 horas el viernes y reporta energía de 8/10, correlaciona esa recuperación con el rendimiento.
 
-        4. CONCLUSIONES PROFESIONALES
-           - Síntesis de hallazgos principales
-           - Identificación de patrones críticos
+        Evalúa cómo las fluctuaciones de sueño crearon un efecto dominó en la toma de decisiones. Analiza si días con sueño inadecuado llevaron a decisiones impulsivas, procrastinación o reducción en la capacidad de análisis, y cómo esto se refleja en las respuestas DRM.
 
-        INSTRUCCIONES:
-        - No menciones datos técnicos (milisegundos, códigos de respuesta)
-        - Usa lenguaje profesional pero accesible
-        - Enfócate en la experiencia subjetiva del usuario
-        - NO generes consejos ni recomendaciones (eso corresponde a otra funcionalidad)
-        - Mantén un tono científico pero empático
-        - Longitud: 400-600 palabras
+        Examina el patrón emocional resultante. Determina si la irregularidad del sueño generó inestabilidad emocional, irritabilidad o cambios de humor que se manifiestan en las puntuaciones de estado de ánimo y productividad reportadas.
+
+        Integra el perfil individual (edad, estrés, actividad física) para contextualizar por qué ciertos déficits de sueño tuvieron mayor o menor impacto en este usuario específico comparado con estándares poblacionales.
+
+        FORMATO DE RESPUESTA:
+        Redacta en párrafos corridos, sin usar markdown, negritas, cursivas, viñetas o numeraciones. Usa un lenguaje científico pero directo que establezca conexiones causales claras. No hagas meros resúmenes de datos, sino análisis interpretativos que revelen insights sobre cómo el sueño moldea específicamente la experiencia diaria de este usuario.
+
+        No ofrezcas consejos ni recomendaciones. Enfócate exclusivamente en el análisis correlacional y las implicaciones psicológicas de los patrones identificados. Longitud: 350-500 palabras con alto valor analítico.
         """;
 
         String sleepLogsString = sleepLogsLastWeek.entrySet().stream()
