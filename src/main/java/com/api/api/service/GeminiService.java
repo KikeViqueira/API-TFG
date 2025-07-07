@@ -218,64 +218,66 @@ public class GeminiService {
      public String generateTip(Map<String, Float> sleepLogsLastWeek,Map<Long, SleepLogAnswer> sleepLogsForContext, OnboardingAnswerDTO onboardingAnswerDTO, DrmObjectDTO drmObjectDTO, User user, List<TipResponseDTO> userTips){
         String apiUrl = "/models/gemini-2.0-flash:generateContent?key=" + apiKey; // Cambiar el modelo a 2.0 Flash
 
-        //PROMPT PARA INDICARLE EL FORMATO DEL INFORME DE LA TOMA DE DECISIONES Y QUE ES LO QUE TIENE QUE TENER EN CUENTA PARA HACERLO
+        //PROMPT PARA GENERAR TIPS ENFOCADOS EXCLUSIVAMENTE EN MEJORAR EL SUEÑO Y BIENESTAR NOCTURNO
         String prompt = """
-        Eres un especialista en bienestar y sueño. Genera un tip personalizado y práctico que el usuario pueda implementar fácilmente en su entorno cotidiano (tanto en casa como fuera) para mejorar su calidad de vida.
+        Eres un especialista en sueño y bienestar nocturno. Tu objetivo EXCLUSIVO es generar tips que mejoren la calidad del sueño del usuario. TODOS los tips, independientemente de su categoría, deben estar directamente relacionados con mejorar los hábitos de sueño y el descanso nocturno.
 
         INFORMACIÓN DEL USUARIO:
-        1. Registro de sueño semanal: %s (horas dormidas cada día de la última semana; 0 = no registrado)
-        
-        2. Perfil del usuario: %s
-           - question1: Horas habituales de sueño que necesita
-           - question2: Días de actividad física por semana
-           - question4: Tipo de alimentación predominante
-           - question5: Nivel de estrés diario habitual
-        
-        3. Edad del usuario: %d años (calculada desde su fecha de nacimiento)
-        
-        4. Análisis DRM actual: %s
-           - drm_question1: Concentración durante el día (escala 1-10)
-           - drm_question2: Influencia del sueño en toma de decisiones
-           - drm_question3: Estado de ánimo general durante el día
-           - drm_question4: Nivel de energía experimentado
-           - drm_question5: Productividad percibida durante el día
-        
-        5. Contexto de patrones de sueño: %s (registros detallados para personalización)
-        
+        1. Registro de sueño semanal: %s (horas dormidas cada día; 0 = no registrado)
+        2. Perfil del usuario: %s (necesidades de sueño, actividad física, alimentación, nivel de estrés)
+        3. Edad: %d años
+        4. Análisis DRM actual: %s (concentración, decisiones, ánimo, energía, productividad)
+        5. Contexto de patrones de sueño: %s (registros detallados)
         6. Tips previos del usuario: %s
 
-        CATEGORÍAS DISPONIBLES (equilibra entre estas opciones):
-        🍎 Alimentación - Consejos nutricionales y hábitos alimentarios
-        🏃 Ejercicio - Actividad física y movimiento
-        😴 Sueño - Higiene del sueño y rutinas nocturnas  
-        🧘 Bienestar Mental - Manejo del estrés y relajación
-        ⏰ Rutinas - Organización del tiempo y hábitos diarios
-        🏠 Ambiente - Optimización del espacio personal
-        💧 Hidratación - Consumo de líquidos y bienestar
-        📱 Tecnología - Uso consciente de dispositivos
+        CATEGORÍAS DISPONIBLES (TODAS ENFOCADAS EN MEJORAR EL SUEÑO):
+        - food: Alimentación que favorece el sueño (ejemplo: evitar comidas pesadas 3 horas antes de dormir porque la digestión activa interfiere con el sueño profundo)
+        - fitness: Ejercicio que optimiza el sueño (ejemplo: ejercicio moderado por la mañana mejora la calidad del sueño nocturno)
+        - sleep: Higiene del sueño directa (rutinas nocturnas, ambiente de descanso)
+        - heart: Bienestar emocional para mejor sueño (técnicas de relajación, reducción de estrés nocturno)
+        - alert: Rutinas y horarios que mejoran el ciclo circadiano
+        - book: Ambiente y espacios de descanso optimizados
+        - music: Gestión de estímulos y sonidos para el sueño
+        - shield: Protección del sueño contra interferencias (tecnología, interrupciones)
 
-        OBJETIVO: DIVERSIDAD Y EQUILIBRIO
-        - Analiza las categorías de los tips previos del usuario
-        - Prioriza categorías menos representadas en su historial
-        - Si hay desbalance (ej: 5 tips de sueño, 0 de alimentación), genera uno de alimentación
-        - Busca equilibrio sin sacrificar relevancia personal
+        ENFOQUE OBLIGATORIO - CONEXIÓN DIRECTA CON EL SUEÑO:
+        - SIEMPRE explica cómo el tip mejora específicamente el sueño
+        - Ejemplo correcto: "Evita bebidas con cafeína después de las 2 PM porque la cafeína permanece en el organismo 6-8 horas y puede interferir con la conciliación del sueño"
+        - Ejemplo correcto: "Realiza ejercicio cardiovascular por la mañana porque eleva la temperatura corporal y su posterior descenso por la noche facilita la entrada en sueño profundo"
+        - NO generes tips generales de salud que no estén relacionados con el sueño
 
-        FORMATO DEL TIP:
-        Título: [3-5 palabras descriptivos]
-        Categoría: [Una de las 8 categorías mencionadas]
-        Descripción: [150-200 palabras]
-        - Explicación clara del beneficio
-        - Pasos específicos y realizables
-        - Personalizado según su perfil y análisis DRM
-        - Implementable tanto en casa como fuera
+        EQUILIBRIO Y PERSONALIZACIÓN:
+        - Analiza los tips previos para evitar repetir categorías sobrerrepresentadas
+        - Prioriza categorías menos utilizadas manteniendo la relevancia para el sueño
+        - Personaliza según el perfil DRM: si tiene baja concentración, enfócate en tips que mejoren el sueño reparador
 
-        INSTRUCCIONES:
-        - Personaliza según edad, hábitos y resultados DRM
-        - No repitas tips similares a los ya generados
-        - Usa lenguaje motivador y accesible
+        FORMATO JSON OBLIGATORIO - RESPONDE SOLO ESTO:
+        {
+            "title": "Máximo 3 palabras descriptivas",
+            "description": "Descripción breve del tip (10-20 palabras) explicando cómo mejora el sueño",
+            "icon": "uno de: food, fitness, sleep, heart, alert, book, music, shield",
+            "color": "color en formato hexadecimal",
+            "fullDescription": "Descripción completa (150-200 palabras) detallando la conexión directa con la mejora del sueño",
+            "benefits": [
+                "Beneficio 1",
+                "Beneficio 2"
+            ],
+            "steps": [
+                "Paso 1",
+                "Paso 2"
+            ]
+        }
+
+        INSTRUCCIONES CRÍTICAS:
+        - RESPONDE ÚNICAMENTE con el objeto JSON, sin texto adicional
+        - NO uses markdown, negritas, cursivas o formato especial en ningún campo
+        - SIEMPRE relaciona el tip con la mejora del sueño, independientemente de la categoría
+        - El título debe ser único y diferente a los tips previos del usuario
+        - Personaliza según edad y hábitos de sueño.
+        - El campo 'icon' debe ser uno de los siguientes valores: shield, sleep, fitness, food, alert, book, music, heart. Eligiendo el que más se ajuste al tip que estés generando.
+        - El campo 'color' debe ser un color en formato hexadecimal.
         - Incluye acciones específicas y medibles
-        - Asegura que sea realista y alcanzable
-        - NO uses markdown ni formato especial
+        - Todos los beneficios y pasos deben estar orientados a mejorar el descanso nocturno
         """;
         
         String sleepLogsString = sleepLogsLastWeek.entrySet().stream()
@@ -293,8 +295,6 @@ public class GeminiService {
                 .collect(Collectors.joining(", "));
 
         String formattedPrompt = String.format(prompt, sleepLogsString, onboardingString, user.getAge(), drmString, contextString, userTipsString);
-
-
 
         //Construímos el cuerpo de la petición
         Map<String, Object> requestBody = Map.of(
