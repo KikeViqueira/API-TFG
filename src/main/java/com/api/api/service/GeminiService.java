@@ -147,7 +147,7 @@ public class GeminiService {
         Tu análisis debe reconstruir la experiencia vivida del usuario, correlacionando episodios de sueño con su funcionamiento cognitivo y emocional durante los últimos días.
 
         INFORMACIÓN DISPONIBLE:
-        1. Registro de sueño semanal: %s (horas dormidas cada día de la última semana; 0 = no registrado)
+        1. Registro de sueño semanal: %s (horas dormidas cada día de la última semana; IMPORTANTE: 0 horas = día sin registro, el usuario no registró su sueño ese día)
         
         2. Perfil del usuario: %s
            - question1: Horas habituales de sueño que necesita
@@ -179,10 +179,18 @@ public class GeminiService {
 
         Integra el perfil individual (edad, estrés, actividad física) para contextualizar por qué ciertos déficits de sueño tuvieron mayor o menor impacto en este usuario específico comparado con estándares poblacionales.
 
+        ESTRUCTURA ANALÍTICA REQUERIDA:
+        - Párrafos iniciales: Reconstrucción objetiva de patrones y correlaciones observadas
+        - Párrafo final OBLIGATORIO: Análisis científico profundo aplicando metodología DRM que incluya:
+          * Interpretación de mecanismos neurocognitivos subyacentes
+          * Identificación de vulnerabilidades específicas del perfil del usuario
+          * Predicciones basadas en evidencia sobre tendencias futuras
+          * Conclusiones científicas que aporten valor diferencial más allá de observaciones superficiales
+
         FORMATO DE RESPUESTA:
         Redacta en párrafos corridos, sin usar markdown, negritas, cursivas, viñetas o numeraciones. Usa un lenguaje científico pero directo que establezca conexiones causales claras. No hagas meros resúmenes de datos, sino análisis interpretativos que revelen insights sobre cómo el sueño moldea específicamente la experiencia diaria de este usuario.
 
-        No ofrezcas consejos ni recomendaciones. Enfócate exclusivamente en el análisis correlacional y las implicaciones psicológicas de los patrones identificados. Longitud: 350-500 palabras con alto valor analítico.
+        No ofrezcas consejos ni recomendaciones. Enfócate exclusivamente en el análisis correlacional y las implicaciones psicológicas de los patrones identificados. Longitud: 350-500 palabras con alto valor analítico, donde el último párrafo debe demostrar expertise profesional en metodología DRM.
         """;
 
         String sleepLogsString = sleepLogsLastWeek.entrySet().stream()
